@@ -1,0 +1,139 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// ENUMS
+
+enum UserRole {
+  ADMIN
+  AGENCY_OWNER
+  AGENCY_MEMBER
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  NEGOTIATION
+  CONVERTED
+  LOST
+}
+
+enum TicketStatus {
+  NEW
+  OPEN
+  CLOSED
+  RESOLVED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+// MODELS
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  role      UserRole @default(AGENCY_MEMBER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  agency   Agency? @relation(fields: [agencyId], references: [id])
+  agencyId String?
+  tickets  Ticket[]
+}
+
+model Agency {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users         User[]
+  leads         Lead[]
+  properties    Property[]
+  subscription  Subscription?
+  tickets       Ticket[]
+}
+
+model Lead {
+  id        String     @id @default(cuid())
+  firstName String
+  lastName  String
+  email     String
+  phone     String?
+  status    LeadStatus @default(NEW)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  agency   Agency @relation(fields: [agencyId], references: [id])
+  agencyId String
+
+  properties Property[] @relation("LeadToProperty")
+}
+
+model Property {
+  id        String   @id @default(cuid())
+  address   String
+  city      String
+  zipCode   String
+  country   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  agency   Agency @relation(fields: [agencyId], references: [id])
+  agencyId String
+
+  leads Lead[] @relation("LeadToProperty")
+}
+
+model Plan {
+  id          String   @id @default(cuid())
+  name        String   @unique // e.g., "Agence Starter", "Agence Pro"
+  price       Float
+  prospectsLimit Int
+  features    String // Comma-separated list of features
+
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id        String   @id @default(cuid())
+  status    String // e.g., "active", "canceled"
+  startDate DateTime
+  endDate   DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  agency   Agency @relation(fields: [agencyId], references: [id])
+  agencyId String @unique
+
+  plan   Plan   @relation(fields: [planId], references: [id])
+  planId String
+}
+
+model Ticket {
+  id          String       @id @default(cuid())
+  subject     String
+  description String
+  status      TicketStatus @default(NEW)
+  priority    TicketPriority @default(MEDIUM)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  agency   Agency @relation(fields: [agencyId], references: [id])
+  agencyId String
+
+  user     User   @relation(fields: [userId], references: [id])
+  userId   String
+}
