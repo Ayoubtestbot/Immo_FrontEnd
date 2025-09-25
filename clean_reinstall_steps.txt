@@ -1,0 +1,25 @@
+**Steps for a clean reinstallation and restart:**
+
+1.  **Stop your Next.js development server** (if it's running).
+    *   Open your terminal where your server is running.
+    *   Press `Ctrl+C` to stop the server.
+
+2.  **Delete `node_modules` and `package-lock.json`:**
+    *   Open your terminal in the project root (`C:\Users\DELL\Downloads\LeadEstate_CLI\`).
+    *   Run the command: `rmdir /s /q node_modules` (for Windows)
+    *   Run the command: `del package-lock.json` (for Windows)
+    *   (If you are on macOS/Linux, use `rm -rf node_modules` and `rm package-lock.json`)
+
+3.  **Reinstall dependencies:**
+    *   Open your terminal in the project root.
+    *   Run the command: `npm install`
+
+4.  **Clear Next.js cache:**
+    *   Open your file explorer and navigate to your project root.
+    *   Delete the folder named `.next`.
+
+5.  **Start your Next.js development server again:**
+    *   Open your terminal in the project root.
+    *   Run the command: `npm run dev`
+
+After performing these steps, please try logging in again. Let me know if the error persists.

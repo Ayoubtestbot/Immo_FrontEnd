@@ -27,7 +27,12 @@ const AdminAgenciesPage = ({ agencies, plans }: AdminAgenciesPageProps) => {
   const [selectedPlanId, setSelectedPlanId] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
+
+  const filteredAgencies = agencies.filter((agency) =>
+    agency.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleClose = () => {
     setShowAddModal(false);
@@ -131,7 +136,16 @@ const AdminAgenciesPage = ({ agencies, plans }: AdminAgenciesPageProps) => {
         <Button variant="primary" onClick={handleShowAddModal}>Ajouter une Agence</Button>
       </div>
 
-      {agencies.length > 0 ? (
+      <Form.Group className="mb-3">
+        <Form.Control
+          type="text"
+          placeholder="Rechercher une agence..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </Form.Group>
+
+      {filteredAgencies.length > 0 ? (
         <Table striped bordered hover responsive>
           <thead>
             <tr>
@@ -143,7 +157,7 @@ const AdminAgenciesPage = ({ agencies, plans }: AdminAgenciesPageProps) => {
             </tr>
           </thead>
           <tbody>
-            {agencies.map((agency, index) => (
+            {filteredAgencies.map((agency, index) => (
               <tr key={agency.id}>
                 <td>{index + 1}</td>
                 <td>{agency.name}</td>
@@ -164,7 +178,7 @@ const AdminAgenciesPage = ({ agencies, plans }: AdminAgenciesPageProps) => {
       {/* Add/Edit Agency Modal */}
       <Modal show={showAddModal || showEditModal} onHide={handleClose} centered>
         <Modal.Header closeButton>
-          <Modal.Title>{currentAgency ? 'Modifier l'Agence' : 'Ajouter une Nouvelle Agence'}</Modal.Title>
+          <Modal.Title>{currentAgency ? "Modifier l'Agence" : "Ajouter une Nouvelle Agence"}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {error && <Alert variant="danger">{error}</Alert>}
@@ -225,7 +239,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   return {
     props: {
-      session,
       agencies: JSON.parse(JSON.stringify(agencies)),
       plans: JSON.parse(JSON.stringify(plans)),
     },

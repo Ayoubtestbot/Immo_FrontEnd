@@ -1,0 +1,3 @@
+firstName,lastName,email,phone,city,trafficSource
+John,Doe,john.doe@example.com,123-456-7890,New York,Website
+Jane,Smith,jane.smith@example.com,098-765-4321,Los Angeles,Referral

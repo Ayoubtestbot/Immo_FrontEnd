@@ -1,45 +1,57 @@
-import React from 'react';
-import { Container, Row, Col, Card, Button } from 'react-bootstrap';
-import { FaFeatherAlt, FaCrown, FaBuilding } from 'react-icons/fa';
+import React, { useState } from 'react';
+import { Container, Row, Col, Card, Button, Modal } from 'react-bootstrap';
+import { FaFeatherAlt, FaCrown, FaBuilding, FaGift, FaRocket } from 'react-icons/fa'; // Added FaGift, FaRocket
+import type { Plan } from '@prisma/client';
+import { useRouter } from 'next/router';
+import { useSession } from 'next-auth/react';
+import { PayPalButtons } from '@paypal/react-paypal-js'; // Assuming this is imported from somewhere
 
-const PricingSection = () => {
-  const plans = [
-    {
-      icon: <FaFeatherAlt size={30} className="mb-3" />,
-      name: 'Agence Starter',
-      price: '49€',
-      features: [
-        'Gestion de 50 prospects',
-        'Accès aux fonctionnalités de base',
-        'Support par email',
-      ],
-      isFeatured: false,
-    },
-    {
-      icon: <FaCrown size={30} className="mb-3 text-white" />,
-      name: 'Agence Pro',
-      price: '99€',
-      features: [
-        'Gestion illimitée de prospects',
-        'Rapports avancés',
-        'Intégration CRM',
-        'Support prioritaire',
-      ],
-      isFeatured: true,
-    },
-    {
-      icon: <FaBuilding size={30} className="mb-3" />,
-      name: 'Agence Entreprise',
-      price: 'Sur devis',
-      features: [
-        'Accès complet à toutes les fonctionnalités',
-        'Support dédié 24/7',
-        'Personnalisation et intégration sur mesure',
-        'Formation de l\'équipe',
-      ],
-      isFeatured: false,
-    },
-  ];
+type PricingSectionProps = {
+  plans: Plan[];
+};
+
+const PricingSection = ({ plans }: PricingSectionProps) => {
+  const router = useRouter();
+  const { data: session } = useSession();
+  const [showPayPalModal, setShowPayPalModal] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+
+  const freeTrialPlan = plans.find(p => p.name === 'Free Trial');
+  const mainPlans = plans.filter(p => p.name !== 'Free Trial');
+
+  // Manually sort mainPlans
+  mainPlans.sort((a, b) => {
+    const order = ['Starter', 'Pro', 'Entreprise'];
+    return order.indexOf(a.name) - order.indexOf(b.name);
+  });
+
+  const handleChoosePlan = (planId: string) => {
+    if (!session) {
+      router.push('/register'); // Redirect to register if not logged in
+    } else {
+      // TODO: Implement payment process for logged-in users
+      const plan = plans.find(p => p.id === planId);
+      if (plan) {
+        setSelectedPlan(plan);
+        setShowPayPalModal(true);
+      }
+    }
+  };
+
+  const getPlanIcon = (planName: string) => {
+    switch (planName.toLowerCase()) {
+      case 'free trial':
+        return <FaGift size={30} className="mb-3" />;
+      case 'starter':
+        return <FaFeatherAlt size={30} className="mb-3" />;
+      case 'pro':
+        return <FaCrown size={30} className="mb-3 text-white" />;
+      case 'entreprise': // Changed from 'business' to 'entreprise'
+        return <FaRocket size={30} className="mb-3" />;
+      default:
+        return <FaFeatherAlt size={30} className="mb-3" />;
+    }
+  };
 
   return (
     <div id="pricing" className="bg-light py-5">
@@ -48,25 +60,58 @@ const PricingSection = () => {
           <h2 className="fw-light">Des tarifs adaptés à chaque agence</h2>
           <p className="lead text-muted">Choisissez le plan qui correspond à vos ambitions.</p>
         </div>
-        <Row className="justify-content-center align-items-center">
-          {plans.map((plan, index) => (
-            <Col lg={4} md={6} className="mb-4" key={index}>
-              <Card className={`h-100 text-center ${plan.isFeatured ? 'bg-primary text-white' : ''}`}>
+
+        {/* Free Trial Plan (Horizontal) */}
+        {freeTrialPlan && (
+          <Row className="justify-content-center mb-5">
+            <Col md={6}>
+              <Card className="text-center free-trial-card"> {/* Added free-trial-card class */}
                 <Card.Body className="d-flex flex-column p-4">
-                  {plan.icon}
-                  <h4 className="my-0 fw-normal">{plan.name}</h4>
-                  <hr className={plan.isFeatured ? 'text-white-50' : ''} />
+                  {getPlanIcon(freeTrialPlan.name)}
+                  <h4 className="my-0 fw-normal">{freeTrialPlan.name}</h4>
+                  <hr />
                   <h1 className="card-title pricing-card-title">
-                    {plan.price}<small className={plan.isFeatured ? 'text-white-50' : 'text-muted'}>/mois</small>
+                    {freeTrialPlan.price} MAD<small className="text-muted">/mois</small>
                   </h1>
                   <ul className="list-unstyled mt-3 mb-4">
-                    {plan.features.map((feature, fIndex) => (
-                      <li key={fIndex} className="mb-2">{feature}</li>
+                    {freeTrialPlan.features.split(',').map((feature, fIndex) => (
+                      <li key={fIndex} className="mb-2">{feature.trim()}</li>
                     ))}
                   </ul>
-                  <Button 
-                    variant={plan.isFeatured ? 'light' : 'primary'} 
+                  <Button
+                    variant="primary"
                     className="w-100 mt-auto"
+                    onClick={() => handleChoosePlan(freeTrialPlan.id)}
+                  >
+                    Choisir ce plan
+                  </Button>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        )}
+
+        {/* Main Plans (Starter, Pro, Entreprise) */}
+        <Row className="justify-content-center align-items-center">
+          {mainPlans.map((plan) => (
+            <Col lg={4} md={6} className="mb-4" key={plan.id}>
+              <Card className={`h-100 text-center ${plan.name.toLowerCase() === 'pro' ? 'bg-primary text-white' : ''}`}>
+                <Card.Body className="d-flex flex-column p-4">
+                  {getPlanIcon(plan.name)}
+                  <h4 className="my-0 fw-normal">{plan.name}</h4>
+                  <hr className={plan.name.toLowerCase() === 'pro' ? 'text-white-50' : ''} />
+                  <h1 className="card-title pricing-card-title">
+                    {plan.price} MAD<small className={plan.name.toLowerCase() === 'pro' ? 'text-white-50' : 'text-muted'}>/mois</small>
+                  </h1>
+                  <ul className="list-unstyled mt-3 mb-4">
+                    {plan.features.split(',').map((feature, fIndex) => (
+                      <li key={fIndex} className="mb-2">{feature.trim()}</li>
+                    ))}
+                  </ul>
+                  <Button
+                    variant={plan.name.toLowerCase() === 'pro' ? 'light' : 'primary'}
+                    className="w-100 mt-auto"
+                    onClick={() => handleChoosePlan(plan.id)}
                   >
                     Choisir ce plan
                   </Button>
@@ -76,6 +121,50 @@ const PricingSection = () => {
           ))}
         </Row>
       </Container>
+
+      {/* PayPal Payment Modal */}
+      <Modal show={showPayPalModal} onHide={() => setShowPayPalModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Payer l'abonnement</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedPlan && (
+            <div className="text-center">
+              <h4>Vous êtes sur le point de vous abonner au plan {selectedPlan.name} pour {selectedPlan.price} MAD</h4>
+              <p>Cliquez sur le bouton PayPal ci-dessous pour finaliser votre paiement.</p>
+              <PayPalButtons
+                style={{ layout: 'vertical' }}
+                createOrder={async (data, actions) => {
+                  const res = await fetch('/api/paypal/create-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount: selectedPlan.price }),
+                  });
+                  const order = await res.json();
+                  return order.id;
+                }}
+                onApprove={async (data, actions) => {
+                  const res = await fetch('/api/paypal/capture-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderID: data.orderID }),
+                  });
+                  const capture = await res.json();
+                  console.log('Capture result:', capture);
+                  alert('Paiement réussi !');
+                  setShowPayPalModal(false);
+                  // TODO: Update user's subscription in the database
+                }}
+                onCancel={() => alert('Paiement annulé.')}
+                onError={(err) => {
+                  console.error('PayPal Error:', err);
+                  alert('Une erreur est survenue lors du paiement PayPal.');
+                }}
+              />
+            </div>
+          )}
+        </Modal.Body>
+      </Modal>
     </div>
   );
 };

@@ -1,0 +1,14 @@
+**Steps to apply database changes:**
+
+1.  **Apply the pending migration:**
+    *   Open your terminal in the project root.
+    *   Run the command: `npx prisma migrate deploy`
+    *   This will add the `usersLimit` field to your `Plan` model in the database.
+
+2.  **Update seed data (optional but recommended):**
+    *   Open DBeaver and connect to your `dev.db` database.
+    *   Go to the `Plan` table.
+    *   For each plan, manually set a value for the `usersLimit` column. For example, you might set `5` for "Agence Starter" and `-1` (for unlimited) for "Agence Pro" and "Agence Entreprise".
+    *   Remember to commit the changes in DBeaver after updating the data.
+
+After completing these steps, you should be able to add users according to your plan's user limit, and the limit will be displayed on the settings page.

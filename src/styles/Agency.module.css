@@ -1,0 +1,70 @@
+
+.layout {
+  background-color: var(--agency-bg);
+  color: var(--text-color-agency);
+  min-height: 100vh;
+}
+
+.sidebar {
+  background-color: var(--sidebar-bg-agency);
+  border-right: 1px solid var(--border-color-agency);
+  padding: 1.5rem;
+}
+
+.sidebar h4 {
+  color: var(--text-color-agency);
+}
+
+.sidebarLink {
+  color: var(--text-secondary-agency);
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.sidebarLink:hover {
+  background-color: rgba(0, 123, 255, 0.1);
+  color: var(--primary-hover-agency);
+  text-decoration: none;
+}
+
+.sidebarLink svg {
+  margin-right: 0.75rem;
+}
+
+.content {
+  padding: 2rem;
+}
+
+.statCard {
+  background-color: var(--card-bg-agency);
+  border: 1px solid var(--border-color-agency);
+  border-radius: 8px;
+  padding: 1.5rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.statCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+}
+
+.statCard h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.statCard p {
+  color: var(--text-secondary-agency);
+  font-size: 1rem;
+}
+
+.chartContainer {
+  background-color: var(--card-bg-agency);
+  border: 1px solid var(--border-color-agency);
+  border-radius: 8px;
+  padding: 2rem;
+}

@@ -12,12 +12,17 @@ datasource db {
 enum UserRole {
   ADMIN
   AGENCY_OWNER
+  AGENCY_SUPER_AGENT // New role
   AGENCY_MEMBER
 }
 
 enum LeadStatus {
   NEW
   CONTACTED
+  QUALIFIED // New
+  APPOINTMENT_SCHEDULED // New
+  FOLLOW_UP // New
+  RELAUNCHED // New
   NEGOTIATION
   CONVERTED
   LOST
@@ -37,25 +42,81 @@ enum TicketPriority {
   URGENT
 }
 
+enum TicketCategory {
+  TECHNICAL
+  BUG
+  BILLING
+  OTHER
+}
+
+enum ActivityType {
+  STATUS_CHANGE
+  NOTE_ADDED
+  LEAD_CREATED
+}
+
 // MODELS
 
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
   name      String?
-  password  String
+  password  String?
   role      UserRole @default(AGENCY_MEMBER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  image     String?
+  accounts  Account[]
+  sessions  Session[]
 
   agency   Agency? @relation(fields: [agencyId], references: [id])
   agencyId String?
   tickets  Ticket[]
+
+  assignedLeads Lead[] @relation("LeadAssignedTo")
+  notes         Note[]
+  ticketMessages TicketMessage[]
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
 }
 
 model Agency {
   id        String   @id @default(cuid())
   name      String
+  currency  String   @default("MAD") // Changed default currency
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -74,42 +135,89 @@ model Lead {
   phone     String?
   status    LeadStatus @default(NEW)
   createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  updatedAt DateTime @updatedAt
+  city      String? // New field
+  trafficSource String? // New field
 
   agency   Agency @relation(fields: [agencyId], references: [id])
   agencyId String
 
   properties Property[] @relation("LeadToProperty")
+
+  assignedTo   User?     @relation("LeadAssignedTo", fields: [assignedToId], references: [id])
+  assignedToId String?
+
+  notes      Note[]
+  activities Activity[]
+}
+
+enum PropertyType {
+  MAISON
+  APPARTEMENT
+  TERRAIN
+  COMMERCE
+}
+
+enum PropertyStatus {
+  A_VENDRE
+  VENDU
+  EN_LOCATION
+  LOUE
 }
 
 model Property {
-  id        String   @id @default(cuid())
-  address   String
-  city      String
-  zipCode   String
-  country   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String         @id @default(cuid())
+  propertyNumber Int?          // New field, optional
+  address     String
+  city        String
+  zipCode     String
+  country     String
+  type        PropertyType
+  price       Float
+  status      PropertyStatus
+  description String?
+  latitude    Float?
+  longitude   Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   agency   Agency @relation(fields: [agencyId], references: [id])
   agencyId String
 
   leads Lead[] @relation("LeadToProperty")
+  images Image[]
+  documents Document[]
+}
+
+model Image {
+  id        String   @id @default(cuid())
+  url       String
+  property  Property @relation(fields: [propertyId], references: [id])
+  propertyId String
+}
+
+model Document {
+  id        String   @id @default(cuid())
+  url       String
+  name      String
+  property  Property @relation(fields: [propertyId], references: [id])
+  propertyId String
 }
 
 model Plan {
   id          String   @id @default(cuid())
-  name        String   @unique // e.g., "Agence Starter", "Agence Pro"
+  name        String   @unique
   price       Float
   prospectsLimit Int
-  features    String // Comma-separated list of features
+  usersLimit  Int      @default(5) // New field
+  features    String
 
   subscriptions Subscription[]
 }
 
 model Subscription {
   id        String   @id @default(cuid())
-  status    String // e.g., "active", "canceled"
+  status    String
   startDate DateTime
   endDate   DateTime?
   createdAt DateTime @default(now())
@@ -128,6 +236,7 @@ model Ticket {
   description String
   status      TicketStatus @default(NEW)
   priority    TicketPriority @default(MEDIUM)
+  category    TicketCategory @default(OTHER)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
@@ -136,4 +245,42 @@ model Ticket {
 
   user     User   @relation(fields: [userId], references: [id])
   userId   String
+
+  messages TicketMessage[]
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lead   Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  leadId String
+
+  author   User   @relation(fields: [authorId], references: [id])
+  authorId String
+}
+
+model Activity {
+  id        String       @id @default(cuid())
+  type      ActivityType
+  details   String?
+  createdAt DateTime     @default(now())
+
+  lead   Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  leadId String
+}
+
+model TicketMessage {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ticket   Ticket @relation(fields: [ticketId], references: [id])
+  ticketId String
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
 }

@@ -64,12 +64,12 @@ const AddLeadModal = ({ show, handleClose, onLeadAdded }: AddLeadModalProps) => 
             <Form.Control type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
           </Form.Group>
           <Form.Group className="mb-3">
-            <Form.Label>Email</Form.Label>
-            <Form.Control type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <Form.Label>Email (optionnel)</Form.Label>
+            <Form.Control type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
           </Form.Group>
           <Form.Group className="mb-3">
-            <Form.Label>Téléphone (optionnel)</Form.Label>
-            <Form.Control type="text" value={phone} onChange={(e) => setPhone(e.target.value)} />
+            <Form.Label>Téléphone</Form.Label>
+            <Form.Control type="text" value={phone} onChange={(e) => setPhone(e.target.value)} required />
           </Form.Group>
           <div className="d-flex justify-content-end mt-4">
             <Button variant="secondary" onClick={handleClose} className="me-2">

@@ -1,4 +1,4 @@
-import type { NextPage } from 'next';
+import type { GetServerSideProps, NextPage } from 'next';
 import Header from '@/components/Header';
 import HeroSection from '@/components/HeroSection';
 import ServicesSection from '@/components/ServicesSection';
@@ -7,8 +7,14 @@ import PricingSection from '@/components/PricingSection';
 import TestimonialsSection from '@/components/TestimonialsSection';
 import ContactSection from '@/components/ContactSection';
 import Footer from '@/components/Footer';
+import { prisma } from '@/lib/prisma';
+import type { Plan } from '@prisma/client';
 
-const HomePage: NextPage = () => {
+type HomePageProps = {
+  plans: Plan[];
+};
+
+const HomePage: NextPage<HomePageProps> = ({ plans }) => {
   return (
     <>
       <Header />
@@ -16,13 +22,23 @@ const HomePage: NextPage = () => {
         <HeroSection />
         <ServicesSection />
         <FeaturesSection />
-        <PricingSection />
+        <PricingSection plans={plans} />
         <TestimonialsSection />
         <ContactSection />
       </main>
       <Footer />
     </>
   );
+};
+
+export const getServerSideProps: GetServerSideProps = async () => {
+  const plans = await prisma.plan.findMany({});
+
+  return {
+    props: {
+      plans: JSON.parse(JSON.stringify(plans)),
+    },
+  };
 };
 
 export default HomePage;

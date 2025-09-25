@@ -1,5 +1,9 @@
 import { useState } from 'react';
-import { Modal, Button, Form, Alert } from 'react-bootstrap';
+import { Modal, Button, Form, Alert, ProgressBar } from 'react-bootstrap';
+import { PropertyType, PropertyStatus } from '@prisma/client';
+import { storage } from '@/lib/firebase';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { v4 as uuidv4 } from 'uuid';
 
 type AddPropertyModalProps = {
   show: boolean;
@@ -12,19 +16,83 @@ const AddPropertyModal = ({ show, handleClose, onPropertyAdded }: AddPropertyMod
   const [city, setCity] = useState('');
   const [zipCode, setZipCode] = useState('');
   const [country, setCountry] = useState('');
+  const [type, setType] = useState<PropertyType>(PropertyType.MAISON);
+  const [price, setPrice] = useState(0);
+  const [status, setStatus] = useState<PropertyStatus>(PropertyStatus.A_VENDRE);
+  const [description, setDescription] = useState('');
+  const [images, setImages] = useState<File[]>([]);
+  const [uploadProgress, setUploadProgress] = useState<number[]>([]);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setImages(Array.from(e.target.files));
+    }
+  };
+
+  const handleUpload = async () => {
+    setLoading(true);
+    const urls: string[] = [];
+    const promises = images.map((image, index) => {
+      const storageRef = ref(storage, `properties/${uuidv4()}-${image.name}`);
+      const uploadTask = uploadBytesResumable(storageRef, image);
+
+      return new Promise<string>((resolve, reject) => {
+        uploadTask.on(
+          'state_changed',
+          (snapshot) => {
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            setUploadProgress(prev => {
+              const newProgress = [...prev];
+              newProgress[index] = progress;
+              return newProgress;
+            });
+          },
+          (error) => {
+            reject(error);
+          },
+          async () => {
+            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+            resolve(downloadURL);
+          }
+        );
+      });
+    });
+
+    try {
+      const downloadedUrls = await Promise.all(promises);
+      setImageUrls(downloadedUrls);
+      return downloadedUrls;
+    } catch (error) {
+      setError('Failed to upload images');
+      setLoading(false);
+      return [];
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
+    let uploadedImageUrls: string[] = [];
+    if (images.length > 0) {
+      uploadedImageUrls = await handleUpload();
+      if (uploadedImageUrls.length === 0) {
+        return; // handleUpload already set the error
+      }
+    }
+
     try {
       const res = await fetch('/api/properties', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address, city, zipCode, country }),
+        body: JSON.stringify({ 
+          address, city, zipCode, country, type, price, status, description, 
+          images: uploadedImageUrls 
+        }),
       });
 
       if (!res.ok) {
@@ -65,6 +133,41 @@ const AddPropertyModal = ({ show, handleClose, onPropertyAdded }: AddPropertyMod
             <Form.Label>Pays</Form.Label>
             <Form.Control type="text" value={country} onChange={(e) => setCountry(e.target.value)} required />
           </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Type</Form.Label>
+            <Form.Select value={type} onChange={(e) => setType(e.target.value as PropertyType)}>
+              {Object.values(PropertyType).map(type => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </Form.Select>
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Prix</Form.Label>
+            <Form.Control type="number" value={price} onChange={(e) => setPrice(parseFloat(e.target.value))} required />
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Statut</Form.Label>
+            <Form.Select value={status} onChange={(e) => setStatus(e.target.value as PropertyStatus)}>
+              {Object.values(PropertyStatus).map(status => (
+                <option key={status} value={status}>{status}</option>
+              ))}
+            </Form.Select>
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Description</Form.Label>
+            <Form.Control as="textarea" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Images</Form.Label>
+            <Form.Control type="file" multiple onChange={handleImageChange} />
+          </Form.Group>
+          {uploadProgress.length > 0 && (
+            <div className="mb-3">
+              {uploadProgress.map((progress, index) => (
+                <ProgressBar key={index} now={progress} label={`${progress.toFixed(2)}%`} />
+              ))}
+            </div>
+          )}
           <div className="d-flex justify-content-end mt-4">
             <Button variant="secondary" onClick={handleClose} className="me-2">
               Annuler

@@ -8,6 +8,7 @@ import type { Plan } from '@prisma/client';
 import { Table, Button, Alert, Modal, Form } from 'react-bootstrap';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
+import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 
 type PlansPageProps = {
   plans: Plan[];
@@ -23,7 +24,14 @@ const AdminPlansPage = ({ plans }: PlansPageProps) => {
   const [features, setFeatures] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showPayPalModal, setShowPayPalModal] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const router = useRouter();
+
+  const filteredPlans = plans.filter((plan) =>
+    plan.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleClose = () => {
     setShowAddModal(false);
@@ -106,7 +114,16 @@ const AdminPlansPage = ({ plans }: PlansPageProps) => {
         <Button variant="primary" onClick={handleShowAddModal}>Ajouter un Plan</Button>
       </div>
 
-      {plans.length > 0 ? (
+      <Form.Group className="mb-3">
+        <Form.Control
+          type="text"
+          placeholder="Rechercher un plan..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </Form.Group>
+
+      {filteredPlans.length > 0 ? (
         <Table striped bordered hover responsive>
           <thead>
             <tr>
@@ -116,19 +133,26 @@ const AdminPlansPage = ({ plans }: PlansPageProps) => {
               <th>Limite Prospects</th>
               <th>Fonctionnalités</th>
               <th>Actions</th>
+              <th>Paiement</th>
             </tr>
           </thead>
           <tbody>
-            {plans.map((plan, index) => (
+            {filteredPlans.map((plan, index) => (
               <tr key={plan.id}>
                 <td>{index + 1}</td>
                 <td>{plan.name}</td>
-                <td>{plan.price}€</td>
+                <td>{plan.price} MAD</td>
                 <td>{plan.prospectsLimit === -1 ? 'Illimité' : plan.prospectsLimit}</td>
                 <td>{plan.features}</td>
                 <td>
                   <Button variant="outline-primary" size="sm" className="me-2" onClick={() => handleShowEditModal(plan)}>Modifier</Button>
                   <Button variant="outline-danger" size="sm" onClick={() => handleDelete(plan.id)}>Supprimer</Button>
+                </td>
+                <td>
+                  <Button variant="success" size="sm" onClick={() => {
+                    setSelectedPlan(plan);
+                    setShowPayPalModal(true);
+                  }}>S'abonner</Button>
                 </td>
               </tr>
             ))}
@@ -151,7 +175,7 @@ const AdminPlansPage = ({ plans }: PlansPageProps) => {
               <Form.Control type="text" value={name} onChange={(e) => setName(e.target.value)} required />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Prix (€)</Form.Label>
+              <Form.Label>Prix (MAD)</Form.Label>
               <Form.Control type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} required />
             </Form.Group>
             <Form.Group className="mb-3">
@@ -169,6 +193,50 @@ const AdminPlansPage = ({ plans }: PlansPageProps) => {
               </Button>
             </div>
           </Form>
+        </Modal.Body>
+      </Modal>
+
+      {/* PayPal Payment Modal */}
+      <Modal show={showPayPalModal} onHide={() => setShowPayPalModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Payer l'abonnement</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedPlan && (
+            <div className="text-center">
+              <h4>Vous êtes sur le point de vous abonner au plan {selectedPlan.name} pour {selectedPlan.price} MAD</h4>
+              <p>Cliquez sur le bouton PayPal ci-dessous pour finaliser votre paiement.</p>
+              <PayPalButtons
+                style={{ layout: 'vertical' }}
+                createOrder={async (data, actions) => {
+                  const res = await fetch('/api/paypal/create-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount: selectedPlan.price }),
+                  });
+                  const order = await res.json();
+                  return order.id;
+                }}
+                onApprove={async (data, actions) => {
+                  const res = await fetch('/api/paypal/capture-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderID: data.orderID }),
+                  });
+                  const capture = await res.json();
+                  console.log('Capture result:', capture);
+                  alert('Paiement réussi !');
+                  setShowPayPalModal(false);
+                  handleRefresh();
+                }}
+                onCancel={() => alert('Paiement annulé.')}
+                onError={(err) => {
+                  console.error('PayPal Error:', err);
+                  alert('Une erreur est survenue lors du paiement PayPal.');
+                }}
+              />
+            </div>
+          )}
         </Modal.Body>
       </Modal>
     </AdminDashboardLayout>
@@ -193,7 +261,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   return {
     props: {
-      session,
       plans: JSON.parse(JSON.stringify(plans)),
     },
   };

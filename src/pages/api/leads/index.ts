@@ -38,7 +38,7 @@ export default async function handler(
     try {
       const { firstName, lastName, email, phone } = req.body;
 
-      if (!firstName || !lastName || !email) {
+      if (!firstName || !lastName || !phone) { // Updated validation
         return res.status(400).json({ error: 'Missing required fields' });
       }
 

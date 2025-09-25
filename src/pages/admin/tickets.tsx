@@ -2,12 +2,13 @@ import type { GetServerSideProps } from 'next';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../api/auth/[...nextauth]';
 import AdminDashboardLayout from '@/components/AdminDashboardLayout';
-import { UserRole } from '@prisma/client';
+import { UserRole, TicketStatus, TicketPriority } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import type { Ticket, Agency, User } from '@prisma/client';
 import { Table, Button, Alert, Modal, Form } from 'react-bootstrap';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
+import TicketMessages from '@/components/TicketMessages';
 
 type TicketWithDetails = Ticket & {
   agency: Agency;
@@ -16,10 +17,13 @@ type TicketWithDetails = Ticket & {
 
 type AdminTicketsPageProps = {
   tickets: TicketWithDetails[];
+  ticketStatuses: string[];
+  ticketPriorities: string[];
 };
 
-const AdminTicketsPage = ({ tickets }: AdminTicketsPageProps) => {
+const AdminTicketsPage = ({ tickets, ticketStatuses, ticketPriorities }: AdminTicketsPageProps) => {
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
   const [currentTicket, setCurrentTicket] = useState<TicketWithDetails | null>(null);
   const [subject, setSubject] = useState('');
   const [description, setDescription] = useState('');
@@ -27,10 +31,20 @@ const AdminTicketsPage = ({ tickets }: AdminTicketsPageProps) => {
   const [priority, setPriority] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
+
+  const filteredTickets = tickets.filter(
+    (ticket) =>
+      ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ticket.agency.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ticket.user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ticket.user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleClose = () => {
     setShowEditModal(false);
+    setShowViewModal(false);
     setCurrentTicket(null);
     setSubject('');
     setDescription('');
@@ -47,6 +61,11 @@ const AdminTicketsPage = ({ tickets }: AdminTicketsPageProps) => {
     setStatus(ticket.status);
     setPriority(ticket.priority);
     setShowEditModal(true);
+  };
+
+  const handleShowViewModal = (ticket: TicketWithDetails) => {
+    setCurrentTicket(ticket);
+    setShowViewModal(true);
   };
 
   const handleRefresh = () => {
@@ -111,7 +130,16 @@ const AdminTicketsPage = ({ tickets }: AdminTicketsPageProps) => {
         <h1>Gestion des Tickets</h1>
       </div>
 
-      {tickets.length > 0 ? (
+      <Form.Group className="mb-3">
+        <Form.Control
+          type="text"
+          placeholder="Rechercher par sujet, agence ou utilisateur..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </Form.Group>
+
+      {filteredTickets.length > 0 ? (
         <Table striped bordered hover responsive>
           <thead>
             <tr>
@@ -125,7 +153,7 @@ const AdminTicketsPage = ({ tickets }: AdminTicketsPageProps) => {
             </tr>
           </thead>
           <tbody>
-            {tickets.map((ticket, index) => (
+            {filteredTickets.map((ticket, index) => (
               <tr key={ticket.id}>
                 <td>{index + 1}</td>
                 <td>{ticket.subject}</td>
@@ -134,6 +162,7 @@ const AdminTicketsPage = ({ tickets }: AdminTicketsPageProps) => {
                 <td>{ticket.status}</td>
                 <td>{ticket.priority}</td>
                 <td>
+                  <Button variant="outline-info" size="sm" className="me-2" onClick={() => handleShowViewModal(ticket)}>Voir</Button>
                   <Button variant="outline-primary" size="sm" className="me-2" onClick={() => handleShowEditModal(ticket)}>Modifier</Button>
                   <Button variant="outline-danger" size="sm" onClick={() => handleDelete(ticket.id)}>Supprimer</Button>
                 </td>
@@ -164,7 +193,7 @@ const AdminTicketsPage = ({ tickets }: AdminTicketsPageProps) => {
             <Form.Group className="mb-3">
               <Form.Label>Statut</Form.Label>
               <Form.Select value={status} onChange={(e) => setStatus(e.target.value)} required>
-                {Object.values(TicketStatus).map((s) => (
+                {ticketStatuses.map((s) => (
                   <option key={s} value={s}>{s}</option>
                 ))}
               </Form.Select>
@@ -172,7 +201,7 @@ const AdminTicketsPage = ({ tickets }: AdminTicketsPageProps) => {
             <Form.Group className="mb-3">
               <Form.Label>Priorité</Form.Label>
               <Form.Select value={priority} onChange={(e) => setPriority(e.target.value)} required>
-                {Object.values(TicketPriority).map((p) => (
+                {ticketPriorities.map((p) => (
                   <option key={p} value={p}>{p}</option>
                 ))}
               </Form.Select>
@@ -184,6 +213,27 @@ const AdminTicketsPage = ({ tickets }: AdminTicketsPageProps) => {
               </Button>
             </div>
           </Form>
+        </Modal.Body>
+      </Modal>
+
+      {/* View Ticket Modal */}
+      <Modal show={showViewModal} onHide={handleClose} centered size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Détails du Ticket</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {currentTicket && (
+            <div>
+              <h5>{currentTicket.subject}</h5>
+              <p><strong>Agence:</strong> {currentTicket.agency.name}</p>
+              <p><strong>Utilisateur:</strong> {currentTicket.user.name || currentTicket.user.email}</p>
+              <p><strong>Status:</strong> {currentTicket.status}</p>
+              <p><strong>Priorité:</strong> {currentTicket.priority}</p>
+              <hr />
+              <h6>Discussion</h6>
+              {currentTicket && <TicketMessages ticketId={currentTicket.id} />}
+            </div>
+          )}
         </Modal.Body>
       </Modal>
     </AdminDashboardLayout>
@@ -212,8 +262,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   return {
     props: {
-      session,
       tickets: JSON.parse(JSON.stringify(tickets)),
+      ticketStatuses: Object.values(TicketStatus),
+      ticketPriorities: Object.values(TicketPriority),
     },
   };
 };

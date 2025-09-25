@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
+import { signIn } from 'next-auth/react';
 import { Container, Form, Button, Card, Alert, Row, Col } from 'react-bootstrap';
+import Link from 'next/link';
 
 const RegisterPage = () => {
   const [name, setName] = useState('');
@@ -62,8 +64,16 @@ const RegisterPage = () => {
             <Button variant="primary" type="submit" className="w-100" disabled={loading}>
               {loading ? 'Inscription en cours...' : "S'inscrire"}
             </Button>
+            <hr className="my-4" />
+            <Button
+              variant="outline-secondary"
+              className="w-100"
+              onClick={() => signIn('google')}
+            >
+              S'inscrire avec Google
+            </Button>
             <p className="text-center mt-3">
-              Déjà un compte ? <a href="/login">Connectez-vous ici</a>
+              Déjà un compte ? <Link href="/login">Connectez-vous ici</Link>
             </p>
           </Form>
         </Card.Body>

@@ -1,53 +1,42 @@
 import React from 'react';
-import { Container, Row, Col, Nav, Button } from 'react-bootstrap';
 import { FaTachometerAlt, FaUsers, FaBuilding, FaDollarSign, FaTicketAlt } from 'react-icons/fa';
 import Link from 'next/link';
 import { signOut } from 'next-auth/react';
+import styles from '@/styles/Admin.module.css';
+import { Button } from 'react-bootstrap';
 
 const AdminDashboardLayout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <Container fluid>
-      <Row>
-        <Col md={2} className="bg-dark text-white vh-100 p-3 d-flex flex-column">
-          <h4 className="mb-4">Admin Panel</h4>
-          <Nav className="flex-column">
-            <Link href="/admin/dashboard" passHref legacyBehavior>
-              <Nav.Link className="d-flex align-items-center mb-2 text-white">
-                <FaTachometerAlt className="me-2" /> Tableau de bord
-              </Nav.Link>
-            </Link>
-            <Link href="/admin/agencies" passHref legacyBehavior>
-              <Nav.Link className="d-flex align-items-center mb-2 text-white">
-                <FaBuilding className="me-2" /> Agences
-              </Nav.Link>
-            </Link>
-            <Link href="/admin/plans" passHref legacyBehavior>
-              <Nav.Link className="d-flex align-items-center mb-2 text-white">
-                <FaDollarSign className="me-2" /> Plans
-              </Nav.Link>
-            </Link>
-            <Link href="/admin/subscriptions" passHref legacyBehavior>
-              <Nav.Link className="d-flex align-items-center mb-2 text-white">
-                <FaUsers className="me-2" /> Abonnements
-              </Nav.Link>
-            </Link>
-            <Link href="/admin/tickets" passHref legacyBehavior>
-              <Nav.Link className="d-flex align-items-center mb-2 text-white">
-                <FaTicketAlt className="me-2" /> Tickets
-              </Nav.Link>
-            </Link>
-          </Nav>
-          <div className="mt-auto">
-            <Button variant="outline-light" className="w-100" onClick={() => signOut({ callbackUrl: '/' })}>
-              Déconnexion
-            </Button>
-          </div>
-        </Col>
-        <Col md={10} className="p-4">
-          {children}
-        </Col>
-      </Row>
-    </Container>
+    <div className={`${styles.layout} d-flex`}>
+      <div className={styles.sidebar}>
+        <h4 className="mb-4">Admin Panel</h4>
+        <nav className="d-flex flex-column">
+          <Link href="/admin/dashboard" className={styles.sidebarLink}>
+              <FaTachometerAlt /> Tableau de bord
+          </Link>
+          <Link href="/admin/agencies" className={styles.sidebarLink}>
+              <FaBuilding /> Agences
+          </Link>
+          <Link href="/admin/plans" className={styles.sidebarLink}>
+              <FaDollarSign /> Plans
+          </Link>
+          <Link href="/admin/subscriptions" className={styles.sidebarLink}>
+              <FaUsers /> Abonnements
+          </Link>
+          <Link href="/admin/tickets" className={styles.sidebarLink}>
+              <FaTicketAlt /> Tickets
+          </Link>
+        </nav>
+        <div className="mt-auto">
+          <Button variant="outline-primary" className="w-100" onClick={() => signOut({ callbackUrl: '/' })}>
+            Déconnexion
+          </Button>
+        </div>
+      </div>
+      <main className={`${styles.content} flex-grow-1`}>
+        {children}
+      </main>
+    </div>
   );
 };
 

@@ -4,7 +4,9 @@ import { authOptions } from '../api/auth/[...nextauth]';
 import AdminDashboardLayout from '@/components/AdminDashboardLayout';
 import { UserRole } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
-import { Card, Row, Col } from 'react-bootstrap';
+import { Row, Col } from 'react-bootstrap';
+import styles from '@/styles/Admin.module.css';
+import SummaryChart from '@/components/admin/SummaryChart';
 
 type AdminDashboardProps = {
   totalAgencies: number;
@@ -15,51 +17,67 @@ type AdminDashboardProps = {
 };
 
 const AdminDashboard = ({ totalAgencies, totalSubscriptions, totalLeads, totalProperties, totalTickets }: AdminDashboardProps) => {
+
+  const chartData = {
+    labels: ['Agences', 'Abonnements', 'Prospects', 'Propriétés', 'Tickets'],
+    datasets: [
+      {
+        label: 'Total',
+        data: [totalAgencies, totalSubscriptions, totalLeads, totalProperties, totalTickets],
+        backgroundColor: [
+          'rgba(88, 166, 255, 0.6)', // Agencies
+          'rgba(46, 160, 67, 0.6)',  // Subscriptions
+          'rgba(29, 155, 240, 0.6)', // Leads
+          'rgba(247, 202, 24, 0.6)', // Properties
+          'rgba(249, 24, 128, 0.6)',  // Tickets
+        ],
+      },
+    ],
+  };
+
   return (
     <AdminDashboardLayout>
       <h1>Tableau de bord Administrateur</h1>
-      <p className="lead">Vue d'ensemble de la plateforme LeadEstate.</p>
+      <p className="lead" style={{ color: 'var(--text-secondary)' }}>Vue d'ensemble de la plateforme LeadEstate.</p>
 
       <Row className="mt-4">
         <Col md={4} className="mb-4">
-          <Card className="text-center p-3">
-            <Card.Body>
-              <h2 className="text-primary">{totalAgencies}</h2>
-              <p className="text-muted">Agences enregistrées</p>
-            </Card.Body>
-          </Card>
+          <div className={styles.statCard}>
+            <h2 style={{ color: 'var(--primary-color)' }}>{totalAgencies}</h2>
+            <p>Agences enregistrées</p>
+          </div>
         </Col>
         <Col md={4} className="mb-4">
-          <Card className="text-center p-3">
-            <Card.Body>
-              <h2 className="text-success">{totalSubscriptions}</h2>
-              <p className="text-muted">Abonnements actifs</p>
-            </Card.Body>
-          </Card>
+          <div className={styles.statCard}>
+            <h2 style={{ color: '#2ea043' }}>{totalSubscriptions}</h2>
+            <p>Abonnements actifs</p>
+          </div>
         </Col>
         <Col md={4} className="mb-4">
-          <Card className="text-center p-3">
-            <Card.Body>
-              <h2 className="text-info">{totalLeads}</h2>
-              <p className="text-muted">Prospects totaux</p>
-            </Card.Body>
-          </Card>
+          <div className={styles.statCard}>
+            <h2 style={{ color: '#1d9bf0' }}>{totalLeads}</h2>
+            <p>Prospects totaux</p>
+          </div>
         </Col>
         <Col md={4} className="mb-4">
-          <Card className="text-center p-3">
-            <Card.Body>
-              <h2 className="text-warning">{totalProperties}</h2>
-              <p className="text-muted">Propriétés gérées</p>
-            </Card.Body>
-          </Card>
+          <div className={styles.statCard}>
+            <h2 style={{ color: '#f7ca18' }}>{totalProperties}</h2>
+            <p>Propriétés gérées</p>
+          </div>
         </Col>
         <Col md={4} className="mb-4">
-          <Card className="text-center p-3">
-            <Card.Body>
-              <h2 className="text-danger">{totalTickets}</h2>
-              <p className="text-muted">Tickets ouverts</p>
-            </Card.Body>
-          </Card>
+          <div className={styles.statCard}>
+            <h2 style={{ color: '#f91880' }}>{totalTickets}</h2>
+            <p>Tickets ouverts</p>
+          </div>
+        </Col>
+      </Row>
+
+      <Row className="mt-4">
+        <Col>
+          <div className={styles.chartContainer} style={{ height: '400px' }}>
+            <SummaryChart chartData={chartData} />
+          </div>
         </Col>
       </Row>
     </AdminDashboardLayout>
@@ -86,7 +104,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const totalLeads = await prisma.lead.count();
   const totalProperties = await prisma.property.count();
   const totalTickets = await prisma.ticket.count({
-    where: { status: 'OPEN' || 'NEW' }, // Assuming 'OPEN' or 'NEW' status
+    where: { status: { in: ['OPEN', 'NEW'] } },
   });
 
   return {

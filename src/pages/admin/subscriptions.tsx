@@ -28,7 +28,14 @@ const AdminSubscriptionsPage = ({ subscriptions, plans }: AdminSubscriptionsPage
   const [selectedPlanId, setSelectedPlanId] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
+
+  const filteredSubscriptions = subscriptions.filter(
+    (sub) =>
+      sub.agency.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      sub.plan.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleClose = () => {
     setShowEditModal(false);
@@ -44,8 +51,8 @@ const AdminSubscriptionsPage = ({ subscriptions, plans }: AdminSubscriptionsPage
   const handleShowEditModal = (subscription: SubscriptionWithDetails) => {
     setCurrentSubscription(subscription);
     setStatus(subscription.status);
-    setStartDate(subscription.startDate.toISOString().split('T')[0]);
-    setEndDate(subscription.endDate?.toISOString().split('T')[0] || '');
+    setStartDate(subscription.startDate.split('T')[0]);
+    setEndDate(subscription.endDate?.split('T')[0] || '');
     setSelectedPlanId(subscription.planId);
     setShowEditModal(true);
   };
@@ -112,7 +119,16 @@ const AdminSubscriptionsPage = ({ subscriptions, plans }: AdminSubscriptionsPage
         <h1>Gestion des Abonnements</h1>
       </div>
 
-      {subscriptions.length > 0 ? (
+      <Form.Group className="mb-3">
+        <Form.Control
+          type="text"
+          placeholder="Rechercher par agence ou plan..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </Form.Group>
+
+      {filteredSubscriptions.length > 0 ? (
         <Table striped bordered hover responsive>
           <thead>
             <tr>
@@ -126,7 +142,7 @@ const AdminSubscriptionsPage = ({ subscriptions, plans }: AdminSubscriptionsPage
             </tr>
           </thead>
           <tbody>
-            {subscriptions.map((sub, index) => (
+            {filteredSubscriptions.map((sub, index) => (
               <tr key={sub.id}>
                 <td>{index + 1}</td>
                 <td>{sub.agency.name}</td>
@@ -145,7 +161,6 @@ const AdminSubscriptionsPage = ({ subscriptions, plans }: AdminSubscriptionsPage
       ) : (
         <Alert variant="info">Aucun abonnement trouvé.</Alert>
       )}
-
       {/* Edit Subscription Modal */}
       <Modal show={showEditModal} onHide={handleClose} centered>
         <Modal.Header closeButton>
@@ -213,7 +228,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   return {
     props: {
-      session,
       subscriptions: JSON.parse(JSON.stringify(subscriptions)),
       plans: JSON.parse(JSON.stringify(plans)),
     },

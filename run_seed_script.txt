@@ -1,0 +1,9 @@
+**Command to run the seed script:**
+
+Open your terminal in the project root and run:
+
+`npx prisma db seed`
+
+This command will execute the `prisma/seed.ts` file, which is configured to create the three plans ("Agence Starter", "Agence Pro", and "Agence Entreprise") and the ADMIN user.
+
+After running this command, please verify in DBeaver if the `Plan` table now contains the three plans.

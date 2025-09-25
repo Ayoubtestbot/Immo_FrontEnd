@@ -2,6 +2,8 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
+import fetch from 'node-fetch';
+import type { Prisma } from '@prisma/client'; // New import
 
 export default async function handler(
   req: NextApiRequest,
@@ -9,56 +11,75 @@ export default async function handler(
 ) {
   const session = await getServerSession(req, res, authOptions);
 
-  if (!session || !session.user?.email) {
+  if (!session || !session.user.agencyId) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-    select: { agencyId: true },
-  });
+  if (req.method === 'POST') {
+    const { address, city, zipCode, country, type, price, status, description, images } = req.body;
 
-  if (!user || !user.agencyId) {
-    return res.status(403).json({ error: 'User is not associated with an agency' });
-  }
-
-  const agencyId = user.agencyId;
-
-  if (req.method === 'GET') {
-    try {
-      const properties = await prisma.property.findMany({
-        where: { agencyId: agencyId },
-      });
-      res.status(200).json(properties);
-    } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch properties' });
+    if (!address || !city || !zipCode || !country || !type || price === undefined || !status) {
+      return res.status(400).json({ error: 'Missing required fields' });
     }
-  } else if (req.method === 'POST') {
+
+    let latitude: number | undefined;
+    let longitude: number | undefined;
+
     try {
-      const { address, city, zipCode, country } = req.body;
-
-      if (!address || !city || !zipCode || !country) {
-        return res.status(400).json({ error: 'Missing required fields' });
+      const geoQuery = `${address}, ${zipCode} ${city}, ${country}`;
+      const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(geoQuery)}`);
+      // @ts-ignore
+      const geoData = await geoRes.json();
+      if (geoData && geoData.length > 0) {
+        latitude = parseFloat(geoData[0].lat);
+        longitude = parseFloat(geoData[0].lon);
       }
+    } catch (error) {
+      console.error('Geocoding failed', error);
+      // a geocoding error is not fatal, we can still create the property
+    }
 
-      const newProperty = await prisma.property.create({
+    try {
+      // Generate propertyNumber
+      const latestProperty = await prisma.property.findFirst({
+        where: { agencyId: session.user.agencyId },
+        orderBy: { propertyNumber: { sort: 'desc', nulls: 'last' } as Prisma.SortOrder }, // Updated orderBy
+        select: { propertyNumber: true },
+      });
+
+      const nextPropertyNumber = latestProperty && latestProperty.propertyNumber !== null ? latestProperty.propertyNumber + 1 : 1;
+
+      const property = await prisma.property.create({
         data: {
+          propertyNumber: nextPropertyNumber, // New field
           address,
           city,
           zipCode,
           country,
+          type,
+          price: parseFloat(price),
+          status,
+          description,
+          latitude,
+          longitude,
           agency: {
-            connect: { id: agencyId },
+            connect: {
+              id: session.user.agencyId,
+            },
+          },
+          images: {
+            create: images.map((url: string) => ({ url })),
           },
         },
       });
-      res.status(201).json(newProperty);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Failed to create property' });
+      return res.status(201).json(property);
+    } catch (error: any) {
+      console.error('Failed to create property:', error);
+      console.error('Error details:', error.message);
+      return res.status(500).json({ error: 'Failed to create property', details: error.message });
     }
   } else {
-    res.setHeader('Allow', ['GET', 'POST']);
+    res.setHeader('Allow', ['POST']);
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }

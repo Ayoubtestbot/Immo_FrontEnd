@@ -1,45 +1,52 @@
 import React from 'react';
-import { Container, Row, Col, Nav } from 'react-bootstrap';
-import { FaTachometerAlt, FaUsers, FaBuilding, FaTicketAlt } from 'react-icons/fa';
+import { FaTachometerAlt, FaUsers, FaBuilding, FaTicketAlt, FaCog } from 'react-icons/fa'; // Added FaCog
 import Link from 'next/link';
+import { signOut, useSession } from 'next-auth/react';
+import styles from '@/styles/Agency.module.css';
+import { Button } from 'react-bootstrap';
+import { UserRole } from '@prisma/client';
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
+  const { data: session } = useSession();
+
   return (
-    <Container fluid>
-      <Row>
-        <Col md={2} className="bg-light vh-100 p-3 d-flex flex-column">
-          <h4 className="mb-4">LeadEstate</h4>
-          <Nav className="flex-column">
-            <Link href="/agency/dashboard" passHref legacyBehavior>
-              <Nav.Link className="d-flex align-items-center mb-2">
-                <FaTachometerAlt className="me-2" /> Tableau de bord
-              </Nav.Link>
-            </Link>
-            <Link href="/agency/leads" passHref legacyBehavior>
-              <Nav.Link className="d-flex align-items-center mb-2">
-                <FaUsers className="me-2" /> Prospects
-              </Nav.Link>
-            </Link>
-            <Link href="/agency/properties" passHref legacyBehavior>
-              <Nav.Link className="d-flex align-items-center mb-2">
-                <FaBuilding className="me-2" /> Propriétés
-              </Nav.Link>
-            </Link>
-            <Link href="/agency/tickets" passHref legacyBehavior>
-              <Nav.Link className="d-flex align-items-center mb-2">
-                <FaTicketAlt className="me-2" /> Tickets
-              </Nav.Link>
-            </Link>
-          </Nav>
-          <div className="mt-auto">
-            {/* User profile / logout button can go here */}
-          </div>
-        </Col>
-        <Col md={10} className="p-4">
-          {children}
-        </Col>
-      </Row>
-    </Container>
+    <div className={`${styles.layout} d-flex`}>
+      <div className={styles.sidebar}>
+        <h4 className="mb-4">LeadEstate</h4>
+        <nav className="flex-column">
+          <Link href="/agency/dashboard" className={styles.sidebarLink}>
+              <FaTachometerAlt /> Tableau de bord
+          </Link>
+          <Link href="/agency/leads" className={styles.sidebarLink}>
+              <FaUsers /> Prospects
+          </Link>
+          <Link href="/agency/properties" className={styles.sidebarLink}>
+              <FaBuilding /> Propriétés
+          </Link>
+          <Link href="/agency/tickets" className={styles.sidebarLink}>
+              <FaTicketAlt /> Tickets
+          </Link>
+          {session?.user?.role === UserRole.AGENCY_OWNER && (
+            <>
+              <Link href="/agency/users" className={styles.sidebarLink}>
+                  <FaUsers /> Membres de l'équipe
+              </Link>
+              <Link href="/agency/settings" className={styles.sidebarLink}> {/* New link */}
+                  <FaCog /> Paramètres
+              </Link>
+            </>
+          )}
+        </nav>
+        <div className="mt-auto">
+          <Button variant="outline-primary" className="w-100" onClick={() => signOut({ callbackUrl: '/' })}>
+            Déconnexion
+          </Button>
+        </div>
+      </div>
+      <main className={`${styles.content} flex-grow-1`}>
+        {children}
+      </main>
+    </div>
   );
 };
 

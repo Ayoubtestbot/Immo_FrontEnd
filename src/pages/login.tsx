@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { getSession, signIn } from 'next-auth/react';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
+// Removed GetServerSidePropsContext, getServerSession, authOptions imports
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -23,10 +25,10 @@ const LoginPage = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    setRegisteredSuccess(false); // Clear success message on new login attempt
+    setRegisteredSuccess(false);
 
     const result = await signIn('credentials', {
-      redirect: false,
+      redirect: false, // Keep redirect: false to handle redirection manually
       email,
       password,
     });
@@ -34,12 +36,15 @@ const LoginPage = () => {
     setLoading(false);
 
     if (result?.ok) {
-      // Fetch session to get user role
+      // Manually fetch session to get user role
       const session = await getSession();
       if (session?.user?.role === 'ADMIN') {
         router.push('/admin/dashboard');
-      } else {
+      } else if (session?.user?.role === 'AGENCY_OWNER' || session?.user?.role === 'AGENCY_MEMBER' || session?.user?.role === 'AGENCY_SUPER_AGENT') {
         router.push('/agency/dashboard');
+      } else {
+        // Default redirect or error handling
+        router.push('/'); 
       }
     } else {
       setError(result?.error || 'Email ou mot de passe invalide');
@@ -79,8 +84,16 @@ const LoginPage = () => {
             <Button variant="primary" type="submit" className="w-100" disabled={loading}>
               {loading ? 'Connexion en cours...' : 'Se connecter'}
             </Button>
+            <hr className="my-4" />
+            <Button
+              variant="outline-secondary"
+              className="w-100"
+              onClick={() => signIn('google')}
+            >
+              Se connecter avec Google
+            </Button>
             <p className="text-center mt-3">
-              Pas encore de compte ? <a href="/register">Inscrivez-vous ici</a>
+              Pas encore de compte ? <Link href="/register">Inscrivez-vous ici</Link>
             </p>
           </Form>
         </Card.Body>
@@ -88,5 +101,7 @@ const LoginPage = () => {
     </Container>
   );
 };
+
+// Removed getServerSideProps function
 
 export default LoginPage;
