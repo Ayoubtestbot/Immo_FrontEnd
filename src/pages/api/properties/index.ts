@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
 import fetch from 'node-fetch';
 import type { Prisma } from '@prisma/client'; // New import
+import { isTrialActive } from '@/lib/subscription';
 
 export default async function handler(
   req: NextApiRequest,
@@ -16,6 +17,11 @@ export default async function handler(
   }
 
   if (req.method === 'POST') {
+    const trialActive = await isTrialActive(session.user.agencyId);
+    if (!trialActive) {
+      return res.status(403).json({ error: 'Your free trial has expired. Please upgrade your plan to add new properties.' });
+    }
+
     const { address, city, zipCode, country, type, price, status, description, images } = req.body;
 
     if (!address || !city || !zipCode || !country || !type || price === undefined || !status) {

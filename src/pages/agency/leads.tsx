@@ -16,6 +16,7 @@ import { LeadStatus, UserRole } from '@prisma/client'; // Added UserRole
 import { Table, Button, Alert, Form, Row, Col, Dropdown } from 'react-bootstrap';
 import { leadStatusTranslations, getTranslatedLeadStatus, leadStatusColors } from '@/utils/leadStatusTranslations';
 import useDebounce from '@/hooks/useDebounce'; // New import
+import { isTrialActive } from '@/lib/subscription';
 
 type LeadWithAssignedTo = Lead & {
   assignedTo: User | null;
@@ -31,9 +32,10 @@ type LeadsPageProps = {
   currentStatus: LeadStatus | 'ALL';
   filterName: string;
   filterAgentId: string;
+  isTrialActive: boolean;
 };
 
-const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initialFilterName, filterAgentId: initialFilterAgentId }: LeadsPageProps) => {
+const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initialFilterName, filterAgentId: initialFilterAgentId, isTrialActive }: LeadsPageProps) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showAddNoteModal, setShowAddNoteModal] = useState(false);
@@ -142,13 +144,18 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
 
   return (
     <DashboardLayout>
+      {!isTrialActive && (
+        <Alert variant="warning">
+          Votre période d\'essai a expiré. Vous ne pouvez plus ajouter de nouveaux prospects. Veuillez mettre à niveau votre plan pour continuer.
+        </Alert>
+      )}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1>Gestion des prospects</h1>
         <div>
-          <Button variant="primary" onClick={() => setShowAddModal(true)} className="me-2">
+          <Button variant="primary" onClick={() => setShowAddModal(true)} className="me-2" disabled={!isTrialActive}>
             Ajouter un prospect
           </Button>
-          <Button variant="secondary" onClick={() => setShowImportModal(true)}>
+          <Button variant="secondary" onClick={() => setShowImportModal(true)} disabled={!isTrialActive}>
             Importer des prospects
           </Button>
         </div>
@@ -213,7 +220,7 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
           <tbody>
             {leads.map((lead) => {
               return (
-                <tr key={lead.id}>
+                <tr key={lead.id} className={!isTrialActive ? 'text-muted' : ''}>
                   <td>{`${lead.firstName} ${lead.lastName}`}</td>
                   <td>{lead.email}</td>
                   <td>{lead.phone || '-'}</td>
@@ -323,7 +330,7 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
     whereClause.assignedToId = session.user.id;
   }
 
-  const [leads, agents, properties] = await Promise.all([
+  const [leads, agents, properties, trialIsActive] = await Promise.all([
     prisma.lead.findMany({
       where: whereClause,
       include: {
@@ -357,6 +364,7 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
         agencyId: session.user.agencyId,
       },
     }),
+    isTrialActive(session.user.agencyId),
   ]);
 
   return {
@@ -367,6 +375,7 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
       currentStatus,
       filterName,
       filterAgentId,
+      isTrialActive: trialIsActive,
     },
   };
 }, ['AGENCY_OWNER', 'AGENCY_MEMBER', 'AGENCY_SUPER_AGENT']); // All agency roles can access this page

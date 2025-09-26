@@ -54,7 +54,7 @@ export default async function handler(
 
         // Create a subscription for the free trial plan
         const subscriptionEndDate = new Date();
-        subscriptionEndDate.setMonth(subscriptionEndDate.getMonth() + 1); // 1 month free trial
+        subscriptionEndDate.setDate(subscriptionEndDate.getDate() + 14); // 14 days free trial
 
         await prisma.subscription.create({
           data: {

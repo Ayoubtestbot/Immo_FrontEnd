@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
 import { hash } from 'bcrypt';
 import { UserRole } from '@prisma/client';
+import { isTrialActive } from '@/lib/subscription';
 
 export default async function handler(
   req: NextApiRequest,
@@ -16,6 +17,11 @@ export default async function handler(
   }
 
   if (req.method === 'POST') {
+    const trialActive = await isTrialActive(session.user.agencyId);
+    if (!trialActive) {
+      return res.status(403).json({ error: 'Your free trial has expired. Please upgrade your plan to add new users.' });
+    }
+
     const { name, email, password, role } = req.body;
 
     if (!name || !email || !password || !role) {

@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
+import { isTrialActive } from '@/lib/subscription';
 
 export default async function handler(
   req: NextApiRequest,
@@ -36,6 +37,11 @@ export default async function handler(
     }
   } else if (req.method === 'POST') {
     try {
+      const trialActive = await isTrialActive(agencyId);
+      if (!trialActive) {
+        return res.status(403).json({ error: 'Your free trial has expired. Please upgrade your plan to add new leads.' });
+      }
+
       const { firstName, lastName, email, phone } = req.body;
 
       if (!firstName || !lastName || !phone) { // Updated validation

@@ -10,6 +10,7 @@ import CustomDropdownMenu from '@/components/CustomDropdownMenu';
 import AddUserModal from '@/components/AddUserModal';
 import EditUserModal from '@/components/EditUserModal'; // New import
 import { getTranslatedUserRole } from '@/utils/userRoleTranslations'; // New import
+import { isTrialActive } from '@/lib/subscription';
 
 type UserWithAgency = User & {
   agency: { name: string } | null;
@@ -18,9 +19,10 @@ type UserWithAgency = User & {
 type UsersPageProps = {
   users: UserWithAgency[];
   agencyName: string;
+  isTrialActive: boolean;
 };
 
-const UsersPage = ({ users, agencyName }: UsersPageProps) => {
+const UsersPage = ({ users, agencyName, isTrialActive }: UsersPageProps) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -54,9 +56,14 @@ const UsersPage = ({ users, agencyName }: UsersPageProps) => {
 
   return (
     <DashboardLayout>
+      {!isTrialActive && (
+        <Alert variant="warning">
+          Votre période d\'essai a expiré. Vous ne pouvez plus ajouter de nouveaux membres. Veuillez mettre à niveau votre plan pour continuer.
+        </Alert>
+      )}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1>Membres de l'équipe ({agencyName})</h1>
-        <Button variant="primary" onClick={() => setShowAddModal(true)}>
+        <Button variant="primary" onClick={() => setShowAddModal(true)} disabled={!isTrialActive}>
           Ajouter un membre
         </Button>
       </div>
@@ -122,7 +129,7 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
     };
   }
 
-  const [users, agency] = await Promise.all([
+  const [users, agency, trialIsActive] = await Promise.all([
     prisma.user.findMany({
       where: {
         agencyId: agencyId,
@@ -141,6 +148,7 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
       where: { id: agencyId },
       select: { name: true },
     }),
+    isTrialActive(agencyId),
   ]);
 
   if (!agency) {
@@ -156,6 +164,7 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
     props: {
       users: JSON.parse(JSON.stringify(users)),
       agencyName: agency.name,
+      isTrialActive: trialIsActive,
     },
   };
 }, ['AGENCY_OWNER']); // Only AGENCY_OWNER can manage users

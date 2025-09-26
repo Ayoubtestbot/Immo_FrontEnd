@@ -14,6 +14,7 @@ import { useRouter } from 'next/router';
 import DynamicMap from '@/components/DynamicMap';
 import CustomDropdownMenu from '@/components/CustomDropdownMenu';
 import useDebounce from '@/hooks/useDebounce'; // New import
+import { isTrialActive } from '@/lib/subscription';
 
 type PropertyWithDetails = Property & {
   images: Image[];
@@ -28,9 +29,10 @@ type PropertiesPageProps = {
   filterType: PropertyType | 'ALL';
   filterMinPrice: string;
   filterMaxPrice: string;
+  isTrialActive: boolean;
 };
 
-const PropertiesPage = ({ properties, leads, filterPropertyNumber: initialFilterPropertyNumber, filterCity: initialFilterCity, filterType: initialFilterType, filterMinPrice: initialFilterMinPrice, filterMaxPrice: initialFilterMaxPrice }: PropertiesPageProps) => {
+const PropertiesPage = ({ properties, leads, filterPropertyNumber: initialFilterPropertyNumber, filterCity: initialFilterCity, filterType: initialFilterType, filterMinPrice: initialFilterMinPrice, filterMaxPrice: initialFilterMaxPrice, isTrialActive }: PropertiesPageProps) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -123,9 +125,14 @@ const PropertiesPage = ({ properties, leads, filterPropertyNumber: initialFilter
 
   return (
     <DashboardLayout>
+      {!isTrialActive && (
+        <Alert variant="warning">
+          Votre période d\'essai a expiré. Vous ne pouvez plus ajouter de nouvelles propriétés. Veuillez mettre à niveau votre plan pour continuer.
+        </Alert>
+      )}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1>Gestion des propriétés</h1>
-        <Button variant="primary" onClick={() => setShowAddModal(true)}>
+        <Button variant="primary" onClick={() => setShowAddModal(true)} disabled={!isTrialActive}>
           Ajouter une propriété
         </Button>
       </div>
@@ -208,7 +215,7 @@ const PropertiesPage = ({ properties, leads, filterPropertyNumber: initialFilter
         </thead>
         <tbody>
           {properties.map((property) => (
-            <tr key={property.id}>
+            <tr key={property.id} className={!isTrialActive ? 'text-muted' : ''}>
               <td>{`PR${String(property.propertyNumber).padStart(6, '0')}`}</td>
               <td>{property.address}</td>
               <td>{property.city}</td>
@@ -307,7 +314,7 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
     whereClause.price = { ...(whereClause.price || {}), lte: filterMaxPrice };
   }
 
-  const [properties, leads] = await Promise.all([
+  const [properties, leads, trialIsActive] = await Promise.all([
     prisma.property.findMany({
       where: whereClause,
       select: {
@@ -338,6 +345,7 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
         agencyId: session.user.agencyId,
       },
     }),
+    isTrialActive(session.user.agencyId),
   ]);
 
   return {
@@ -349,6 +357,7 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
       filterType,
       filterMinPrice: filterMinPrice || '',
       filterMaxPrice: filterMaxPrice || '',
+      isTrialActive: trialIsActive,
     },
   };
 }, ['AGENCY_OWNER', 'AGENCY_MEMBER']);
