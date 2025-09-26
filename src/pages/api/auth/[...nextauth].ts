@@ -4,6 +4,7 @@ import GoogleProvider from 'next-auth/providers/google';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { prisma } from '@/lib/prisma';
 import { compare } from 'bcrypt';
+import admin from '@/lib/firebase-admin';
 
 // Extend the user and session types to include our custom fields
 declare module 'next-auth' {
@@ -64,40 +65,54 @@ export const authOptions: NextAuthOptions = {
         };
       },
     }),
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID as string,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-      allowDangerousEmailAccountLinking: true,
+    CredentialsProvider({
+      id: 'firebase',
+      name: 'Firebase',
+      credentials: {
+        idToken: { label: "ID Token", type: "text" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.idToken) {
+          return null;
+        }
+
+        try {
+          const decodedToken = await admin.auth().verifyIdToken(credentials.idToken);
+          const { email, name, picture } = decodedToken;
+
+          if (!email) {
+            return null;
+          }
+
+          let user = await prisma.user.findUnique({
+            where: { email },
+          });
+
+          if (!user) {
+            user = await prisma.user.create({
+              data: {
+                email,
+                name,
+                image: picture,
+              },
+            });
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            agencyId: user.agencyId,
+          };
+        } catch (error) {
+          console.error("Firebase auth error", error);
+          return null;
+        }
+      },
     }),
   ],
   callbacks: {
-    async signIn({ user, account }) {
-      if (account?.provider === "google") {
-        if (!user.email) {
-          return false;
-        }
-        try {
-          const userExists = await prisma.user.findUnique({
-            where: { email: user.email },
-          });
-          if (userExists) {
-            return true;
-          } else {
-            await prisma.user.create({
-              data: {
-                name: user.name,
-                email: user.email,
-                image: user.image,
-              },
-            });
-            return true;
-          }
-        } catch (error) {
-          return false;
-        }
-      }
-      return true;
-    },
     session({ session, token }) {
       if (token && session.user) {
         session.user.role = token.role as string;

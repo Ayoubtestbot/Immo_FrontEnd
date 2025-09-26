@@ -208,6 +208,7 @@ model Plan {
   id          String   @id @default(cuid())
   name        String   @unique
   price       Float
+  yearlyPrice Float? // New field for yearly pricing
   prospectsLimit Int
   usersLimit  Int      @default(5) // New field
   features    String

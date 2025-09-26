@@ -15,9 +15,27 @@ const PricingSection = ({ plans }: PricingSectionProps) => {
   const { data: session } = useSession();
   const [showPayPalModal, setShowPayPalModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+  const [isYearly, setIsYearly] = useState(false);
 
   const freeTrialPlan = plans.find(p => p.name === 'Free Trial');
   const mainPlans = plans.filter(p => p.name !== 'Free Trial');
+
+  const getDisplayedPrice = (plan: Plan) => {
+    if (isYearly) {
+      switch (plan.name) {
+        case 'Starter':
+          return { price: 4990, period: '/an' };
+        case 'Pro':
+          return { price: 7990, period: '/an' };
+        case 'Entreprise':
+          return { price: 19900, period: '/an' };
+        default:
+          return { price: plan.price, period: '/mois' }; // Fallback to monthly if yearly not defined
+      }
+    } else {
+      return { price: plan.price, period: '/mois' };
+    }
+  };
 
   // Manually sort mainPlans
   mainPlans.sort((a, b) => {
@@ -61,6 +79,23 @@ const PricingSection = ({ plans }: PricingSectionProps) => {
           <p className="lead text-muted">Choisissez le plan qui correspond à vos ambitions.</p>
         </div>
 
+        <div className="d-flex justify-content-center mb-4">
+          <div className="btn-group" role="group">
+            <Button
+              variant={!isYearly ? 'primary' : 'outline-primary'}
+              onClick={() => setIsYearly(false)}
+            >
+              Mensuel
+            </Button>
+            <Button
+              variant={isYearly ? 'primary' : 'outline-primary'}
+              onClick={() => setIsYearly(true)}
+            >
+              Annuel
+            </Button>
+          </div>
+        </div>
+
         {/* Free Trial Plan (Horizontal) */}
         {freeTrialPlan && (
           <Row className="justify-content-center mb-5">
@@ -71,7 +106,7 @@ const PricingSection = ({ plans }: PricingSectionProps) => {
                   <h4 className="my-0 fw-normal">{freeTrialPlan.name}</h4>
                   <hr />
                   <h1 className="card-title pricing-card-title">
-                    {freeTrialPlan.price} MAD<small className="text-muted">/mois</small>
+                    {getDisplayedPrice(freeTrialPlan).price} MAD<small className="text-muted">{getDisplayedPrice(freeTrialPlan).period}</small>
                   </h1>
                   <ul className="list-unstyled mt-3 mb-4">
                     {freeTrialPlan.features.split(',').map((feature, fIndex) => (
@@ -101,7 +136,7 @@ const PricingSection = ({ plans }: PricingSectionProps) => {
                   <h4 className="my-0 fw-normal">{plan.name}</h4>
                   <hr className={plan.name.toLowerCase() === 'pro' ? 'text-white-50' : ''} />
                   <h1 className="card-title pricing-card-title">
-                    {plan.price} MAD<small className={plan.name.toLowerCase() === 'pro' ? 'text-white-50' : 'text-muted'}>/mois</small>
+                    {getDisplayedPrice(plan).price} MAD<small className={plan.name.toLowerCase() === 'pro' ? 'text-white-50' : 'text-muted'}>{getDisplayedPrice(plan).period}</small>
                   </h1>
                   <ul className="list-unstyled mt-3 mb-4">
                     {plan.features.split(',').map((feature, fIndex) => (
@@ -130,7 +165,7 @@ const PricingSection = ({ plans }: PricingSectionProps) => {
         <Modal.Body>
           {selectedPlan && (
             <div className="text-center">
-              <h4>Vous êtes sur le point de vous abonner au plan {selectedPlan.name} pour {selectedPlan.price} MAD</h4>
+              <h4>Vous êtes sur le point de vous abonner au plan {selectedPlan.name} pour {getDisplayedPrice(selectedPlan).price} MAD</h4>
               <p>Cliquez sur le bouton PayPal ci-dessous pour finaliser votre paiement.</p>
               <PayPalButtons
                 style={{ layout: 'vertical' }}

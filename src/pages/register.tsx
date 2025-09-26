@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-import { signIn } from 'next-auth/react';
+import { signIn, getSession } from 'next-auth/react';
+import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import { Container, Form, Button, Card, Alert, Row, Col } from 'react-bootstrap';
 import Link from 'next/link';
 
@@ -12,6 +14,28 @@ const RegisterPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  const handleGoogleSignUp = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const idToken = await result.user.getIdToken();
+      
+      const res = await signIn('firebase', { idToken, redirect: false });
+
+      if (res?.ok) {
+        const session = await getSession();
+        if (session?.user) {
+          router.push(`/onboarding/new-agency?name=${session.user.name}&email=${session.user.email}`);
+        }
+      } else {
+        setError(res?.error || 'Firebase sign-up failed');
+      }
+    } catch (error) {
+      console.error("Google sign-up error", error);
+      setError('An error occurred during Google sign-up.');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,7 +92,7 @@ const RegisterPage = () => {
             <Button
               variant="outline-secondary"
               className="w-100"
-              onClick={() => signIn('google')}
+              onClick={handleGoogleSignUp}
             >
               S'inscrire avec Google
             </Button>

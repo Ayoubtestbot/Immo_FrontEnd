@@ -3,10 +3,13 @@
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
   "/register": "pages/register.js",
-  "/": "pages/index.js",
   "/login": "pages/login.js",
   "/api/auth/[...nextauth]": "pages/api/auth/[...nextauth].js",
+  "/onboarding/new-agency": "pages/onboarding/new-agency.js",
+  "/api/onboarding/new-agency": "pages/api/onboarding/new-agency.js",
+  "/agency/dashboard": "pages/agency/dashboard.js",
+  "/agency/settings": "pages/agency/settings.js",
+  "/": "pages/index.js",
   "/admin/dashboard": "pages/admin/dashboard.js",
-  "/admin/plans": "pages/admin/plans.js",
-  "/admin/subscriptions": "pages/admin/subscriptions.js"
+  "/admin/agencies": "pages/admin/agencies.js"
 }
