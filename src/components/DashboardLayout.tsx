@@ -1,51 +1,94 @@
-import React from 'react';
-import { FaTachometerAlt, FaUsers, FaBuilding, FaTicketAlt, FaCog } from 'react-icons/fa'; // Added FaCog
+import React, { useState } from 'react';
+import { FiGrid, FiUsers, FiArchive, FiTag, FiSettings, FiLogOut, FiUser, FiMenu } from 'react-icons/fi';
 import Link from 'next/link';
 import { signOut, useSession } from 'next-auth/react';
-import styles from '@/styles/Agency.module.css';
-import { Button } from 'react-bootstrap';
+
+import { Dropdown, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { UserRole } from '@prisma/client';
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const { data: session } = useSession();
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  const toggleSidebar = () => {
+    setIsSidebarCollapsed(!isSidebarCollapsed);
+  };
+
+  const renderTooltip = (text: string) => (
+    <Tooltip id={`tooltip-${text}`}>{text}</Tooltip>
+  );
 
   return (
-    <div className={`${styles.layout} d-flex`}>
-      <div className={styles.sidebar}>
-        <h4 className="mb-4">LeadEstate</h4>
-        <nav className="flex-column">
-          <Link href="/agency/dashboard" className={styles.sidebarLink}>
-              <FaTachometerAlt /> Tableau de bord
-          </Link>
-          <Link href="/agency/leads" className={styles.sidebarLink}>
-              <FaUsers /> Prospects
-          </Link>
-          <Link href="/agency/properties" className={styles.sidebarLink}>
-              <FaBuilding /> Propriétés
-          </Link>
-          <Link href="/agency/tickets" className={styles.sidebarLink}>
-              <FaTicketAlt /> Tickets
-          </Link>
+    <div className={`dashboard-container ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+      <div className='sidebar'>
+        <div className="sidebar-header">
+          <h4 className="full-logo">LeadEstate</h4>
+          <button onClick={toggleSidebar} className="sidebar-toggle">
+            <FiMenu />
+          </button>
+        </div>
+        <nav className="sidebar-nav">
+          <OverlayTrigger placement="right" overlay={isSidebarCollapsed ? renderTooltip('Tableau de bord') : <></>}>
+            <Link href="/agency/dashboard" className="sidebar-link">
+              <FiGrid /> <span>Tableau de bord</span>
+            </Link>
+          </OverlayTrigger>
+          <OverlayTrigger placement="right" overlay={isSidebarCollapsed ? renderTooltip('Prospects') : <></>}>
+            <Link href="/agency/leads" className="sidebar-link">
+              <FiUsers /> <span>Prospects</span>
+            </Link>
+          </OverlayTrigger>
+          <OverlayTrigger placement="right" overlay={isSidebarCollapsed ? renderTooltip('Propriétés') : <></>}>
+            <Link href="/agency/properties" className="sidebar-link">
+              <FiArchive /> <span>Propriétés</span>
+            </Link>
+          </OverlayTrigger>
+          <OverlayTrigger placement="right" overlay={isSidebarCollapsed ? renderTooltip('Tickets') : <></>}>
+            <Link href="/agency/tickets" className="sidebar-link">
+              <FiTag /> <span>Tickets</span>
+            </Link>
+          </OverlayTrigger>
           {session?.user?.role === UserRole.AGENCY_OWNER && (
             <>
-              <Link href="/agency/users" className={styles.sidebarLink}>
-                  <FaUsers /> Membres de l'équipe
-              </Link>
-              <Link href="/agency/settings" className={styles.sidebarLink}> {/* New link */}
-                  <FaCog /> Paramètres
-              </Link>
+              <OverlayTrigger placement="right" overlay={isSidebarCollapsed ? renderTooltip('Équipe') : <></>}>
+                <Link href="/agency/users" className="sidebar-link">
+                  <FiUsers /> <span>Équipe</span>
+                </Link>
+              </OverlayTrigger>
+              <OverlayTrigger placement="right" overlay={isSidebarCollapsed ? renderTooltip('Paramètres') : <></>}>
+                <Link href="/agency/settings" className="sidebar-link">
+                  <FiSettings /> <span>Paramètres</span>
+                </Link>
+              </OverlayTrigger>
             </>
           )}
         </nav>
-        <div className="mt-auto">
-          <Button variant="outline-primary" className="w-100" onClick={() => signOut({ callbackUrl: '/' })}>
-            Déconnexion
-          </Button>
+        <div className="sidebar-footer">
+          <Dropdown drop="up">
+            <Dropdown.Toggle variant="transparent" id="dropdown-user" className="user-menu">
+                <FiUser size={24} />
+                <span className="ms-2">{session?.user?.name}</span>
+            </Dropdown.Toggle>
+            <Dropdown.Menu>
+              <Dropdown.Item onClick={() => signOut({ callbackUrl: '/' })}>
+                <FiLogOut className="me-2" />
+                Déconnexion
+              </Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown>
         </div>
       </div>
-      <main className={`${styles.content} flex-grow-1`}>
-        {children}
-      </main>
+      <div className="main-content">
+        <div className="header">
+          <button onClick={toggleSidebar} className="sidebar-mobile-toggle">
+            <FiMenu />
+          </button>
+          {/* Header content can go here, like a search bar */}
+        </div>
+        <main className="p-4">
+          {children}
+        </main>
+      </div>
     </div>
   );
 };

@@ -62,13 +62,14 @@ const UsersPage = ({ users, agencyName, isTrialActive }: UsersPageProps) => {
         </Alert>
       )}
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1>Membres de l'équipe ({agencyName})</h1>
-        <Button variant="primary" onClick={() => setShowAddModal(true)} disabled={!isTrialActive}>
+        <h1 className="h2">Membres de l'équipe ({agencyName})</h1>
+        <Button onClick={() => setShowAddModal(true)} className="btn-primary" disabled={!isTrialActive}>
           Ajouter un membre
         </Button>
       </div>
 
-      <Table striped bordered hover responsive>
+      <div className="card">
+        <Table hover responsive>
         <thead>
           <tr>
             <th>Nom</th>
@@ -85,19 +86,19 @@ const UsersPage = ({ users, agencyName, isTrialActive }: UsersPageProps) => {
               <td>{getTranslatedUserRole(user.role)}</td>
               <td>
                 <Dropdown align="end" popperConfig={{ strategy: 'fixed' }}>
-                  <Dropdown.Toggle variant="outline-secondary" size="sm">
-                    Actions
-                  </Dropdown.Toggle>
-                  <CustomDropdownMenu className="dropdown-menu-fix">
-                    <Dropdown.Item onClick={() => handleOpenEditModal(user)}>Modifier</Dropdown.Item>
-                    <Dropdown.Item className="text-danger" onClick={() => handleDeleteUser(user.id)}>Supprimer</Dropdown.Item>
-                  </CustomDropdownMenu>
-                </Dropdown>
+                                      <Dropdown.Toggle variant="outline-secondary" size="sm">
+                                        Actions
+                                      </Dropdown.Toggle>
+                                      <CustomDropdownMenu className="dropdown-menu-fix">
+                                        <Dropdown.Item onClick={() => handleOpenEditModal(user)}>Modifier</Dropdown.Item>
+                                        <Dropdown.Item variant="danger" onClick={() => handleDeleteUser(user.id)}>Supprimer</Dropdown.Item>
+                                      </CustomDropdownMenu>                </Dropdown>
               </td>
             </tr>
           ))}
         </tbody>
       </Table>
+      </div>
 
       <AddUserModal
         show={showAddModal}

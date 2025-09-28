@@ -5,10 +5,9 @@ import AdminDashboardLayout from '@/components/AdminDashboardLayout';
 import { UserRole } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import type { Plan } from '@prisma/client';
-import { Table, Button, Alert, Modal, Form } from 'react-bootstrap';
+import { Modal, Form, Button, Alert } from 'react-bootstrap';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 
 type PlansPageProps = {
   plans: Plan[];
@@ -25,8 +24,6 @@ const AdminPlansPage = ({ plans }: PlansPageProps) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showPayPalModal, setShowPayPalModal] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const router = useRouter();
 
   const filteredPlans = plans.filter((plan) =>
@@ -109,22 +106,22 @@ const AdminPlansPage = ({ plans }: PlansPageProps) => {
 
   return (
     <AdminDashboardLayout>
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="header">
         <h1>Gestion des Plans</h1>
-        <Button variant="primary" onClick={handleShowAddModal}>Ajouter un Plan</Button>
+        <button className="primary-action-button" onClick={handleShowAddModal}>Ajouter un Plan</button>
       </div>
 
-      <Form.Group className="mb-3">
-        <Form.Control
+      <div className="content-card">
+        <input
           type="text"
           placeholder="Rechercher un plan..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          className="mb-3"
         />
-      </Form.Group>
 
-      {filteredPlans.length > 0 ? (
-        <Table striped bordered hover responsive>
+        {filteredPlans.length > 0 ? (
+        <table className="data-table">
           <thead>
             <tr>
               <th>#</th>
@@ -132,8 +129,7 @@ const AdminPlansPage = ({ plans }: PlansPageProps) => {
               <th>Prix</th>
               <th>Limite Prospects</th>
               <th>Fonctionnalités</th>
-              <th>Actions</th>
-              <th>Paiement</th>
+              <th className="action-cell">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -143,24 +139,25 @@ const AdminPlansPage = ({ plans }: PlansPageProps) => {
                 <td>{plan.name}</td>
                 <td>{plan.price} MAD</td>
                 <td>{plan.prospectsLimit === -1 ? 'Illimité' : plan.prospectsLimit}</td>
-                <td>{plan.features}</td>
                 <td>
-                  <Button variant="outline-primary" size="sm" className="me-2" onClick={() => handleShowEditModal(plan)}>Modifier</Button>
-                  <Button variant="outline-danger" size="sm" onClick={() => handleDelete(plan.id)}>Supprimer</Button>
+                  <ul className="list-unstyled">
+                    {plan.features.split(',').map((feature, i) => (
+                      <li key={i}>{feature.trim()}</li>
+                    ))}
+                  </ul>
                 </td>
-                <td>
-                  <Button variant="success" size="sm" onClick={() => {
-                    setSelectedPlan(plan);
-                    setShowPayPalModal(true);
-                  }}>S'abonner</Button>
+                <td className="action-cell">
+                  <button className="secondary-action-button me-2" onClick={() => handleShowEditModal(plan)}>Modifier</button>
+                  <button className="secondary-action-button" onClick={() => handleDelete(plan.id)}>Supprimer</button>
                 </td>
               </tr>
             ))}
           </tbody>
-        </Table>
+        </table>
       ) : (
-        <Alert variant="info">Aucun plan trouvé. Ajoutez-en un pour commencer !</Alert>
+        <div className="alert alert-info">Aucun plan trouvé. Ajoutez-en un pour commencer !</div>
       )}
+      </div>
 
       {/* Add/Edit Plan Modal */}
       <Modal show={showAddModal || showEditModal} onHide={handleClose} centered>
@@ -188,55 +185,11 @@ const AdminPlansPage = ({ plans }: PlansPageProps) => {
             </Form.Group>
             <div className="d-flex justify-content-end mt-4">
               <Button variant="secondary" onClick={handleClose} className="me-2">Annuler</Button>
-              <Button variant="primary" type="submit" disabled={loading}>
+              <Button type="submit" disabled={loading} variant="primary">
                 {loading ? 'Enregistrement...' : currentPlan ? 'Mettre à jour' : 'Ajouter'}
               </Button>
             </div>
           </Form>
-        </Modal.Body>
-      </Modal>
-
-      {/* PayPal Payment Modal */}
-      <Modal show={showPayPalModal} onHide={() => setShowPayPalModal(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Payer l'abonnement</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {selectedPlan && (
-            <div className="text-center">
-              <h4>Vous êtes sur le point de vous abonner au plan {selectedPlan.name} pour {selectedPlan.price} MAD</h4>
-              <p>Cliquez sur le bouton PayPal ci-dessous pour finaliser votre paiement.</p>
-              <PayPalButtons
-                style={{ layout: 'vertical' }}
-                createOrder={async (data, actions) => {
-                  const res = await fetch('/api/paypal/create-order', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ amount: selectedPlan.price }),
-                  });
-                  const order = await res.json();
-                  return order.id;
-                }}
-                onApprove={async (data, actions) => {
-                  const res = await fetch('/api/paypal/capture-order', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ orderID: data.orderID }),
-                  });
-                  const capture = await res.json();
-                  console.log('Capture result:', capture);
-                  alert('Paiement réussi !');
-                  setShowPayPalModal(false);
-                  handleRefresh();
-                }}
-                onCancel={() => alert('Paiement annulé.')}
-                onError={(err) => {
-                  console.error('PayPal Error:', err);
-                  alert('Une erreur est survenue lors du paiement PayPal.');
-                }}
-              />
-            </div>
-          )}
         </Modal.Body>
       </Modal>
     </AdminDashboardLayout>

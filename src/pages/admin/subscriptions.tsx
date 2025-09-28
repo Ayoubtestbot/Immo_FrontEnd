@@ -5,7 +5,7 @@ import AdminDashboardLayout from '@/components/AdminDashboardLayout';
 import { UserRole } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import type { Subscription, Agency, Plan } from '@prisma/client';
-import { Table, Button, Alert, Modal, Form } from 'react-bootstrap';
+import { Modal, Form, Button, Alert } from 'react-bootstrap';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 
@@ -115,21 +115,21 @@ const AdminSubscriptionsPage = ({ subscriptions, plans }: AdminSubscriptionsPage
 
   return (
     <AdminDashboardLayout>
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="header">
         <h1>Gestion des Abonnements</h1>
       </div>
 
-      <Form.Group className="mb-3">
-        <Form.Control
+      <div className="content-card">
+        <input
           type="text"
           placeholder="Rechercher par agence ou plan..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          className="mb-3"
         />
-      </Form.Group>
 
-      {filteredSubscriptions.length > 0 ? (
-        <Table striped bordered hover responsive>
+        {filteredSubscriptions.length > 0 ? (
+        <table className="data-table">
           <thead>
             <tr>
               <th>#</th>
@@ -138,7 +138,7 @@ const AdminSubscriptionsPage = ({ subscriptions, plans }: AdminSubscriptionsPage
               <th>Statut</th>
               <th>Début</th>
               <th>Fin</th>
-              <th>Actions</th>
+              <th className="action-cell">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -150,17 +150,19 @@ const AdminSubscriptionsPage = ({ subscriptions, plans }: AdminSubscriptionsPage
                 <td>{sub.status}</td>
                 <td>{new Date(sub.startDate).toLocaleDateString()}</td>
                 <td>{sub.endDate ? new Date(sub.endDate).toLocaleDateString() : 'N/A'}</td>
-                <td>
-                  <Button variant="outline-primary" size="sm" className="me-2" onClick={() => handleShowEditModal(sub)}>Modifier</Button>
-                  <Button variant="outline-danger" size="sm" onClick={() => handleDelete(sub.id)}>Supprimer</Button>
+                <td className="action-cell">
+                  <button className="secondary-action-button me-2" onClick={() => handleShowEditModal(sub)}>Modifier</button>
+                  <button className="secondary-action-button" onClick={() => handleDelete(sub.id)}>Supprimer</button>
                 </td>
               </tr>
             ))}
           </tbody>
-        </Table>
+        </table>
       ) : (
-        <Alert variant="info">Aucun abonnement trouvé.</Alert>
+        <div className="alert alert-info">Aucun abonnement trouvé.</div>
       )}
+      </div>
+
       {/* Edit Subscription Modal */}
       <Modal show={showEditModal} onHide={handleClose} centered>
         <Modal.Header closeButton>
@@ -191,7 +193,7 @@ const AdminSubscriptionsPage = ({ subscriptions, plans }: AdminSubscriptionsPage
             </Form.Group>
             <div className="d-flex justify-content-end mt-4">
               <Button variant="secondary" onClick={handleClose} className="me-2">Annuler</Button>
-              <Button variant="primary" type="submit" disabled={loading}>
+              <Button type="submit" disabled={loading} variant="primary">
                 {loading ? 'Enregistrement...' : 'Mettre à jour'}
               </Button>
             </div>

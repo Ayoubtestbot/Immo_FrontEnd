@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Card, Button, Modal } from 'react-bootstrap';
-import { FaFeatherAlt, FaCrown, FaBuilding, FaGift, FaRocket } from 'react-icons/fa'; // Added FaGift, FaRocket
+import { FaFeatherAlt, FaCrown, FaBuilding, FaGift, FaRocket } from 'react-icons/fa';
 import type { Plan } from '@prisma/client';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
-import { PayPalButtons } from '@paypal/react-paypal-js'; // Assuming this is imported from somewhere
+import { PayPalButtons } from '@paypal/react-paypal-js';
+import styles from '@/styles/Landing.module.css';
 
 type PricingSectionProps = {
   plans: Plan[];
@@ -30,14 +30,13 @@ const PricingSection = ({ plans }: PricingSectionProps) => {
         case 'Entreprise':
           return { price: 19900, period: '/an' };
         default:
-          return { price: plan.price, period: '/mois' }; // Fallback to monthly if yearly not defined
+          return { price: plan.price, period: '/mois' };
       }
     } else {
       return { price: plan.price, period: '/mois' };
     }
   };
 
-  // Manually sort mainPlans
   mainPlans.sort((a, b) => {
     const order = ['Starter', 'Pro', 'Entreprise'];
     return order.indexOf(a.name) - order.indexOf(b.name);
@@ -45,9 +44,8 @@ const PricingSection = ({ plans }: PricingSectionProps) => {
 
   const handleChoosePlan = (planId: string) => {
     if (!session) {
-      router.push('/register'); // Redirect to register if not logged in
+      router.push('/register');
     } else {
-      // TODO: Implement payment process for logged-in users
       const plan = plans.find(p => p.id === planId);
       if (plan) {
         setSelectedPlan(plan);
@@ -63,8 +61,8 @@ const PricingSection = ({ plans }: PricingSectionProps) => {
       case 'starter':
         return <FaFeatherAlt size={30} className="mb-3" />;
       case 'pro':
-        return <FaCrown size={30} className="mb-3 text-white" />;
-      case 'entreprise': // Changed from 'business' to 'entreprise'
+        return <FaCrown size={30} className="mb-3" />;
+      case 'entreprise':
         return <FaRocket size={30} className="mb-3" />;
       default:
         return <FaFeatherAlt size={30} className="mb-3" />;
@@ -72,135 +70,122 @@ const PricingSection = ({ plans }: PricingSectionProps) => {
   };
 
   return (
-    <div id="pricing" className="bg-light py-5">
-      <Container>
-        <div className="text-center mb-5">
-          <h2 className="fw-light">Des tarifs adaptés à chaque agence</h2>
-          <p className="lead text-muted">Choisissez le plan qui correspond à vos ambitions.</p>
-        </div>
+    <section id="pricing" className={styles.section}>
+      <h2 className={styles.sectionTitle}>Des tarifs adaptés à chaque agence</h2>
+      <p className="lead text-muted">Choisissez le plan qui correspond à vos ambitions.</p>
 
-        <div className="d-flex justify-content-center mb-4">
-          <div className="btn-group" role="group">
-            <Button
-              variant={!isYearly ? 'primary' : 'outline-primary'}
-              onClick={() => setIsYearly(false)}
-            >
-              Mensuel
-            </Button>
-            <Button
-              variant={isYearly ? 'primary' : 'outline-primary'}
-              onClick={() => setIsYearly(true)}
-            >
-              Annuel
-            </Button>
-          </div>
-        </div>
+      <div className="d-flex justify-content-center mb-4">
+          <button
+            className={!isYearly ? 'btn-primary me-2' : 'btn-outline-primary me-2'}
+            onClick={() => setIsYearly(false)}
+          >
+            Mensuel
+          </button>
+          <button
+            className={isYearly ? 'btn-primary' : 'btn-outline-primary'}
+            onClick={() => setIsYearly(true)}
+          >
+            Annuel
+          </button>
+      </div>
 
-        {/* Free Trial Plan (Horizontal) */}
+      <div className="d-flex flex-wrap justify-content-center">
         {freeTrialPlan && (
-          <Row className="justify-content-center mb-5">
-            <Col md={6}>
-              <Card className="text-center free-trial-card"> {/* Added free-trial-card class */}
-                <Card.Body className="d-flex flex-column p-4">
-                  {getPlanIcon(freeTrialPlan.name)}
-                  <h4 className="my-0 fw-normal">{freeTrialPlan.name}</h4>
-                  <hr />
-                  <h1 className="card-title pricing-card-title">
+            <div className="p-4 m-2 card" style={{ flex: '1 1 300px', maxWidth: '350px' }}>
+                {getPlanIcon(freeTrialPlan.name)}
+                <h4 className="my-0 fw-normal">{freeTrialPlan.name}</h4>
+                <hr />
+                <h1 className="card-title pricing-card-title">
                     {getDisplayedPrice(freeTrialPlan).price} MAD<small className="text-muted">{getDisplayedPrice(freeTrialPlan).period}</small>
-                  </h1>
-                  <ul className="list-unstyled mt-3 mb-4">
+                </h1>
+                <ul className="list-unstyled mt-3 mb-4">
                     {freeTrialPlan.features.split(',').map((feature, fIndex) => (
-                      <li key={fIndex} className="mb-2">{feature.trim()}</li>
+                    <li key={fIndex} className="mb-2">{feature.trim()}</li>
                     ))}
-                  </ul>
-                  <Button
-                    variant="primary"
-                    className="w-100 mt-auto"
+                </ul>
+                <button
+                    className="btn-primary w-100 mt-auto"
                     onClick={() => handleChoosePlan(freeTrialPlan.id)}
-                  >
+                >
                     Choisir ce plan
-                  </Button>
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
+                </button>
+            </div>
         )}
 
-        {/* Main Plans (Starter, Pro, Entreprise) */}
-        <Row className="justify-content-center align-items-center">
-          {mainPlans.map((plan) => (
-            <Col lg={4} md={6} className="mb-4" key={plan.id}>
-              <Card className={`h-100 text-center ${plan.name.toLowerCase() === 'pro' ? 'bg-primary text-white' : ''}`}>
-                <Card.Body className="d-flex flex-column p-4">
-                  {getPlanIcon(plan.name)}
-                  <h4 className="my-0 fw-normal">{plan.name}</h4>
-                  <hr className={plan.name.toLowerCase() === 'pro' ? 'text-white-50' : ''} />
-                  <h1 className="card-title pricing-card-title">
-                    {getDisplayedPrice(plan).price} MAD<small className={plan.name.toLowerCase() === 'pro' ? 'text-white-50' : 'text-muted'}>{getDisplayedPrice(plan).period}</small>
-                  </h1>
-                  <ul className="list-unstyled mt-3 mb-4">
+        {mainPlans.map((plan) => (
+            <div className={`p-4 m-2 card ${plan.name.toLowerCase() === 'pro' ? 'card-pro' : ''}`} style={{ flex: '1 1 300px', maxWidth: '350px' }} key={plan.id}>
+                {plan.name.toLowerCase() === 'pro' && <span className={styles.mostPopularBadge}>Most Popular</span>}
+                {getPlanIcon(plan.name)}
+                <h4 className="my-0 fw-normal">{plan.name}</h4>
+                <hr />
+                <h1 className="card-title pricing-card-title">
+                    {getDisplayedPrice(plan).price} MAD<small>{getDisplayedPrice(plan).period}</small>
+                </h1>
+                <ul className="list-unstyled mt-3 mb-4">
                     {plan.features.split(',').map((feature, fIndex) => (
-                      <li key={fIndex} className="mb-2">{feature.trim()}</li>
+                    <li key={fIndex} className="mb-2">{feature.trim()}</li>
                     ))}
-                  </ul>
-                  <Button
-                    variant={plan.name.toLowerCase() === 'pro' ? 'light' : 'primary'}
-                    className="w-100 mt-auto"
+                </ul>
+                <button
+                    className="btn-primary w-100 mt-auto"
                     onClick={() => handleChoosePlan(plan.id)}
-                  >
+                >
                     Choisir ce plan
-                  </Button>
-                </Card.Body>
-              </Card>
-            </Col>
-          ))}
-        </Row>
-      </Container>
+                </button>
+            </div>
+        ))}
+        </div>
 
       {/* PayPal Payment Modal */}
-      <Modal show={showPayPalModal} onHide={() => setShowPayPalModal(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Payer l'abonnement</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {selectedPlan && (
-            <div className="text-center">
-              <h4>Vous êtes sur le point de vous abonner au plan {selectedPlan.name} pour {getDisplayedPrice(selectedPlan).price} MAD</h4>
-              <p>Cliquez sur le bouton PayPal ci-dessous pour finaliser votre paiement.</p>
-              <PayPalButtons
-                style={{ layout: 'vertical' }}
-                createOrder={async (data, actions) => {
-                  const res = await fetch('/api/paypal/create-order', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ amount: selectedPlan.price }),
-                  });
-                  const order = await res.json();
-                  return order.id;
-                }}
-                onApprove={async (data, actions) => {
-                  const res = await fetch('/api/paypal/capture-order', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ orderID: data.orderID }),
-                  });
-                  const capture = await res.json();
-                  console.log('Capture result:', capture);
-                  alert('Paiement réussi !');
-                  setShowPayPalModal(false);
-                  // TODO: Update user's subscription in the database
-                }}
-                onCancel={() => alert('Paiement annulé.')}
-                onError={(err) => {
-                  console.error('PayPal Error:', err);
-                  alert('Une erreur est survenue lors du paiement PayPal.');
-                }}
-              />
+        {selectedPlan && showPayPalModal && (
+            <div className="modal d-block" tabIndex={-1} role="dialog">
+                <div className="modal-dialog" role="document">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h5 className="modal-title">Payer l'abonnement</h5>
+                            <button type="button" className="close" onClick={() => setShowPayPalModal(false)} aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div className="modal-body">
+                            <div className="text-center">
+                                <h4>Vous êtes sur le point de vous abonner au plan {selectedPlan.name} pour {getDisplayedPrice(selectedPlan).price} MAD</h4>
+                                <p>Cliquez sur le bouton PayPal ci-dessous pour finaliser votre paiement.</p>
+                                <PayPalButtons
+                                    style={{ layout: 'vertical' }}
+                                    createOrder={async (data, actions) => {
+                                    const res = await fetch('/api/paypal/create-order', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ amount: selectedPlan.price }),
+                                    });
+                                    const order = await res.json();
+                                    return order.id;
+                                    }}
+                                    onApprove={async (data, actions) => {
+                                    const res = await fetch('/api/paypal/capture-order', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ orderID: data.orderID }),
+                                    });
+                                    const capture = await res.json();
+                                    console.log('Capture result:', capture);
+                                    alert('Paiement réussi !');
+                                    setShowPayPalModal(false);
+                                    }}
+                                    onCancel={() => alert('Paiement annulé.')}
+                                    onError={(err) => {
+                                    console.error('PayPal Error:', err);
+                                    alert('Une erreur est survenue lors du paiement PayPal.');
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-          )}
-        </Modal.Body>
-      </Modal>
-    </div>
+        )}
+    </section>
   );
 };
 

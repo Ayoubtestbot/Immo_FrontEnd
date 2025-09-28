@@ -1,0 +1,174 @@
+
+.header {
+    background-color: #fff;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header a {
+    text-decoration: none;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.nav a {
+    margin-left: 1.5rem;
+    color: #333;
+    font-weight: 500;
+}
+
+.hero {
+    background: linear-gradient(to right, #6a11cb, #2575fc);
+    color: #fff;
+    padding: 8rem 2rem; /* Increased padding */
+    text-align: left; /* Align text to the left */
+}
+
+.heroContent {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+}
+
+.heroText {
+    flex: 1;
+}
+
+.heroImage {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.heroTitle {
+    font-size: 3rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
+.heroSubtitle {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+}
+
+.hero a {
+    text-decoration: none;
+}
+
+.equal-width-btn {
+    min-width: 220px; /* Adjust as needed */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.section {
+    padding: 4rem 2rem;
+    text-align: center;
+    background-color: #f8f9fa; /* Light grey background */
+}
+
+.aboutSection {
+    background-color: #fff; /* White background for this section */
+    padding: 6rem 2rem;
+}
+
+.valuesList {
+    list-style: none;
+    padding-left: 0;
+}
+
+.valuesList li {
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: baseline;
+    position: relative; /* For bullet point positioning */
+    padding-left: 20px; /* Space for bullet */
+}
+
+.valuesList li::before {
+    content: '\2022'; /* Unicode for a bullet point */
+    color: #6a11cb; /* Bullet color */
+    font-weight: bold;
+    position: absolute;
+    left: 0;
+}
+
+.valuesList strong {
+    /* flex: 0 0 120px; Removed fixed width */
+    /* margin-right: 0; Removed margin */
+}
+
+.valuesList span {
+    flex: 1;
+}
+
+.featureItem {
+    flex: 1 1 calc(33.33% - 40px); /* 3 items per line with spacing */
+    margin: 10px;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 280px; /* Ensure items don't get too small */
+}
+
+.sectionTitle {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 2rem;
+}
+
+.footer {
+    background-color: #333;
+    color: #fff;
+    padding: 2rem;
+    text-align: center;
+}
+
+.card-pro {
+    background-color: #6a11cb; /* A shade of purple from the gradient */
+    color: #fff;
+    border: 2px solid #6a11cb;
+    position: relative; /* Needed for absolute positioning of the badge */
+}
+
+.card-pro .text-muted {
+    color: #fff !important;
+}
+
+.mostPopularBadge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #ffc107; /* Yellow color for the badge */
+    color: #333;
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.input {
+    width: 100%;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 0.25rem;
+}
+
+a.btn-secondary {
+    text-decoration: none;
+}

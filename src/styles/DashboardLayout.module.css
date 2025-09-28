@@ -1,0 +1,115 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--background-color);
+}
+
+.sidebar {
+  width: 260px;
+  background-color: var(--card-background);
+  border-right: 1px solid var(--border-color);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s ease;
+  box-shadow: var(--card-box-shadow);
+}
+
+.sidebarCollapsed {
+  width: 80px;
+  align-items: center; /* Center items when collapsed */
+}
+
+.sidebarHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  color: var(--text-color-dark);
+}
+
+.sidebarCollapsed .sidebarHeader {
+  justify-content: center; /* Center logo when collapsed */
+}
+
+.fullLogo {
+  color: var(--primary-accent-color);
+  margin-bottom: 0; /* Remove default margin */
+}
+
+.smallLogo {
+  width: 40px; /* Adjust size as needed */
+  height: 40px;
+  object-fit: contain;
+}
+
+.sidebarToggle {
+  background: none;
+  border: none;
+  color: var(--text-color-dark);
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.sidebarCollapsed .sidebarToggle {
+  transform: rotate(180deg); /* Rotate arrow when collapsed */
+}
+
+.sidebarNav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sidebarLink {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--card-border-radius);
+  color: var(--text-color-dark);
+  text-decoration: none;
+  transition: background-color 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+
+.sidebarLink span {
+  transition: opacity 0.3s ease;
+}
+
+.sidebarCollapsed .sidebarLink span {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+}
+
+.sidebarLink:hover {
+  background-color: var(--primary-accent-color);
+  color: white;
+}
+
+.content {
+  flex-grow: 1;
+  padding: 2rem;
+  background-color: var(--background-color);
+}
+
+.topbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: var(--card-background);
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: var(--card-box-shadow);
+}
+
+.userMenu {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-color-dark);
+}

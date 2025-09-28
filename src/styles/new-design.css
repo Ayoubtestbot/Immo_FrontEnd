@@ -1,0 +1,108 @@
+/* src/styles/new-design.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --primary-dark-blue: #1A2C49;
+  --secondary-dark-blue: #233758;
+  --off-white-background: #F8FAFC;
+  --light-gray-background: #F3F6F9;
+  --vibrant-orange-accent: #FF7F41;
+  --secondary-orange-accent: #FFA500;
+  --success-green: #4CAF50;
+  --secondary-success-green: #6DC572;
+  --neutral-gray-text: #6B7280;
+  --secondary-neutral-gray: #9CA3AF;
+
+  --card-border-radius: 10px;
+  --card-box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.05);
+
+  --font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+body {
+  font-family: var(--font-family-sans);
+  background-color: var(--off-white-background);
+  color: var(--neutral-gray-text);
+}
+
+.admin-dashboard {
+  display: flex;
+  min-height: 100vh;
+}
+
+.btn-primary {
+  background-color: var(--vibrant-orange-accent);
+  color: #ffffff;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: var(--secondary-orange-accent);
+}
+
+.btn-secondary {
+  background-color: var(--neutral-gray-text);
+  color: #ffffff;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background-color: var(--secondary-neutral-gray);
+}
+
+.btn-outline-primary {
+  background-color: transparent;
+  color: var(--vibrant-orange-accent);
+  border: 1px solid var(--vibrant-orange-accent);
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--vibrant-orange-accent);
+  color: #ffffff;
+}
+
+.btn-danger {
+  background-color: #DC3545;
+  color: #ffffff;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+}
+
+.btn-outline-danger {
+  background-color: transparent;
+  color: #DC3545;
+  border: 1px solid #DC3545;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.btn-outline-danger:hover {
+  background-color: #DC3545;
+  color: #ffffff;
+}

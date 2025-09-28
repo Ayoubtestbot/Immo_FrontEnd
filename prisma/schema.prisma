@@ -138,6 +138,7 @@ model Lead {
   updatedAt DateTime @updatedAt
   city      String? // New field
   trafficSource String? // New field
+  isUrgent      Boolean @default(false) // New field for urgent leads
 
   agency   Agency @relation(fields: [agencyId], references: [id])
   agencyId String

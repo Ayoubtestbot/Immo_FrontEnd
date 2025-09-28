@@ -64,12 +64,13 @@ const TicketsPage = ({ tickets, ticketPriorities, ticketCategories }: TicketsPag
   return (
     <DashboardLayout>
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1>Gestion des tickets</h1>
-        <Button variant="primary" onClick={() => setShowCreateModal(true)}>Ouvrir un ticket</Button>
+        <h1 className="h2">Gestion des tickets</h1>
+        <Button onClick={() => setShowCreateModal(true)} className="btn-primary">Ouvrir un ticket</Button>
       </div>
 
-      {tickets.length > 0 ? (
-        <Table striped bordered hover responsive>
+      <div className="card">
+        {tickets.length > 0 ? (
+        <Table hover responsive>
           <thead>
             <tr>
               <th>#</th>
@@ -91,7 +92,7 @@ const TicketsPage = ({ tickets, ticketPriorities, ticketCategories }: TicketsPag
                 <td>{ticketCategoryTranslations[ticket.category]}</td>
                 <td>{new Date(ticket.createdAt).toLocaleDateString()}</td>
                 <td>
-                  <Button variant="outline-primary" size="sm" onClick={() => handleShowViewModal(ticket)}>Voir</Button>
+                  <Button size="sm" onClick={() => handleShowViewModal(ticket)} className="btn-outline-primary">Voir</Button>
                 </td>
               </tr>
             ))}
@@ -102,6 +103,7 @@ const TicketsPage = ({ tickets, ticketPriorities, ticketCategories }: TicketsPag
           Aucun ticket trouvé.
         </Alert>
       )}
+      </div>
 
       {/* Create Ticket Modal */}
       <Modal show={showCreateModal} onHide={() => setShowCreateModal(false)} centered>
@@ -136,8 +138,8 @@ const TicketsPage = ({ tickets, ticketPriorities, ticketCategories }: TicketsPag
               </Form.Select>
             </Form.Group>
             <div className="d-flex justify-content-end mt-4">
-              <Button variant="secondary" onClick={() => setShowCreateModal(false)} className="me-2">Annuler</Button>
-              <Button variant="primary" type="submit" disabled={loading}>
+              <Button onClick={() => setShowCreateModal(false)} className="btn-secondary me-2">Annuler</Button>
+              <Button type="submit" disabled={loading} className="btn-primary">
                 {loading ? 'Envoi en cours...' : 'Envoyer'}
               </Button>
             </div>

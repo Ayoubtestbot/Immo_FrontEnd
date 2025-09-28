@@ -23,6 +23,7 @@ type LeadWithAssignedTo = Lead & {
   notes: (Note & { author: User })[];
   activities: Activity[];
   properties: Property[]; // New field
+  isUrgent: boolean; // New field
 };
 
 type LeadsPageProps = {
@@ -142,6 +143,23 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
     }
   };
 
+  const handleToggleUrgent = async (leadId: string, isUrgent: boolean) => {
+    try {
+      const res = await fetch(`/api/leads/${leadId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isUrgent }),
+      });
+      if (!res.ok) {
+        throw new Error('Failed to update lead urgency');
+      }
+      refreshData();
+    } catch (error) {
+      console.error(error);
+      alert('Error updating lead urgency');
+    }
+  };
+
   return (
     <DashboardLayout>
       {!isTrialActive && (
@@ -150,19 +168,20 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
         </Alert>
       )}
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1>Gestion des prospects</h1>
+        <h1 className="h2">Gestion des prospects</h1>
         <div>
-          <Button variant="primary" onClick={() => setShowAddModal(true)} className="me-2" disabled={!isTrialActive}>
+          <Button onClick={() => setShowAddModal(true)} className="btn-primary me-2" disabled={!isTrialActive}>
             Ajouter un prospect
           </Button>
-          <Button variant="secondary" onClick={() => setShowImportModal(true)} disabled={!isTrialActive}>
+          <Button onClick={() => setShowImportModal(true)} className="btn-secondary" disabled={!isTrialActive}>
             Importer des prospects
           </Button>
         </div>
       </div>
 
-      <Row className="mb-4">
-        <Col md={4}>
+      <div className="card">
+        <Row className="mb-4">
+          <Col md={4}>
           <Form.Group controlId="statusFilter">
             <Form.Label>Filtrer par statut</Form.Label>
             <Form.Select
@@ -204,7 +223,7 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
       </Row>
 
       {leads.length > 0 ? (
-        <Table striped bordered hover responsive>
+        <Table hover responsive>
           <thead>
             <tr>
               <th>Nom</th>
@@ -215,6 +234,7 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
               <th>Statut</th>
               <th>Agent Assigné</th>
               <th>Actions</th>
+              <th>Urgent</th>
             </tr>
           </thead>
           <tbody>
@@ -232,17 +252,25 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
                   <td>{lead.assignedTo?.name || <span className="text-muted">Non assigné</span>}</td>
                   <td>
                     <Dropdown align="end" popperConfig={{ strategy: 'fixed' }}>
-                      <Dropdown.Toggle variant="outline-secondary" size="sm" id={`dropdown-${lead.id}`}>
-                        Actions
-                      </Dropdown.Toggle>
-                      <CustomDropdownMenu className="dropdown-menu-fix">
-                        <Dropdown.Item onClick={() => handleOpenViewModal(lead)}>Visualiser le prospect</Dropdown.Item>
-                        <Dropdown.Item as="button" onClick={() => handleOpenUpdateModal(lead)}>Modifier</Dropdown.Item>
-                        <Dropdown.Item as="button" onClick={() => handleOpenAddNoteModal(lead)}>Ajouter Note</Dropdown.Item>
-                        <Dropdown.Item as="button" onClick={() => handleOpenLinkPropertyModal(lead)}>Lier une propriété</Dropdown.Item>
-                        <Dropdown.Item as="button" className="text-danger" onClick={() => handleDeleteLead(lead.id)}>Supprimer</Dropdown.Item>
-                      </CustomDropdownMenu>
-                    </Dropdown>
+                                          <Dropdown.Toggle variant="outline-secondary" size="sm" id={`dropdown-${lead.id}`}>
+                                            Actions
+                                          </Dropdown.Toggle>
+                                          <CustomDropdownMenu className="dropdown-menu-fix">
+                                            <Dropdown.Item onClick={() => handleOpenViewModal(lead)}>Visualiser le prospect</Dropdown.Item>
+                                            <Dropdown.Item as="button" onClick={() => handleOpenUpdateModal(lead)}>Modifier</Dropdown.Item>
+                                            <Dropdown.Item as="button" onClick={() => handleOpenAddNoteModal(lead)}>Ajouter Note</Dropdown.Item>
+                                            <Dropdown.Item as="button" onClick={() => handleOpenLinkPropertyModal(lead)}>Lier une propriété</Dropdown.Item>
+                                            <Dropdown.Item as="button" variant="danger" onClick={() => handleDeleteLead(lead.id)}>Supprimer</Dropdown.Item>
+                                          </CustomDropdownMenu>                    </Dropdown>
+                  </td>
+                  <td>
+                    <Form.Check
+                      type="switch"
+                      id={`urgent-switch-${lead.id}`}
+                      checked={lead.isUrgent}
+                      onChange={() => handleToggleUrgent(lead.id, !lead.isUrgent)}
+                      disabled={!isTrialActive}
+                    />
                   </td>
                 </tr>
               );
@@ -254,6 +282,8 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
           Aucun prospect trouvé pour ce filtre.
         </Alert>
       )}
+
+      </div>
 
       <AddLeadModal
         show={showAddModal}

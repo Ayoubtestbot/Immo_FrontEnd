@@ -5,7 +5,7 @@ import AdminDashboardLayout from '@/components/AdminDashboardLayout';
 import { UserRole } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import type { Agency, Plan, Subscription } from '@prisma/client';
-import { Table, Button, Alert, Modal, Form } from 'react-bootstrap';
+import { Modal, Form, Button, Alert } from 'react-bootstrap';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 
@@ -131,29 +131,29 @@ const AdminAgenciesPage = ({ agencies, plans }: AdminAgenciesPageProps) => {
 
   return (
     <AdminDashboardLayout>
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="header">
         <h1>Gestion des Agences</h1>
-        <Button variant="primary" onClick={handleShowAddModal}>Ajouter une Agence</Button>
+        <button className="primary-action-button" onClick={handleShowAddModal}>Ajouter une Agence</button>
       </div>
 
-      <Form.Group className="mb-3">
-        <Form.Control
+      <div className="content-card">
+        <input
           type="text"
           placeholder="Rechercher une agence..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          className="mb-3"
         />
-      </Form.Group>
 
-      {filteredAgencies.length > 0 ? (
-        <Table striped bordered hover responsive>
+        {filteredAgencies.length > 0 ? (
+        <table className="data-table">
           <thead>
             <tr>
               <th>#</th>
               <th>Nom</th>
               <th>Utilisateurs</th>
               <th>Abonnement</th>
-              <th>Actions</th>
+              <th className="action-cell">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -163,17 +163,18 @@ const AdminAgenciesPage = ({ agencies, plans }: AdminAgenciesPageProps) => {
                 <td>{agency.name}</td>
                 <td>{agency.users.length}</td>
                 <td>{agency.subscription ? agency.subscription.plan.name : 'Aucun'}</td>
-                <td>
-                  <Button variant="outline-primary" size="sm" className="me-2" onClick={() => handleShowEditModal(agency)}>Modifier</Button>
-                  <Button variant="outline-danger" size="sm" onClick={() => handleDelete(agency.id)}>Supprimer</Button>
+                <td className="action-cell">
+                  <button className="secondary-action-button me-2" onClick={() => handleShowEditModal(agency)}>Modifier</button>
+                  <button className="secondary-action-button" onClick={() => handleDelete(agency.id)}>Supprimer</button>
                 </td>
               </tr>
             ))}
           </tbody>
-        </Table>
+        </table>
       ) : (
-        <Alert variant="info">Aucune agence trouvée. Ajoutez-en une pour commencer !</Alert>
+        <div className="alert alert-info">Aucune agence trouvée. Ajoutez-en une pour commencer !</div>
       )}
+      </div>
 
       {/* Add/Edit Agency Modal */}
       <Modal show={showAddModal || showEditModal} onHide={handleClose} centered>
@@ -198,7 +199,7 @@ const AdminAgenciesPage = ({ agencies, plans }: AdminAgenciesPageProps) => {
             </Form.Group>
             <div className="d-flex justify-content-end mt-4">
               <Button variant="secondary" onClick={handleClose} className="me-2">Annuler</Button>
-              <Button variant="primary" type="submit" disabled={loading}>
+              <Button type="submit" disabled={loading} variant="primary">
                 {loading ? 'Enregistrement...' : currentAgency ? 'Mettre à jour' : 'Ajouter'}
               </Button>
             </div>

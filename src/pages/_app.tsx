@@ -1,10 +1,22 @@
+import '../styles/new-design.css';
+import '../styles/CozyAdminTheme.css';
 import type { AppProps } from 'next/app';
+import Head from 'next/head';
 import { SessionProvider } from 'next-auth/react';
 import { PayPalScriptProvider } from '@paypal/react-paypal-js';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '@/styles/custom.css';
+import '@/styles/modern.css';
+import '@/styles/new-design.css';
+import { useEffect } from 'react';
 
 function MyApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {
+  useEffect(() => {
+    document.body.classList.add('cozy-theme');
+    return () => {
+      document.body.classList.remove('cozy-theme');
+    };
+  }, []);
   const initialOptions = {
     clientId: process.env.PAYPAL_CLIENT_ID || "sb", // Use "sb" for sandbox if not defined
     currency: "EUR", // Assuming Euro as currency
@@ -15,6 +27,11 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {
 
   return (
     <SessionProvider session={session}>
+      <Head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+      </Head>
       <PayPalScriptProvider options={initialOptions}>
         <Component {...pageProps} />
       </PayPalScriptProvider>

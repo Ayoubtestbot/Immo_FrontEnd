@@ -1,52 +1,34 @@
 import React from 'react';
-import { Container, Row, Col, Card } from 'react-bootstrap';
-import { FaQuoteLeft } from 'react-icons/fa';
+import styles from '@/styles/Landing.module.css';
 
 const TestimonialsSection = () => {
   const testimonials = [
     {
-      quote: 'LeadEstate a transformé notre manière de travailler. Nous avons augmenté notre taux de conversion de 20% en seulement trois mois !',
-      author: 'Claire Dubois',
-      company: 'Agence ImmoPlus',
+      quote: "LeadEstate a transformé la façon dont nous gérons nos prospects. L'interface est intuitive et les fonctionnalités sont puissantes.",
+      author: "Fatima Z. - Directrice d'agence immobilière",
     },
     {
-      quote: 'La simplicité d\'utilisation et la puissance des fonctionnalités analytiques sont incroyables. Un outil indispensable.',
-      author: 'Marc Petit',
-      company: 'Le Bon Agent',
+      quote: "Grâce à LeadEstate, nous avons considérablement amélioré notre taux de conversion. Un outil indispensable pour toute agence moderne.",
+      author: "Ahmed L. - Agent immobilier senior",
     },
     {
-      quote: 'Enfin une plateforme qui comprend les besoins spécifiques des agences immobilières. Le suivi des prospects est parfait.',
-      author: 'Julien Leroy',
-      company: 'Propriétés & Co.',
+      quote: "Le support client est exceptionnel et la plateforme est constamment mise à jour avec de nouvelles fonctionnalités. Fortement recommandé !",
+      author: "Sara K. - Fondatrice d'agence",
     },
   ];
 
   return (
-    <div id="about" className="py-5">
-      <Container>
-        <div className="text-center mb-5">
-          <h2 className="fw-light">Ils nous font confiance</h2>
-          <p className="lead text-muted">Découvrez pourquoi les meilleures agences choisissent LeadEstate.</p>
-        </div>
-        <Row>
-          {testimonials.map((testimonial, index) => (
-            <Col md={4} className="mb-4" key={index}>
-              <Card className="h-100">
-                <Card.Body className="d-flex flex-column p-4">
-                  <FaQuoteLeft className="text-primary mb-3" size={30} />
-                  <blockquote className="blockquote mb-4 flex-grow-1">
-                    <p>{testimonial.quote}</p>
-                  </blockquote>
-                  <footer className="blockquote-footer mt-auto">
-                    <strong>{testimonial.author}</strong>, <cite title="Source Title">{testimonial.company}</cite>
-                  </footer>
-                </Card.Body>
-              </Card>
-            </Col>
-          ))}
-        </Row>
-      </Container>
-    </div>
+    <section id="testimonials" className={styles.section}>
+      <h2 className={styles.sectionTitle}>Ce que nos clients disent</h2>
+      <div className="d-flex flex-wrap justify-content-center">
+        {testimonials.map((testimonial, index) => (
+          <div className="p-4 m-2 card" style={{ flex: '1 1 300px', maxWidth: '350px' }} key={index}>
+            <p className="fst-italic">\" {testimonial.quote} \"</p>
+            <p className="fw-bold mt-3">- {testimonial.author}</p>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 };
 

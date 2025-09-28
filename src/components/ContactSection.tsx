@@ -1,51 +1,25 @@
 import React from 'react';
-import { Container, Row, Col, Form, Button, Card } from 'react-bootstrap';
+import styles from '@/styles/Landing.module.css';
 
 const ContactSection = () => {
   return (
-    <div id="contact" className="bg-light py-5">
-      <Container>
-        <div className="text-center mb-5">
-          <h2 className="fw-light">Prêt à commencer ?</h2>
-          <p className="lead text-muted">Inscrivez-vous pour un essai gratuit ou contactez-nous pour en savoir plus.</p>
-        </div>
-        <Row className="justify-content-center">
-          <Col lg={7} md={9}>
-            <Card className="p-4">
-              <Card.Body>
-                <Form>
-                  <Row>
-                    <Col md={6}>
-                      <Form.Group className="mb-3" controlId="formBasicName">
-                        <Form.Label>Votre nom</Form.Label>
-                        <Form.Control type="text" placeholder="Entrez votre nom" />
-                      </Form.Group>
-                    </Col>
-                    <Col md={6}>
-                      <Form.Group className="mb-3" controlId="formBasicEmail">
-                        <Form.Label>Adresse email</Form.Label>
-                        <Form.Control type="email" placeholder="Entrez votre email" />
-                      </Form.Group>
-                    </Col>
-                  </Row>
-
-                  <Form.Group className="mb-3" controlId="formBasicMessage">
-                    <Form.Label>Votre message (optionnel)</Form.Label>
-                    <Form.Control as="textarea" rows={4} placeholder="Comment pouvons-nous vous aider ?" />
-                  </Form.Group>
-
-                  <div className="d-grid">
-                    <Button variant="primary" type="submit" size="lg">
-                      Commencer mon essai gratuit
-                    </Button>
-                  </div>
-                </Form>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      </Container>
-    </div>
+    <section id="contact" className={styles.section}>
+      <h2 className={styles.sectionTitle}>Prêt à commencer ?</h2>
+      <p className="lead text-muted">Inscrivez-vous pour un essai gratuit ou contactez-nous pour en savoir plus.</p>
+      <div className="d-flex justify-content-center">
+        <form className="p-4 m-2 card" style={{ flex: '1 1 500px', maxWidth: '700px' }}>
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+            <input type="text" placeholder="Votre nom" className={styles.input} style={{ flex: 1 }} />
+            <input type="email" placeholder="Adresse email" className={styles.input} style={{ flex: 1 }} />
+          </div>
+          <textarea rows={4} placeholder="Comment pouvons-nous vous aider ?" className={styles.input} style={{ height: '120px' }}></textarea>
+          <div className="d-flex justify-content-center mt-3">
+            <button type="submit" className="btn btn-primary me-2">Envoyer le message</button>
+            <a href="/register" className="btn btn-outline-primary">S'inscrire</a>
+          </div>
+        </form>
+      </div>
+    </section>
   );
 };
 

@@ -4,9 +4,10 @@ import { authOptions } from '../api/auth/[...nextauth]';
 import AdminDashboardLayout from '@/components/AdminDashboardLayout';
 import { UserRole } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
-import { Row, Col } from 'react-bootstrap';
-import styles from '@/styles/Admin.module.css';
-import SummaryChart from '@/components/admin/SummaryChart';
+import { Row, Col, Card } from 'react-bootstrap';
+
+import ModernChart from '@/components/ModernChart';
+import KpiCard from '@/components/KpiCard';
 
 type AdminDashboardProps = {
   totalAgencies: number;
@@ -25,11 +26,11 @@ const AdminDashboard = ({ totalAgencies, totalSubscriptions, totalLeads, totalPr
         label: 'Total',
         data: [totalAgencies, totalSubscriptions, totalLeads, totalProperties, totalTickets],
         backgroundColor: [
-          'rgba(88, 166, 255, 0.6)', // Agencies
-          'rgba(46, 160, 67, 0.6)',  // Subscriptions
-          'rgba(29, 155, 240, 0.6)', // Leads
-          'rgba(247, 202, 24, 0.6)', // Properties
-          'rgba(249, 24, 128, 0.6)',  // Tickets
+          '#1A2C49', // Calming blue
+          '#4CAF50',  // Soft green
+          '#FF7F41', // Amber
+          '#6B7280', // Muted gray
+          '#DC3545',  // Light red
         ],
       },
     ],
@@ -42,42 +43,31 @@ const AdminDashboard = ({ totalAgencies, totalSubscriptions, totalLeads, totalPr
 
       <Row className="mt-4">
         <Col md={4} className="mb-4">
-          <div className={styles.statCard}>
-            <h2 style={{ color: 'var(--primary-color)' }}>{totalAgencies}</h2>
-            <p>Agences enregistrées</p>
-          </div>
+          <KpiCard title="Agences enregistrées" value={totalAgencies} />
         </Col>
         <Col md={4} className="mb-4">
-          <div className={styles.statCard}>
-            <h2 style={{ color: '#2ea043' }}>{totalSubscriptions}</h2>
-            <p>Abonnements actifs</p>
-          </div>
+          <KpiCard title="Abonnements actifs" value={totalSubscriptions} />
         </Col>
         <Col md={4} className="mb-4">
-          <div className={styles.statCard}>
-            <h2 style={{ color: '#1d9bf0' }}>{totalLeads}</h2>
-            <p>Prospects totaux</p>
-          </div>
+          <KpiCard title="Prospects totaux" value={totalLeads} />
         </Col>
         <Col md={4} className="mb-4">
-          <div className={styles.statCard}>
-            <h2 style={{ color: '#f7ca18' }}>{totalProperties}</h2>
-            <p>Propriétés gérées</p>
-          </div>
+          <KpiCard title="Propriétés gérées" value={totalProperties} />
         </Col>
         <Col md={4} className="mb-4">
-          <div className={styles.statCard}>
-            <h2 style={{ color: '#f91880' }}>{totalTickets}</h2>
-            <p>Tickets ouverts</p>
-          </div>
+          <KpiCard title="Tickets ouverts" value={totalTickets} />
         </Col>
       </Row>
 
       <Row className="mt-4">
         <Col>
-          <div className={styles.chartContainer} style={{ height: '400px' }}>
-            <SummaryChart chartData={chartData} />
-          </div>
+          <Card className="card" style={{ minHeight: '400px' }}>
+            <Card.Body className="d-flex flex-column h-100">
+              <div className="flex-grow-1 d-flex align-items-center justify-content-center">
+                <ModernChart chartData={chartData} />
+              </div>
+            </Card.Body>
+          </Card>
         </Col>
       </Row>
     </AdminDashboardLayout>

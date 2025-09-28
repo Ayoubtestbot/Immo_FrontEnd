@@ -131,8 +131,8 @@ const PropertiesPage = ({ properties, leads, filterPropertyNumber: initialFilter
         </Alert>
       )}
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1>Gestion des propriétés</h1>
-        <Button variant="primary" onClick={() => setShowAddModal(true)} disabled={!isTrialActive}>
+        <h1 className="h2">Gestion des propriétés</h1>
+        <Button onClick={() => setShowAddModal(true)} className="btn-primary" disabled={!isTrialActive}>
           Ajouter une propriété
         </Button>
       </div>
@@ -141,7 +141,8 @@ const PropertiesPage = ({ properties, leads, filterPropertyNumber: initialFilter
         <DynamicMap properties={properties} />
       </div>
 
-      <Row className="mb-4">
+      <div className="card">
+        <Row className="mb-4">
         <Col md={3}>
           <Form.Group controlId="propertyNumberFilter">
             <Form.Label>Filtrer par N° Propriété</Form.Label>
@@ -200,7 +201,7 @@ const PropertiesPage = ({ properties, leads, filterPropertyNumber: initialFilter
         </Col>
       </Row>
 
-      <Table striped bordered hover responsive>
+      <Table hover responsive>
         <thead>
           <tr>
             <th>Propriété</th>
@@ -225,21 +226,22 @@ const PropertiesPage = ({ properties, leads, filterPropertyNumber: initialFilter
               <td>{property.status}</td>
               <td>
                 <Dropdown align="end" popperConfig={{ strategy: 'fixed' }}>
-                  <Dropdown.Toggle variant="outline-secondary" size="sm">
-                    Actions
-                  </Dropdown.Toggle>
-                  <CustomDropdownMenu className="dropdown-menu-fix">
-                    <Dropdown.Item onClick={() => handleOpenViewModal(property)}>Visualiser</Dropdown.Item>
-                    <Dropdown.Item onClick={() => handleOpenEditModal(property)}>Modifier</Dropdown.Item>
-                    <Dropdown.Item onClick={() => handleOpenLinkLeadModal(property)}>Lier à un prospect</Dropdown.Item>
-                    <Dropdown.Item className="text-danger" onClick={() => handleDeleteProperty(property.id)}>Supprimer</Dropdown.Item>
-                  </CustomDropdownMenu>
-                </Dropdown>
+                                      <Dropdown.Toggle variant="outline-secondary" size="sm">
+                                        Actions
+                                      </Dropdown.Toggle>
+                                      <CustomDropdownMenu className="dropdown-menu-fix">
+                                        <Dropdown.Item onClick={() => handleOpenViewModal(property)}>Visualiser</Dropdown.Item>
+                                        <Dropdown.Item onClick={() => handleOpenEditModal(property)}>Modifier</Dropdown.Item>
+                                        <Dropdown.Item onClick={() => handleOpenLinkLeadModal(property)}>Lier à un prospect</Dropdown.Item>
+                                        <Dropdown.Item variant="danger" onClick={() => handleDeleteProperty(property.id)}>Supprimer</Dropdown.Item>
+                                      </CustomDropdownMenu>                </Dropdown>
               </td>
             </tr>
           ))}
         </tbody>
       </Table>
+
+      </div>
 
       <AddPropertyModal
         show={showAddModal}

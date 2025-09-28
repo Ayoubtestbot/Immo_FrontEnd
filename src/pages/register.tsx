@@ -3,8 +3,9 @@ import { useRouter } from 'next/router';
 import { signIn, getSession } from 'next-auth/react';
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { Container, Form, Button, Card, Alert, Row, Col } from 'react-bootstrap';
+import { Alert } from 'react-bootstrap';
 import Link from 'next/link';
+import styles from '@/styles/Login.module.css';
 
 const RegisterPage = () => {
   const [name, setName] = useState('');
@@ -55,7 +56,7 @@ const RegisterPage = () => {
       }
 
       setLoading(false);
-      router.push('/login?registered=true'); // Redirect to login with a success message
+      router.push('/login?registered=true');
     } catch (err: any) {
       setLoading(false);
       setError(err.message);
@@ -63,46 +64,65 @@ const RegisterPage = () => {
   };
 
   return (
-    <Container className="d-flex align-items-center justify-content-center" style={{ minHeight: '100vh' }}>
-      <Card style={{ width: '500px' }}>
-        <Card.Body>
+    <div className={styles.loginContainer}>
+      <div className={styles.imageContainer}>
+        <img src="/logo.png" alt="LeadEstate Logo" width={150} />
+        <h1 className={styles.title}>LeadEstate</h1>
+        <p className={styles.subtitle}>Rejoignez notre communauté et commencez à gérer vos prospects efficacement.</p>
+      </div>
+      <div className={styles.formContainer}>
+        <form className={styles.form} onSubmit={handleSubmit}>
           <h2 className="text-center mb-4">Inscription</h2>
           {error && <Alert variant="danger">{error}</Alert>}
-          <Form onSubmit={handleSubmit}>
-            <Form.Group className="mb-3" controlId="name">
-              <Form.Label>Votre Nom</Form.Label>
-              <Form.Control type="text" value={name} onChange={(e) => setName(e.target.value)} required />
-            </Form.Group>
-            <Form.Group className="mb-3" controlId="email">
-              <Form.Label>Email</Form.Label>
-              <Form.Control type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-            </Form.Group>
-            <Form.Group className="mb-3" controlId="password">
-              <Form.Label>Mot de passe</Form.Label>
-              <Form.Control type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-            </Form.Group>
-            <Form.Group className="mb-3" controlId="agencyName">
-              <Form.Label>Nom de votre Agence</Form.Label>
-              <Form.Control type="text" value={agencyName} onChange={(e) => setAgencyName(e.target.value)} required />
-            </Form.Group>
-            <Button variant="primary" type="submit" className="w-100" disabled={loading}>
-              {loading ? 'Inscription en cours...' : "S'inscrire"}
-            </Button>
-            <hr className="my-4" />
-            <Button
-              variant="outline-secondary"
-              className="w-100"
-              onClick={handleGoogleSignUp}
-            >
-              S'inscrire avec Google
-            </Button>
-            <p className="text-center mt-3">
-              Déjà un compte ? <Link href="/login">Connectez-vous ici</Link>
-            </p>
-          </Form>
-        </Card.Body>
-      </Card>
-    </Container>
+          <input
+            type="text"
+            placeholder="Votre Nom"
+            className={styles.input}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            className={styles.input}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <input
+            type="password"
+            placeholder="Mot de passe"
+            className={styles.input}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <input
+            type="text"
+            placeholder="Nom de votre Agence"
+            className={styles.input}
+            value={agencyName}
+            onChange={(e) => setAgencyName(e.target.value)}
+            required
+          />
+          <button type="submit" className={styles.button} disabled={loading}>
+            {loading ? 'Inscription en cours...' : "S'inscrire"}
+          </button>
+          <hr className="my-4" />
+          <button
+            type="button"
+            className={`${styles.button} ${styles.googleButton}`}
+            onClick={handleGoogleSignUp}
+          >
+            S'inscrire avec Google
+          </button>
+          <p className={styles.link}>
+            Déjà un compte ? <Link href="/login" legacyBehavior>Connectez-vous ici</Link>
+          </p>
+        </form>
+      </div>
+    </div>
   );
 };
 

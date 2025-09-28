@@ -44,7 +44,7 @@ const NewAgencyPage = () => {
 
   return (
     <Container className="d-flex align-items-center justify-content-center" style={{ minHeight: '100vh' }}>
-      <Card style={{ width: '500px' }}>
+      <Card className="card" style={{ width: '500px' }}>
         <Card.Body>
           <h2 className="text-center mb-4">Créer votre agence</h2>
           {error && <Alert variant="danger">{error}</Alert>}
@@ -61,7 +61,7 @@ const NewAgencyPage = () => {
               <Form.Label>Nom de votre Agence</Form.Label>
               <Form.Control type="text" value={agencyName} onChange={(e) => setAgencyName(e.target.value)} required />
             </Form.Group>
-            <Button variant="primary" type="submit" className="w-100" disabled={loading}>
+            <Button type="submit" className="btn-primary w-100" disabled={loading}>
               {loading ? 'Création en cours...' : 'Créer l\'agence'}
             </Button>
           </Form>

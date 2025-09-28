@@ -3,6 +3,7 @@ import Header from '@/components/Header';
 import HeroSection from '@/components/HeroSection';
 import ServicesSection from '@/components/ServicesSection';
 import FeaturesSection from '@/components/FeaturesSection';
+import AboutSection from '@/components/AboutSection';
 import PricingSection from '@/components/PricingSection';
 import TestimonialsSection from '@/components/TestimonialsSection';
 import ContactSection from '@/components/ContactSection';
@@ -24,6 +25,7 @@ const HomePage: NextPage<HomePageProps> = ({ plans }) => {
         <FeaturesSection />
         <PricingSection plans={plans} />
         <TestimonialsSection />
+        <AboutSection />
         <ContactSection />
       </main>
       <Footer />

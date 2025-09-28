@@ -4,8 +4,8 @@ import { useRouter } from 'next/router';
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import Link from 'next/link';
-import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
-// Removed GetServerSidePropsContext, getServerSession, authOptions imports
+import { Alert } from 'react-bootstrap';
+import styles from '@/styles/Login.module.css';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -18,7 +18,6 @@ const LoginPage = () => {
   useEffect(() => {
     if (router.query.registered === 'true') {
       setRegisteredSuccess(true);
-      // Remove the query parameter after showing the message
       router.replace('/login', undefined, { shallow: true });
     }
   }, [router.query.registered]);
@@ -56,7 +55,7 @@ const LoginPage = () => {
     setRegisteredSuccess(false);
 
     const result = await signIn('credentials', {
-      redirect: false, // Keep redirect: false to handle redirection manually
+      redirect: false,
       email,
       password,
     });
@@ -64,14 +63,12 @@ const LoginPage = () => {
     setLoading(false);
 
     if (result?.ok) {
-      // Manually fetch session to get user role
       const session = await getSession();
       if (session?.user?.role === 'ADMIN') {
         router.push('/admin/dashboard');
       } else if (session?.user?.role === 'AGENCY_OWNER' || session?.user?.role === 'AGENCY_MEMBER' || session?.user?.role === 'AGENCY_SUPER_AGENT') {
         router.push('/agency/dashboard');
       } else {
-        // Default redirect or error handling
         router.push('/'); 
       }
     } else {
@@ -80,9 +77,14 @@ const LoginPage = () => {
   };
 
   return (
-    <Container className="d-flex align-items-center justify-content-center" style={{ minHeight: '100vh' }}>
-      <Card style={{ width: '400px' }}>
-        <Card.Body>
+    <div className={styles.loginContainer}>
+      <div className={styles.imageContainer}>
+        <img src="/logo.png" alt="LeadEstate Logo" width={150} />
+        <h1 className={styles.title}>LeadEstate</h1>
+        <p className={styles.subtitle}>Votre partenaire immobilier de confiance</p>
+      </div>
+      <div className={styles.formContainer}>
+        <form className={styles.form} onSubmit={handleSubmit}>
           <h2 className="text-center mb-4">Connexion</h2>
           {registeredSuccess && (
             <Alert variant="success">
@@ -90,46 +92,40 @@ const LoginPage = () => {
             </Alert>
           )}
           {error && <Alert variant="danger">{error}</Alert>}
-          <Form onSubmit={handleSubmit}>
-            <Form.Group className="mb-3" controlId="email">
-              <Form.Label>Email</Form.Label>
-              <Form.Control
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </Form.Group>
-            <Form.Group className="mb-3" controlId="password">
-              <Form.Label>Mot de passe</Form.Label>
-              <Form.Control
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </Form.Group>
-            <Button variant="primary" type="submit" className="w-100" disabled={loading}>
-              {loading ? 'Connexion en cours...' : 'Se connecter'}
-            </Button>
-            <hr className="my-4" />
-            <Button
-              variant="outline-secondary"
-              className="w-100"
-              onClick={handleGoogleSignIn}
-            >
-              Se connecter avec Google
-            </Button>
-            <p className="text-center mt-3">
-              Pas encore de compte ? <Link href="/register">Inscrivez-vous ici</Link>
-            </p>
-          </Form>
-        </Card.Body>
-      </Card>
-    </Container>
+          <input
+            type="email"
+            placeholder="Email"
+            className={styles.input}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <input
+            type="password"
+            placeholder="Mot de passe"
+            className={styles.input}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <button type="submit" className={styles.button} disabled={loading}>
+            {loading ? 'Connexion en cours...' : 'Se connecter'}
+          </button>
+          <hr className="my-4" />
+          <button
+            type="button"
+            className={`${styles.button} ${styles.googleButton}`}
+            onClick={handleGoogleSignIn}
+          >
+            Se connecter avec Google
+          </button>
+          <p className={styles.link}>
+            Pas encore de compte ? <Link href="/register" legacyBehavior>Inscrivez-vous ici</Link>
+          </p>
+        </form>
+      </div>
+    </div>
   );
 };
-
-// Removed getServerSideProps function
 
 export default LoginPage;

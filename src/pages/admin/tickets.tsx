@@ -5,10 +5,12 @@ import AdminDashboardLayout from '@/components/AdminDashboardLayout';
 import { UserRole, TicketStatus, TicketPriority } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import type { Ticket, Agency, User } from '@prisma/client';
-import { Table, Button, Alert, Modal, Form } from 'react-bootstrap';
+import { Modal, Form, Button, Alert } from 'react-bootstrap';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import TicketMessages from '@/components/TicketMessages';
+import { ticketStatusTranslations } from '@/utils/ticketStatusTranslations';
+import { ticketPriorityTranslations } from '@/utils/ticketPriorityTranslations';
 
 type TicketWithDetails = Ticket & {
   agency: Agency;
@@ -126,21 +128,21 @@ const AdminTicketsPage = ({ tickets, ticketStatuses, ticketPriorities }: AdminTi
 
   return (
     <AdminDashboardLayout>
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="header">
         <h1>Gestion des Tickets</h1>
       </div>
 
-      <Form.Group className="mb-3">
-        <Form.Control
+      <div className="content-card">
+        <input
           type="text"
           placeholder="Rechercher par sujet, agence ou utilisateur..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          className="mb-3"
         />
-      </Form.Group>
 
-      {filteredTickets.length > 0 ? (
-        <Table striped bordered hover responsive>
+        {filteredTickets.length > 0 ? (
+        <table className="data-table">
           <thead>
             <tr>
               <th>#</th>
@@ -149,7 +151,7 @@ const AdminTicketsPage = ({ tickets, ticketStatuses, ticketPriorities }: AdminTi
               <th>Utilisateur</th>
               <th>Statut</th>
               <th>Priorité</th>
-              <th>Actions</th>
+              <th className="action-cell">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -159,20 +161,21 @@ const AdminTicketsPage = ({ tickets, ticketStatuses, ticketPriorities }: AdminTi
                 <td>{ticket.subject}</td>
                 <td>{ticket.agency.name}</td>
                 <td>{ticket.user.name || ticket.user.email}</td>
-                <td>{ticket.status}</td>
-                <td>{ticket.priority}</td>
-                <td>
-                  <Button variant="outline-info" size="sm" className="me-2" onClick={() => handleShowViewModal(ticket)}>Voir</Button>
-                  <Button variant="outline-primary" size="sm" className="me-2" onClick={() => handleShowEditModal(ticket)}>Modifier</Button>
-                  <Button variant="outline-danger" size="sm" onClick={() => handleDelete(ticket.id)}>Supprimer</Button>
+                <td>{ticketStatusTranslations[ticket.status]}</td>
+                <td>{ticketPriorityTranslations[ticket.priority]}</td>
+                <td className="action-cell">
+                  <button className="secondary-action-button me-2" onClick={() => handleShowViewModal(ticket)}>Voir</button>
+                  <button className="secondary-action-button me-2" onClick={() => handleShowEditModal(ticket)}>Modifier</button>
+                  <button className="secondary-action-button" onClick={() => handleDelete(ticket.id)}>Supprimer</button>
                 </td>
               </tr>
             ))}
           </tbody>
-        </Table>
+        </table>
       ) : (
-        <Alert variant="info">Aucun ticket trouvé.</Alert>
+        <div className="alert alert-info">Aucun ticket trouvé.</div>
       )}
+      </div>
 
       {/* Edit Ticket Modal */}
       <Modal show={showEditModal} onHide={handleClose} centered>
@@ -194,7 +197,7 @@ const AdminTicketsPage = ({ tickets, ticketStatuses, ticketPriorities }: AdminTi
               <Form.Label>Statut</Form.Label>
               <Form.Select value={status} onChange={(e) => setStatus(e.target.value)} required>
                 {ticketStatuses.map((s) => (
-                  <option key={s} value={s}>{s}</option>
+                  <option key={s} value={s}>{ticketStatusTranslations[s]}</option>
                 ))}
               </Form.Select>
             </Form.Group>
@@ -202,13 +205,13 @@ const AdminTicketsPage = ({ tickets, ticketStatuses, ticketPriorities }: AdminTi
               <Form.Label>Priorité</Form.Label>
               <Form.Select value={priority} onChange={(e) => setPriority(e.target.value)} required>
                 {ticketPriorities.map((p) => (
-                  <option key={p} value={p}>{p}</option>
+                  <option key={p} value={p}>{ticketPriorityTranslations[p]}</option>
                 ))}
               </Form.Select>
             </Form.Group>
             <div className="d-flex justify-content-end mt-4">
               <Button variant="secondary" onClick={handleClose} className="me-2">Annuler</Button>
-              <Button variant="primary" type="submit" disabled={loading}>
+              <Button type="submit" disabled={loading} variant="primary">
                 {loading ? 'Enregistrement...' : 'Mettre à jour'}
               </Button>
             </div>
@@ -227,8 +230,8 @@ const AdminTicketsPage = ({ tickets, ticketStatuses, ticketPriorities }: AdminTi
               <h5>{currentTicket.subject}</h5>
               <p><strong>Agence:</strong> {currentTicket.agency.name}</p>
               <p><strong>Utilisateur:</strong> {currentTicket.user.name || currentTicket.user.email}</p>
-              <p><strong>Status:</strong> {currentTicket.status}</p>
-              <p><strong>Priorité:</strong> {currentTicket.priority}</p>
+              <p><strong>Status:</strong> {ticketStatusTranslations[currentTicket.status]}</p>
+              <p><strong>Priorité:</strong> {ticketPriorityTranslations[currentTicket.priority]}</p>
               <hr />
               <h6>Discussion</h6>
               {currentTicket && <TicketMessages ticketId={currentTicket.id} />}

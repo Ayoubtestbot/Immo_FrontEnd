@@ -71,12 +71,12 @@ const SettingsPage = ({ agency, availablePlans }: SettingsPageProps) => {
               <p><strong>Limite de prospects:</strong> {agency.subscription.plan.prospectsLimit}</p>
               <p><strong>Limite d'utilisateurs:</strong> {agency.subscription.plan.usersLimit}</p> {/* New line */}
               <p><strong>Date de fin:</strong> {agency.subscription.endDate ? format(new Date(agency.subscription.endDate), 'dd/MM/yyyy') : 'N/A'}</p>
-              <Button variant="primary">Mettre à niveau le plan</Button>
+              <Button className="btn-primary">Mettre à niveau le plan</Button>
             </>
           ) : (
             <>
               <p>Vous n'avez pas de plan actif.</p>
-              <Button variant="primary">Choisir un plan</Button>
+              <Button className="btn-primary">Choisir un plan</Button>
             </>
           )}
         </Card.Body>

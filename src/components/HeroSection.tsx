@@ -1,34 +1,33 @@
 import React from 'react';
-import { Container, Row, Col, Button } from 'react-bootstrap';
-import { useRouter } from 'next/router'; // New import
+import { useRouter } from 'next/router';
+import Image from 'next/image';
+import styles from '@/styles/Landing.module.css';
 
 const HeroSection = () => {
-  const router = useRouter(); // Initialize useRouter
+  const router = useRouter();
 
   const handleStartTrial = () => {
-    router.push('/register'); // Redirect to /register
+    router.push('/register');
   };
 
   return (
-    <Container className="py-5 text-center">
-      <Row className="py-lg-5">
-        <Col lg={8} md={10} className="mx-auto">
-          <h1 className="fw-light">La plateforme tout-en-un pour votre agence immobilière</h1>
-          <p className="lead text-muted">
-            Gérez vos prospects, vos propriétés, et votre pipeline de vente avec une efficacité redoutable. LeadEstate centralise vos opérations pour transformer vos prospects en clients satisfaits.
+    <section className={styles.hero}>
+      <div className={styles.heroContent}>
+        <div className={styles.heroText}>
+          <h1 className={styles.heroTitle}>Transformez vos prospects en clients</h1>
+          <p className={styles.heroSubtitle}>
+            LeadEstate est la plateforme tout-en-un qui vous aide à gérer vos prospects, propriétés et ventes avec une efficacité redoutable.
           </p>
-          <p className="mb-4">
-            <Button variant="primary" className="my-2" onClick={handleStartTrial}>Commencez votre essai gratuit</Button>{' '}
-            <Button variant="secondary" className="my-2">Découvrir les fonctionnalités</Button>
-          </p>
-          <img
-            src="https://placehold.co/800x400/1abc9c/ffffff?text=LeadEstate" // Stable placeholder image
-            alt="LeadEstate Hero Image"
-            className="img-fluid rounded shadow-lg mt-4"
-          />
-        </Col>
-      </Row>
-    </Container>
+          <div className="d-flex">
+            <button className="btn-primary my-2 me-2 equal-width-btn" onClick={handleStartTrial}>Commencez votre essai gratuit</button>
+            <a href="#features" className="btn-secondary my-2 equal-width-btn">Découvrir les fonctionnalités</a>
+          </div>
+        </div>
+        <div className={styles.heroImage}>
+          <Image src="/hero_section_image.jpg" alt="Real Estate" width={700} height={400} style={{ borderRadius: '8px' }} />
+        </div>
+      </div>
+    </section>
   );
 };
 

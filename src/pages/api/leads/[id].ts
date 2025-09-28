@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../auth/[...nextauth]';
+import { authOptions } from '../auth/[...nextauth]';
 
 export default async function handler(
   req: NextApiRequest,
@@ -25,8 +25,25 @@ export default async function handler(
       console.error(error);
       return res.status(500).json({ error: 'Failed to delete lead' });
     }
+  } else if (req.method === 'PUT') { // Add PUT handler
+    const { isUrgent } = req.body;
+
+    if (typeof isUrgent !== 'boolean') {
+      return res.status(400).json({ error: 'Invalid isUrgent value' });
+    }
+
+    try {
+      const updatedLead = await prisma.lead.update({
+        where: { id },
+        data: { isUrgent },
+      });
+      return res.status(200).json(updatedLead);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ error: 'Failed to update lead urgency' });
+    }
   } else {
-    res.setHeader('Allow', ['DELETE']);
+    res.setHeader('Allow', ['DELETE', 'PUT']); // Allow PUT method
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }

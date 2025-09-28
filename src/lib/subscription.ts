@@ -14,4 +14,5 @@ export const isTrialActive = async (agencyId: string): Promise<boolean> => {
   }
 
   return new Date() < subscription.endDate;
+
 };

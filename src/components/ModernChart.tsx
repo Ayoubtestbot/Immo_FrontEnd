@@ -20,7 +20,7 @@ ChartJS.register(
   Legend
 );
 
-type SummaryChartProps = {
+type ModernChartProps = {
   chartData: {
     labels: string[];
     datasets: {
@@ -29,45 +29,51 @@ type SummaryChartProps = {
       backgroundColor: string[];
     }[];
   };
-  type?: 'bar' | 'doughnut' | 'pie';
+  type?: 'bar' | 'doughnut';
   title?: string;
 };
 
-const SummaryChart = ({ chartData, type = 'bar', title = 'Overview' }: SummaryChartProps) => {
+const ModernChart = ({ chartData, type = 'bar', title }: ModernChartProps) => {
   const baseOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
         position: 'top' as const,
+        labels: {
+          color: '#34495e', // Dark text color for legend
+        },
       },
       title: {
-        display: true,
+        display: !!title,
         text: title,
-        color: '#2c3e50',
+        color: '#34495e', // Dark text color for title
         font: {
           size: 18,
         },
       },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)', // Darker tooltip background
+        titleColor: 'white',
+        bodyColor: 'white',
+      },
+    },
+    animation: {
+      duration: 1000,
+      easing: 'easeInOutQuart',
     },
   };
 
   const barOptions = {
     ...baseOptions,
-    plugins: {
-      ...baseOptions.plugins,
-      legend: {
-        display: false,
-      },
-    },
     scales: {
       y: {
         beginAtZero: true,
-        ticks: { color: '#5a6e82', stepSize: 1 },
-        grid: { color: '#dee2e6' },
+        ticks: { color: '#34495e' }, // Dark text color for ticks
+        grid: { color: '#e0e0e0' }, // Lighter grid lines
       },
       x: {
-        ticks: { color: '#5a6e82' },
+        ticks: { color: '#34495e' }, // Dark text color for ticks
         grid: { display: false },
       },
     },
@@ -83,11 +89,11 @@ const SummaryChart = ({ chartData, type = 'bar', title = 'Overview' }: SummaryCh
     }
   };
 
-  if (type === 'doughnut' || type === 'pie') {
+  if (type === 'doughnut') {
     return <Doughnut options={doughnutOptions} data={chartData} />;
   }
 
   return <Bar options={barOptions} data={chartData} />;
 };
 
-export default SummaryChart;
+export default ModernChart;
