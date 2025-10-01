@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Modal, Button, Form, Alert } from 'react-bootstrap';
+import { Modal, Button, Form, Alert, Row, Col } from 'react-bootstrap';
 import type { Lead, User } from '@prisma/client';
 import { LeadStatus } from '@prisma/client';
 import { leadStatusTranslations } from '@/utils/leadStatusTranslations'; // New import
@@ -15,6 +15,9 @@ type UpdateLeadModalProps = {
 const UpdateLeadModal = ({ show, handleClose, lead, agents, onLeadUpdated }: UpdateLeadModalProps) => {
   const [status, setStatus] = useState<LeadStatus>(LeadStatus.NEW);
   const [assignedToId, setAssignedToId] = useState<string | null>(null);
+  const [appointmentDate, setAppointmentDate] = useState<string>('');
+  const [appointmentTimeHour, setAppointmentTimeHour] = useState<string>(''); // New state for hour
+  const [appointmentTimeMinute, setAppointmentTimeMinute] = useState<string>(''); // New state for minute
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -22,6 +25,16 @@ const UpdateLeadModal = ({ show, handleClose, lead, agents, onLeadUpdated }: Upd
     if (lead) {
       setStatus(lead.status);
       setAssignedToId(lead.assignedToId);
+      if (lead.appointmentDate) {
+        const date = new Date(lead.appointmentDate);
+        setAppointmentDate(date.toISOString().split('T')[0]);
+        setAppointmentTimeHour(date.getHours().toString().padStart(2, '0'));
+        setAppointmentTimeMinute(date.getMinutes().toString().padStart(2, '0'));
+      } else {
+        setAppointmentDate('');
+        setAppointmentTimeHour('');
+        setAppointmentTimeMinute('');
+      }
     }
   }, [lead]);
 
@@ -32,11 +45,24 @@ const UpdateLeadModal = ({ show, handleClose, lead, agents, onLeadUpdated }: Upd
     setLoading(true);
     setError('');
 
+    const data: any = { status, assignedToId };
+    if (status === LeadStatus.APPOINTMENT_SCHEDULED) {
+      if (appointmentDate) {
+        const [year, month, day] = appointmentDate.split('-').map(Number);
+        const hour = parseInt(appointmentTimeHour || '0');
+        const minute = parseInt(appointmentTimeMinute || '0');
+        const combinedDateTime = new Date(year, month - 1, day, hour, minute);
+        data.appointmentDate = combinedDateTime.toISOString();
+      } else {
+        data.appointmentDate = null;
+      }
+    }
+
     try {
       const res = await fetch(`/api/leads/${lead.id}/update`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status, assignedToId }),
+        body: JSON.stringify(data),
       });
 
       if (!res.ok) {
@@ -69,6 +95,44 @@ const UpdateLeadModal = ({ show, handleClose, lead, agents, onLeadUpdated }: Upd
               ))}
             </Form.Select>
           </Form.Group>
+          {status === LeadStatus.APPOINTMENT_SCHEDULED && (
+            <>
+              <Form.Group className="mb-3" controlId="appointmentDate">
+                <Form.Label>Date du rendez-vous</Form.Label>
+                <Form.Control
+                  type="date"
+                  value={appointmentDate}
+                  onChange={(e) => setAppointmentDate(e.target.value)}
+                />
+              </Form.Group>
+              <Row>
+                <Col>
+                  <Form.Group className="mb-3" controlId="appointmentTimeHour">
+                    <Form.Label>Heure</Form.Label>
+                    <Form.Control
+                      type="number"
+                      min="0"
+                      max="23"
+                      value={appointmentTimeHour}
+                      onChange={(e) => setAppointmentTimeHour(e.target.value)}
+                    />
+                  </Form.Group>
+                </Col>
+                <Col>
+                  <Form.Group className="mb-3" controlId="appointmentTimeMinute">
+                    <Form.Label>Minute</Form.Label>
+                    <Form.Control
+                      type="number"
+                      min="0"
+                      max="59"
+                      value={appointmentTimeMinute}
+                      onChange={(e) => setAppointmentTimeMinute(e.target.value)}
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+            </>
+          )}
           <Form.Group className="mb-3" controlId="assignedTo">
             <Form.Label>Assigner à</Form.Label>
             <Form.Select value={assignedToId || ''} onChange={(e) => setAssignedToId(e.target.value || null)}>

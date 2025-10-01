@@ -4,7 +4,7 @@ import { withAuth } from '@/lib/withAuth';
 import DashboardLayout from '@/components/DashboardLayout';
 import { prisma } from '@/lib/prisma';
 import type { User, UserRole } from '@prisma/client';
-import { Table, Button, Dropdown } from 'react-bootstrap';
+import { Table, Button, Dropdown, Alert } from 'react-bootstrap';
 import { useRouter } from 'next/router';
 import CustomDropdownMenu from '@/components/CustomDropdownMenu';
 import AddUserModal from '@/components/AddUserModal';
@@ -38,7 +38,7 @@ const UsersPage = ({ users, agencyName, isTrialActive }: UsersPageProps) => {
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
+    if (window.confirm('Etes-vous sur de vouloir supprimer cet utilisateur ?')) {
       try {
         const res = await fetch(`/api/users/${userId}`, {
           method: 'DELETE',
@@ -58,22 +58,23 @@ const UsersPage = ({ users, agencyName, isTrialActive }: UsersPageProps) => {
     <DashboardLayout>
       {!isTrialActive && (
         <Alert variant="warning">
-          Votre période d\'essai a expiré. Vous ne pouvez plus ajouter de nouveaux membres. Veuillez mettre à niveau votre plan pour continuer.
+          Votre période d&apos;essai a expiré. Vous ne pouvez plus ajouter de nouveaux membres. Veuillez mettre à niveau votre plan pour continuer.
         </Alert>
       )}
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1 className="h2">Membres de l'équipe ({agencyName})</h1>
+        <h1 className="h2">Membres de l&apos;équipe ({agencyName})</h1>
         <Button onClick={() => setShowAddModal(true)} className="btn-primary" disabled={!isTrialActive}>
           Ajouter un membre
         </Button>
       </div>
 
-      <div className="card">
+      <div className="table-responsive-wrapper">
         <Table hover responsive>
         <thead>
           <tr>
             <th>Nom</th>
             <th>Email</th>
+            <th>Téléphone</th>
             <th>Rôle</th>
             <th>Actions</th>
           </tr>
@@ -83,6 +84,7 @@ const UsersPage = ({ users, agencyName, isTrialActive }: UsersPageProps) => {
             <tr key={user.id}>
               <td>{user.name || '-'}</td>
               <td>{user.email}</td>
+              <td>{user.phone || '-'}</td>
               <td>{getTranslatedUserRole(user.role)}</td>
               <td>
                 <Dropdown align="end" popperConfig={{ strategy: 'fixed' }}>
@@ -139,6 +141,7 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
         id: true,
         name: true,
         email: true,
+        phone: true,
         role: true,
       },
       orderBy: {

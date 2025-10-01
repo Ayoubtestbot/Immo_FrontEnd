@@ -142,7 +142,7 @@ const PricingSection = ({ plans }: PricingSectionProps) => {
                 <div className="modal-dialog" role="document">
                     <div className="modal-content">
                         <div className="modal-header">
-                            <h5 className="modal-title">Payer l'abonnement</h5>
+                            <h5 className="modal-title">Payer l&apos;abonnement</h5>
                             <button type="button" className="close" onClick={() => setShowPayPalModal(false)} aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>

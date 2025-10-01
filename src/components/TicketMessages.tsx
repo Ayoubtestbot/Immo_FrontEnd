@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Form, Button, ListGroup, Alert } from 'react-bootstrap';
 import { TicketMessage, User } from '@prisma/client';
 
@@ -14,7 +14,7 @@ const TicketMessages = ({ ticketId }: TicketMessagesProps) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const fetchMessages = async () => {
+  const fetchMessages = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch(`/api/tickets/${ticketId}/messages`);
@@ -28,13 +28,13 @@ const TicketMessages = ({ ticketId }: TicketMessagesProps) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [ticketId]);
 
   useEffect(() => {
     if (ticketId) {
       fetchMessages();
     }
-  }, [ticketId]);
+  }, [ticketId, fetchMessages]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

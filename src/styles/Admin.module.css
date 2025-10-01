@@ -103,3 +103,28 @@
   border-radius: 8px;
   padding: 2rem;
 }
+
+.table-responsive-wrapper {
+  background-color: var(--card-bg);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Subtle shadow */
+  padding: 1.5rem;
+  overflow-x: auto; /* Ensure responsiveness for tables */
+}
+
+.table-responsive-wrapper .table {
+  margin-bottom: 0; /* Remove default table margin */
+  border: none; /* Remove outer table border */
+}
+
+.table-responsive-wrapper .table thead th {
+  border-bottom: 1px solid var(--border-color); /* Keep header bottom border */
+}
+
+.table-responsive-wrapper .table tbody tr td {
+  border-top: 1px solid var(--border-color); /* Keep row separation */
+}
+
+.table-responsive-wrapper .table tbody tr:first-child td {
+  border-top: none; /* No top border for the first row */
+}

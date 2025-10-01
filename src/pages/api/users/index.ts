@@ -22,7 +22,7 @@ export default async function handler(
       return res.status(403).json({ error: 'Your free trial has expired. Please upgrade your plan to add new users.' });
     }
 
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, phone } = req.body;
 
     if (!name || !email || !password || !role) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -67,6 +67,7 @@ export default async function handler(
           email,
           password: hashedPassword,
           role,
+          phone,
           agency: {
             connect: {
               id: session.user.agencyId,

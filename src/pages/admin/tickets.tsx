@@ -132,7 +132,7 @@ const AdminTicketsPage = ({ tickets, ticketStatuses, ticketPriorities }: AdminTi
         <h1>Gestion des Tickets</h1>
       </div>
 
-      <div className="content-card">
+      <div className="table-responsive-wrapper">
         <input
           type="text"
           placeholder="Rechercher par sujet, agence ou utilisateur..."

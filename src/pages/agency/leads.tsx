@@ -17,6 +17,8 @@ import { Table, Button, Alert, Form, Row, Col, Dropdown } from 'react-bootstrap'
 import { leadStatusTranslations, getTranslatedLeadStatus, leadStatusColors } from '@/utils/leadStatusTranslations';
 import useDebounce from '@/hooks/useDebounce'; // New import
 import { isTrialActive } from '@/lib/subscription';
+import { useSession } from 'next-auth/react'; // New import
+import AssignAgentModal from '@/components/AssignAgentModal'; // New import
 
 type LeadWithAssignedTo = Lead & {
   assignedTo: User | null;
@@ -34,16 +36,23 @@ type LeadsPageProps = {
   filterName: string;
   filterAgentId: string;
   isTrialActive: boolean;
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
 };
 
-const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initialFilterName, filterAgentId: initialFilterAgentId, isTrialActive }: LeadsPageProps) => {
+const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initialFilterName, filterAgentId: initialFilterAgentId, isTrialActive, currentPage, pageSize, totalPages }: LeadsPageProps) => {
+  const { data: session } = useSession();
   const [showAddModal, setShowAddModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showAddNoteModal, setShowAddNoteModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showLinkPropertyModal, setShowLinkPropertyModal] = useState(false);
+  const [showAssignAgentModal, setShowAssignAgentModal] = useState(false); // New state
   const [editingLead, setEditingLead] = useState<LeadWithAssignedTo | null>(null);
+  const [assigningLeadId, setAssigningLeadId] = useState<string | null>(null); // New state
+  const [assigningLeadCurrentAgentId, setAssigningLeadCurrentAgentId] = useState<string | null>(null); // New state
   const [filterName, setFilterName] = useState(initialFilterName);
   const [filterAgentId, setFilterAgentId] = useState(initialFilterAgentId);
   const [statusFilter, setStatusFilter] = useState(currentStatus);
@@ -74,7 +83,7 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
     // Construct current query from router.query for comparison
     const currentQuery: Record<string, string> = {};
     Object.keys(router.query).forEach(key => {
-      if (key !== 'agencyId' && router.query[key] !== undefined) {
+      if (key !== 'agencyId' && router.query[key] !== undefined && key !== 'page' && key !== 'pageSize') {
         currentQuery[key] = String(router.query[key]);
       }
     });
@@ -86,10 +95,10 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
     if (hasChanges) {
       router.push({
         pathname: '/agency/leads',
-        query: newQuery,
+        query: { ...newQuery, page: String(currentPage), pageSize: String(pageSize) },
       });
     }
-  }, [statusFilter, debouncedFilterName, filterAgentId, router.query]);
+  }, [statusFilter, debouncedFilterName, filterAgentId, router, currentPage, pageSize]);
 
   const handleOpenUpdateModal = (lead: LeadWithAssignedTo) => {
     setEditingLead(lead);
@@ -126,8 +135,20 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
     setShowLinkPropertyModal(true);
   };
 
+  const handleOpenAssignAgentModal = (lead: LeadWithAssignedTo) => {
+    setAssigningLeadId(lead.id);
+    setAssigningLeadCurrentAgentId(lead.assignedToId);
+    setShowAssignAgentModal(true);
+  };
+
+  const handleCloseAssignAgentModal = () => {
+    setAssigningLeadId(null);
+    setAssigningLeadCurrentAgentId(null);
+    setShowAssignAgentModal(false);
+  };
+
   const handleDeleteLead = async (leadId: string) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce prospect ?')) {
+    if (window.confirm('Etes-vous sur de vouloir supprimer ce prospect ?')) {
       try {
         const res = await fetch(`/api/leads/${leadId}`, {
           method: 'DELETE',
@@ -160,11 +181,33 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
     }
   };
 
+  const handleExportLeads = async () => {
+    try {
+      const res = await fetch('/api/agency/leads/export');
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to export leads');
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'prospects.csv';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error: any) {
+      console.error('Export failed:', error);
+      alert(`Erreur lors de l&apos;exportation: ${error.message}`);
+    }
+  };
+
   return (
     <DashboardLayout>
       {!isTrialActive && (
         <Alert variant="warning">
-          Votre période d\'essai a expiré. Vous ne pouvez plus ajouter de nouveaux prospects. Veuillez mettre à niveau votre plan pour continuer.
+          Votre période d&apos;essai a expiré. Vous ne pouvez plus ajouter de nouveaux prospects. Veuillez mettre à niveau votre plan pour continuer.
         </Alert>
       )}
       <div className="d-flex justify-content-between align-items-center mb-4">
@@ -173,13 +216,18 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
           <Button onClick={() => setShowAddModal(true)} className="btn-primary me-2" disabled={!isTrialActive}>
             Ajouter un prospect
           </Button>
-          <Button onClick={() => setShowImportModal(true)} className="btn-secondary" disabled={!isTrialActive}>
+          <Button onClick={() => setShowImportModal(true)} className="btn-secondary me-2" disabled={!isTrialActive}>
             Importer des prospects
           </Button>
+          {session?.user?.role === UserRole.AGENCY_OWNER && (
+            <Button onClick={handleExportLeads} className="btn-info" disabled={!isTrialActive}>
+              Exporter les prospects
+            </Button>
+          )}
         </div>
       </div>
 
-      <div className="card">
+      <div className="table-responsive-wrapper">
         <Row className="mb-4">
           <Col md={4}>
           <Form.Group controlId="statusFilter">
@@ -260,6 +308,7 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
                                             <Dropdown.Item as="button" onClick={() => handleOpenUpdateModal(lead)}>Modifier</Dropdown.Item>
                                             <Dropdown.Item as="button" onClick={() => handleOpenAddNoteModal(lead)}>Ajouter Note</Dropdown.Item>
                                             <Dropdown.Item as="button" onClick={() => handleOpenLinkPropertyModal(lead)}>Lier une propriété</Dropdown.Item>
+                                            <Dropdown.Item as="button" onClick={() => handleOpenAssignAgentModal(lead)}>Assigner un agent</Dropdown.Item> {/* New Dropdown Item */}
                                             <Dropdown.Item as="button" variant="danger" onClick={() => handleDeleteLead(lead.id)}>Supprimer</Dropdown.Item>
                                           </CustomDropdownMenu>                    </Dropdown>
                   </td>
@@ -282,6 +331,39 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
           Aucun prospect trouvé pour ce filtre.
         </Alert>
       )}
+
+      <Row className="mt-4 align-items-center">
+        <Col md={4}>
+          <Form.Group controlId="pageSizeSelect" className="d-flex align-items-center">
+            <Form.Label className="me-2 mb-0">Afficher</Form.Label>
+            <Form.Select value={pageSize} onChange={(e) => router.push({ pathname: router.pathname, query: { ...router.query, pageSize: e.target.value, page: 1 } })} style={{ width: 'auto' }}>
+              <option value="10">10</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </Form.Select>
+            <Form.Label className="ms-2 mb-0">par page</Form.Label>
+          </Form.Group>
+        </Col>
+        <Col md={4} className="d-flex justify-content-center align-items-center">
+          <Button
+            variant="outline-primary"
+            onClick={() => router.push({ pathname: router.pathname, query: { ...router.query, page: currentPage - 1 } })}
+            disabled={currentPage === 1}
+            className="me-2"
+          >
+            Précédent
+          </Button>
+          <span className="mx-2">Page {currentPage} sur {totalPages}</span>
+          <Button
+            variant="outline-primary"
+            onClick={() => router.push({ pathname: router.pathname, query: { ...router.query, page: currentPage + 1 } })}
+            disabled={currentPage === totalPages}
+          >
+            Suivant
+          </Button>
+        </Col>
+        <Col md={4}></Col> {/* Empty column for spacing */}
+      </Row>
 
       </div>
 
@@ -333,12 +415,24 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
           onPropertyLinked={refreshData}
         />
       )}
+
+      {assigningLeadId && (
+        <AssignAgentModal
+          show={showAssignAgentModal}
+          onClose={handleCloseAssignAgentModal}
+          leadId={assigningLeadId}
+          currentAssignedAgentId={assigningLeadCurrentAgentId}
+          onAgentAssigned={refreshData}
+        />
+      )}
     </DashboardLayout>
   );
 };
 
 export const getServerSideProps: GetServerSideProps = withAuth(async (context, session) => {
-  const { status, name, agentId } = context.query;
+  const { status, name, agentId, page = '1', pageSize = '10' } = context.query;
+  const currentPage = parseInt(String(page));
+  const currentSize = parseInt(String(pageSize));
   const currentStatus = status && Object.values(LeadStatus).includes(status as LeadStatus) ? status as LeadStatus : 'ALL';
   const filterName = name ? String(name) : '';
   const filterAgentId = agentId ? String(agentId) : 'ALL';
@@ -360,7 +454,7 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
     whereClause.assignedToId = session.user.id;
   }
 
-  const [leads, agents, properties, trialIsActive] = await Promise.all([
+  const [leads, totalLeadsCount, agents, properties, trialIsActive] = await Promise.all([
     prisma.lead.findMany({
       where: whereClause,
       include: {
@@ -383,7 +477,10 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
       orderBy: {
         createdAt: 'desc',
       },
+      skip: (currentPage - 1) * currentSize,
+      take: currentSize,
     }),
+    prisma.lead.count({ where: whereClause }), // Get total count for pagination
     prisma.user.findMany({
       where: {
         agencyId: session.user.agencyId,
@@ -397,6 +494,8 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
     isTrialActive(session.user.agencyId),
   ]);
 
+  const totalPages = Math.ceil(totalLeadsCount / currentSize);
+
   return {
     props: {
       leads: JSON.parse(JSON.stringify(leads)),
@@ -406,6 +505,9 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
       filterName,
       filterAgentId,
       isTrialActive: trialIsActive,
+      currentPage,
+      pageSize: currentSize,
+      totalPages,
     },
   };
 }, ['AGENCY_OWNER', 'AGENCY_MEMBER', 'AGENCY_SUPER_AGENT']); // All agency roles can access this page

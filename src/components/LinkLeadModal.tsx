@@ -12,8 +12,15 @@ type LinkLeadModalProps = {
 
 const LinkLeadModal = ({ show, handleClose, leads, propertyId, onLeadLinked }: LinkLeadModalProps) => {
   const [selectedLeadId, setSelectedLeadId] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const filteredLeads = searchTerm.length > 1
+    ? leads.filter(lead =>
+        `${lead.firstName} ${lead.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : [];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,13 +63,29 @@ const LinkLeadModal = ({ show, handleClose, leads, propertyId, onLeadLinked }: L
         {error && <Alert variant="danger">{error}</Alert>}
         <Form onSubmit={handleSubmit}>
           <Form.Group className="mb-3">
+            <Form.Label>Rechercher un prospect</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Taper pour rechercher..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </Form.Group>
+          <Form.Group className="mb-3">
             <Form.Label>Sélectionner un prospect</Form.Label>
-            <Form.Select value={selectedLeadId} onChange={(e) => setSelectedLeadId(e.target.value)} required>
-              <option value="">-- Choisir un prospect --</option>
-              {leads.map(lead => (
-                <option key={lead.id} value={lead.id}>{`${lead.firstName} ${lead.lastName}`}</option>
+            <ul className="list-group">
+              {searchTerm.length <= 1 && <li className="list-group-item text-muted">Commencez à taper pour voir les prospects...</li>}
+              {filteredLeads.map(lead => (
+                <li
+                  key={lead.id}
+                  className={`list-group-item ${selectedLeadId === lead.id ? 'active' : ''}`}
+                  onClick={() => setSelectedLeadId(lead.id)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {`${lead.firstName} ${lead.lastName}`}
+                </li>
               ))}
-            </Form.Select>
+            </ul>
           </Form.Group>
           <div className="d-flex justify-content-end mt-4">
             <Button variant="secondary" onClick={handleClose} className="me-2">

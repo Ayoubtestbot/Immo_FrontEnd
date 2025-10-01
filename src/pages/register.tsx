@@ -7,6 +7,8 @@ import { Alert } from 'react-bootstrap';
 import Link from 'next/link';
 import styles from '@/styles/Login.module.css';
 
+import Image from 'next/image';
+
 const RegisterPage = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -66,7 +68,7 @@ const RegisterPage = () => {
   return (
     <div className={styles.loginContainer}>
       <div className={styles.imageContainer}>
-        <img src="/logo.png" alt="LeadEstate Logo" width={150} />
+        <Image src="/logo.png" alt="LeadEstate Logo" width={150} height={150} />
         <h1 className={styles.title}>LeadEstate</h1>
         <p className={styles.subtitle}>Rejoignez notre communauté et commencez à gérer vos prospects efficacement.</p>
       </div>
@@ -107,7 +109,7 @@ const RegisterPage = () => {
             required
           />
           <button type="submit" className={styles.button} disabled={loading}>
-            {loading ? 'Inscription en cours...' : "S'inscrire"}
+            {loading ? 'Inscription en cours...' : "S&apos;inscrire"}
           </button>
           <hr className="my-4" />
           <button
@@ -115,7 +117,7 @@ const RegisterPage = () => {
             className={`${styles.button} ${styles.googleButton}`}
             onClick={handleGoogleSignUp}
           >
-            S'inscrire avec Google
+            S&apos;inscrire avec Google
           </button>
           <p className={styles.link}>
             Déjà un compte ? <Link href="/login" legacyBehavior>Connectez-vous ici</Link>

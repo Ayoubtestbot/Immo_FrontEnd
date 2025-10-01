@@ -1,5 +1,6 @@
 import React from 'react';
 import styles from '@/styles/Landing.module.css';
+import Link from 'next/link';
 
 const ContactSection = () => {
   return (
@@ -15,7 +16,7 @@ const ContactSection = () => {
           <textarea rows={4} placeholder="Comment pouvons-nous vous aider ?" className={styles.input} style={{ height: '120px' }}></textarea>
           <div className="d-flex justify-content-center mt-3">
             <button type="submit" className="btn btn-primary me-2">Envoyer le message</button>
-            <a href="/register" className="btn btn-outline-primary">S'inscrire</a>
+            <Link href="/register" className="btn btn-outline-primary">S&apos;inscrire</Link>
           </div>
         </form>
       </div>

@@ -43,6 +43,11 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
               <FiArchive /> <span>Propriétés</span>
             </Link>
           </OverlayTrigger>
+          <OverlayTrigger placement="right" overlay={isSidebarCollapsed ? renderTooltip('Calendrier') : <></>}>
+            <Link href="/agency/calendar" className="sidebar-link">
+              <FiGrid /> <span>Calendrier</span>
+            </Link>
+          </OverlayTrigger>
           <OverlayTrigger placement="right" overlay={isSidebarCollapsed ? renderTooltip('Tickets') : <></>}>
             <Link href="/agency/tickets" className="sidebar-link">
               <FiTag /> <span>Tickets</span>

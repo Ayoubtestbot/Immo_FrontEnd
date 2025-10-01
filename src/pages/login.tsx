@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { Alert } from 'react-bootstrap';
 import styles from '@/styles/Login.module.css';
 
+import Image from 'next/image';
+
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,7 +22,7 @@ const LoginPage = () => {
       setRegisteredSuccess(true);
       router.replace('/login', undefined, { shallow: true });
     }
-  }, [router.query.registered]);
+  }, [router.query.registered, router]);
 
   const handleGoogleSignIn = async () => {
     const provider = new GoogleAuthProvider();
@@ -79,7 +81,7 @@ const LoginPage = () => {
   return (
     <div className={styles.loginContainer}>
       <div className={styles.imageContainer}>
-        <img src="/logo.png" alt="LeadEstate Logo" width={150} />
+        <Image src="/logo.png" alt="LeadEstate Logo" width={150} height={150} />
         <h1 className={styles.title}>LeadEstate</h1>
         <p className={styles.subtitle}>Votre partenaire immobilier de confiance</p>
       </div>

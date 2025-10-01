@@ -18,7 +18,7 @@ export default async function handler(
   const { id } = req.query as { id: string };
 
   if (req.method === 'PUT') {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, phone } = req.body;
 
     if (!name || !email || !role) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -40,6 +40,7 @@ export default async function handler(
           name,
           email,
           role,
+          phone,
           ...(password && { password: await hash(password, 10) }), // Only update password if provided
         },
       });

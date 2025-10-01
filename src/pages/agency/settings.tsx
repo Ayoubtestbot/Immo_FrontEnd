@@ -56,7 +56,7 @@ const SettingsPage = ({ agency, availablePlans }: SettingsPageProps) => {
 
   return (
     <DashboardLayout>
-      <h1>Paramètres de l'agence</h1>
+      <h1>Paramètres de l&apos;agence</h1>
 
       {message && <Alert variant="success">{message}</Alert>}
       {error && <Alert variant="danger">{error}</Alert>}
@@ -69,13 +69,13 @@ const SettingsPage = ({ agency, availablePlans }: SettingsPageProps) => {
               <p><strong>Plan:</strong> {agency.subscription.plan.name}</p>
               <p><strong>Prix:</strong> {agency.subscription.plan.price.toLocaleString('fr-FR', { style: 'currency', currency: agency.currency || 'EUR' })} / mois</p>
               <p><strong>Limite de prospects:</strong> {agency.subscription.plan.prospectsLimit}</p>
-              <p><strong>Limite d'utilisateurs:</strong> {agency.subscription.plan.usersLimit}</p> {/* New line */}
+              <p><strong>Limite d&apos;utilisateurs:</strong> {agency.subscription.plan.usersLimit}</p> {/* New line */}
               <p><strong>Date de fin:</strong> {agency.subscription.endDate ? format(new Date(agency.subscription.endDate), 'dd/MM/yyyy') : 'N/A'}</p>
               <Button className="btn-primary">Mettre à niveau le plan</Button>
             </>
           ) : (
             <>
-              <p>Vous n'avez pas de plan actif.</p>
+              <p>Vous n&apos;avez pas de plan actif.</p>
               <Button className="btn-primary">Choisir un plan</Button>
             </>
           )}

@@ -35,7 +35,7 @@ const Header = () => {
         {status === 'loading' && <p>Loading...</p>}
         {status === 'unauthenticated' && (
           <>
-            <Link href="/register" legacyBehavior><a className="btn-outline-primary me-2">S'enregistrer</a></Link>
+            <Link href="/register" legacyBehavior><a className="btn-outline-primary me-2">S&apos;enregistrer</a></Link>
             <Link href="/login" legacyBehavior><a className="btn-primary">Se connecter</a></Link>
           </>
         )}

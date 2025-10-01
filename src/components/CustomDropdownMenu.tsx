@@ -47,4 +47,6 @@ const CustomDropdownMenu = React.forwardRef<HTMLDivElement, React.HTMLAttributes
   }
 );
 
+CustomDropdownMenu.displayName = 'CustomDropdownMenu';
+
 export default CustomDropdownMenu;

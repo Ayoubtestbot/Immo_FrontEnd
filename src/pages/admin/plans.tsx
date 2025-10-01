@@ -111,7 +111,7 @@ const AdminPlansPage = ({ plans }: PlansPageProps) => {
         <button className="primary-action-button" onClick={handleShowAddModal}>Ajouter un Plan</button>
       </div>
 
-      <div className="content-card">
+      <div className="table-responsive-wrapper">
         <input
           type="text"
           placeholder="Rechercher un plan..."

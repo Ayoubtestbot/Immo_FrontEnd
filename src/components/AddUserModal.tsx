@@ -13,6 +13,7 @@ const AddUserModal = ({ show, handleClose, onUserAdded }: AddUserModalProps) => 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [phone, setPhone] = useState('');
   const [role, setRole] = useState<UserRole>(UserRole.AGENCY_MEMBER);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -26,7 +27,7 @@ const AddUserModal = ({ show, handleClose, onUserAdded }: AddUserModalProps) => 
       const res = await fetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, role }),
+        body: JSON.stringify({ name, email, password, role, phone }),
       });
 
       if (!res.ok) {
@@ -38,6 +39,7 @@ const AddUserModal = ({ show, handleClose, onUserAdded }: AddUserModalProps) => 
       setName('');
       setEmail('');
       setPassword('');
+      setPhone('');
       setRole(UserRole.AGENCY_MEMBER);
 
       setLoading(false);
@@ -64,6 +66,10 @@ const AddUserModal = ({ show, handleClose, onUserAdded }: AddUserModalProps) => 
           <Form.Group className="mb-3">
             <Form.Label>Email</Form.Label>
             <Form.Control type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Téléphone</Form.Label>
+            <Form.Control type="text" value={phone} onChange={(e) => setPhone(e.target.value)} />
           </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label>Mot de passe</Form.Label>

@@ -35,7 +35,7 @@ const ViewLeadModal = ({ show, handleClose, lead }: ViewLeadModalProps) => {
         <p><strong>Ville:</strong> {lead.city || '-'}</p>
         <p><strong>Source de trafic:</strong> {lead.trafficSource || '-'}</p>
         <p><strong>Assigné à:</strong> {lead.assignedTo?.name || <span className="text-muted">Non assigné</span>}</p>
-        <p><strong>Créé le:</strong> {format(new Date(lead.createdAt), 'dd/MM/yyyy HH:mm')}</p>
+        <p><strong>Créé le:</strong> {lead.createdAt && !isNaN(new Date(lead.createdAt).getTime()) ? format(new Date(lead.createdAt), 'dd/MM/yyyy HH:mm') : 'N/A'}</p>
         <hr />
         <h5>Propriétés liées</h5>
         <ListGroup variant="flush">

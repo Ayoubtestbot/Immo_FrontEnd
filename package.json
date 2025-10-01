@@ -14,6 +14,12 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@fullcalendar/core": "^6.1.19",
+    "@fullcalendar/daygrid": "^6.1.19",
+    "@fullcalendar/interaction": "^6.1.19",
+    "@fullcalendar/react": "^6.1.19",
+    "@fullcalendar/timegrid": "^6.1.19",
+    "@getbrevo/brevo": "^3.0.1",
     "@next-auth/prisma-adapter": "^1.0.7",
     "@paypal/react-paypal-js": "^8.9.1",
     "@prisma/client": "^6.16.2",
@@ -48,6 +54,8 @@
     "@types/react": "^19.1.13",
     "@types/react-leaflet": "^2.8.3",
     "@types/uuid": "^10.0.0",
+    "eslint": "^9.36.0",
+    "eslint-config-next": "^15.5.4",
     "prisma": "^6.16.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.2"

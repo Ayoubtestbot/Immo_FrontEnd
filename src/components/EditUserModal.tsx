@@ -13,6 +13,7 @@ type EditUserModalProps = {
 const EditUserModal = ({ show, handleClose, user, onUserUpdated }: EditUserModalProps) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [role, setRole] = useState<UserRole>(UserRole.AGENCY_MEMBER);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,6 +22,7 @@ const EditUserModal = ({ show, handleClose, user, onUserUpdated }: EditUserModal
     if (user) {
       setName(user.name || '');
       setEmail(user.email);
+      setPhone(user.phone || '');
       setRole(user.role);
     }
   }, [user]);
@@ -35,7 +37,7 @@ const EditUserModal = ({ show, handleClose, user, onUserUpdated }: EditUserModal
         {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, role }),
+          body: JSON.stringify({ name, email, role, phone }),
         }
       );
 
@@ -68,6 +70,10 @@ const EditUserModal = ({ show, handleClose, user, onUserUpdated }: EditUserModal
           <Form.Group className="mb-3">
             <Form.Label>Email</Form.Label>
             <Form.Control type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Téléphone</Form.Label>
+            <Form.Control type="text" value={phone} onChange={(e) => setPhone(e.target.value)} />
           </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label>Rôle</Form.Label>

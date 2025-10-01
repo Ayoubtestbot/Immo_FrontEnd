@@ -9,7 +9,7 @@ import LinkLeadModal from '@/components/LinkLeadModal';
 import { prisma } from '@/lib/prisma';
 import type { Property, Image, Lead, Prisma } from '@prisma/client';
 import { PropertyType } from '@prisma/client';
-import { Table, Button, Dropdown, Form, Row, Col } from 'react-bootstrap';
+import { Table, Button, Dropdown, Form, Row, Col, Alert } from 'react-bootstrap';
 import { useRouter } from 'next/router';
 import DynamicMap from '@/components/DynamicMap';
 import CustomDropdownMenu from '@/components/CustomDropdownMenu';
@@ -89,7 +89,7 @@ const PropertiesPage = ({ properties, leads, filterPropertyNumber: initialFilter
         query: newQuery,
       });
     }
-  }, [debouncedPropertyNumber, debouncedCity, filterType, filterMinPrice, filterMaxPrice, router.query]);
+  }, [debouncedPropertyNumber, debouncedCity, filterType, filterMinPrice, filterMaxPrice, router]);
 
   const handleOpenViewModal = (property: PropertyWithDetails) => {
     setSelectedProperty(property);
@@ -107,7 +107,7 @@ const PropertiesPage = ({ properties, leads, filterPropertyNumber: initialFilter
   };
 
   const handleDeleteProperty = async (propertyId: string) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette propriété ?')) {
+    if (window.confirm('Etes-vous sur de vouloir supprimer cette propriété ?')) {
       try {
         const res = await fetch(`/api/properties/${propertyId}`, {
           method: 'DELETE',
@@ -127,7 +127,7 @@ const PropertiesPage = ({ properties, leads, filterPropertyNumber: initialFilter
     <DashboardLayout>
       {!isTrialActive && (
         <Alert variant="warning">
-          Votre période d\'essai a expiré. Vous ne pouvez plus ajouter de nouvelles propriétés. Veuillez mettre à niveau votre plan pour continuer.
+          Votre période d&apos;essai a expiré. Vous ne pouvez plus ajouter de nouvelles propriétés. Veuillez mettre à niveau votre plan pour continuer.
         </Alert>
       )}
       <div className="d-flex justify-content-between align-items-center mb-4">
@@ -141,7 +141,7 @@ const PropertiesPage = ({ properties, leads, filterPropertyNumber: initialFilter
         <DynamicMap properties={properties} />
       </div>
 
-      <div className="card">
+      <div className="table-responsive-wrapper">
         <Row className="mb-4">
         <Col md={3}>
           <Form.Group controlId="propertyNumberFilter">

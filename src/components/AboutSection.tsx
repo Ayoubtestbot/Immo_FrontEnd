@@ -12,7 +12,7 @@ const AboutSection = () => {
           </div>
           <div className="col-lg-6">
             <h2 className={styles.sectionTitle}>À propos de LeadEstate</h2>
-            <p className="lead text-muted">Notre mission est de fournir aux agences immobilières les outils dont elles ont besoin pour prospérer à l'ère numérique.</p>
+            <p className="lead text-muted">Notre mission est de fournir aux agences immobilières les outils dont elles ont besoin pour prospérer à l&apos;ère numérique.</p>
             <h4>Notre Solution</h4>
             <p>LeadEstate est une plateforme tout-en-un conçue pour simplifier la gestion des prospects, des propriétés et des ventes. Nous centralisons vos opérations pour vous faire gagner du temps et vous aider à conclure plus de transactions.</p>
             <h4>Nos Valeurs</h4>

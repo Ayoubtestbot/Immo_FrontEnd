@@ -95,7 +95,7 @@ const AdminSubscriptionsPage = ({ subscriptions, plans }: AdminSubscriptionsPage
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cet abonnement ?')) return;
+    if (!confirm('Etes-vous sur de vouloir supprimer cet abonnement ?')) return;
 
     try {
       const res = await fetch(`/api/admin/subscriptions/${id}`, {
@@ -119,7 +119,7 @@ const AdminSubscriptionsPage = ({ subscriptions, plans }: AdminSubscriptionsPage
         <h1>Gestion des Abonnements</h1>
       </div>
 
-      <div className="content-card">
+      <div className="table-responsive-wrapper">
         <input
           type="text"
           placeholder="Rechercher par agence ou plan..."
@@ -166,7 +166,7 @@ const AdminSubscriptionsPage = ({ subscriptions, plans }: AdminSubscriptionsPage
       {/* Edit Subscription Modal */}
       <Modal show={showEditModal} onHide={handleClose} centered>
         <Modal.Header closeButton>
-          <Modal.Title>Modifier l'Abonnement</Modal.Title>
+          <Modal.Title>Modifier l&apos;Abonnement</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {error && <Alert variant="danger">{error}</Alert>}
@@ -184,7 +184,7 @@ const AdminSubscriptionsPage = ({ subscriptions, plans }: AdminSubscriptionsPage
               <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Plan d'Abonnement</Form.Label>
+              <Form.Label>Plan d&apos;Abonnement</Form.Label>
               <Form.Select value={selectedPlanId} onChange={(e) => setSelectedPlanId(e.target.value)} required>
                 {plans.map((plan) => (
                   <option key={plan.id} value={plan.id}>{plan.name}</option>

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
 import { isTrialActive } from '@/lib/subscription';
+import { sendSms } from '@/lib/brevo';
 
 export default async function handler(
   req: NextApiRequest,
@@ -42,7 +43,7 @@ export default async function handler(
         return res.status(403).json({ error: 'Your free trial has expired. Please upgrade your plan to add new leads.' });
       }
 
-      const { firstName, lastName, email, phone } = req.body;
+      const { firstName, lastName, email, phone, city } = req.body;
 
       if (!firstName || !lastName || !phone) { // Updated validation
         return res.status(400).json({ error: 'Missing required fields' });
@@ -54,11 +55,16 @@ export default async function handler(
           lastName,
           email,
           phone,
+          city, // Add city to data
           agency: {
             connect: { id: agencyId },
           },
         },
       });
+
+      // Send SMS to the new lead
+      await sendSms(newLead);
+
       res.status(201).json(newLead);
     } catch (error) {
       console.error(error);

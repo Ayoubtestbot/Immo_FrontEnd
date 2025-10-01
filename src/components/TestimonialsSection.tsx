@@ -23,7 +23,7 @@ const TestimonialsSection = () => {
       <div className="d-flex flex-wrap justify-content-center">
         {testimonials.map((testimonial, index) => (
           <div className="p-4 m-2 card" style={{ flex: '1 1 300px', maxWidth: '350px' }} key={index}>
-            <p className="fst-italic">\" {testimonial.quote} \"</p>
+            <p className="fst-italic">&quot; {testimonial.quote} &quot;</p>
             <p className="fw-bold mt-3">- {testimonial.author}</p>
           </div>
         ))}

@@ -1,9 +1,10 @@
 import { Modal, Button, Badge, ListGroup, Carousel } from 'react-bootstrap';
-import type { Property, Image, Lead } from '@prisma/client';
+import type { Property, Image as PrismaImage, Lead } from '@prisma/client';
 import DynamicMap from './DynamicMap';
+import Image from 'next/image';
 
 type PropertyWithDetails = Property & {
-  images: Image[];
+  images: PrismaImage[];
   leads: Lead[];
   propertyNumber: number; // New field
 };
@@ -29,10 +30,13 @@ const ViewPropertyModal = ({ show, handleClose, property }: ViewPropertyModalPro
           <Carousel className="mb-4">
             {property.images.map(image => (
               <Carousel.Item key={image.id}>
-                <img
+                <Image
                   className="d-block w-100"
                   src={image.url}
                   alt="Property image"
+                  width={800}
+                  height={400}
+                  objectFit="cover"
                 />
               </Carousel.Item>
             ))}

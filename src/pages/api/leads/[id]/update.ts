@@ -1,7 +1,6 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
-import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next'; // Correct import
 import { authOptions } from '../../auth/[...nextauth]'; // Import authOptions
+import { sendSms } from '@/lib/brevo';
 import { LeadStatus, ActivityType } from '@prisma/client';
 import { leadStatusTranslations } from '@/utils/leadStatusTranslations'; // New import
 
@@ -21,7 +20,7 @@ export default async function handler(
 
   if (req.method === 'PATCH') {
     try {
-      const { status, assignedToId } = req.body;
+      const { status, assignedToId, appointmentDate } = req.body; // Destructure appointmentDate
 
       // First, verify the lead exists and belongs to the user's agency
       const lead = await prisma.lead.findFirst({
@@ -36,6 +35,8 @@ export default async function handler(
       }
 
       const activities = [];
+      const updateData: Prisma.LeadUpdateInput = {};
+
       if (status && status !== lead.status) {
         console.log('Old status:', lead.status, 'Translated:', leadStatusTranslations[lead.status]);
         console.log('New status:', status, 'Translated:', leadStatusTranslations[status as LeadStatus]);
@@ -46,26 +47,47 @@ export default async function handler(
             details: `Statut changé de ${leadStatusTranslations[lead.status]} à ${leadStatusTranslations[status as LeadStatus]} `,
           },
         }));
+        updateData.status = status;
       }
 
-      if (assignedToId !== lead.assignedToId) {
-        const oldAgent = lead.assignedToId ? (await prisma.user.findUnique({ where: { id: lead.assignedToId } }))?.name : 'personne';
-        const newAgent = assignedToId ? (await prisma.user.findUnique({ where: { id: assignedToId } }))?.name : 'personne';
-        activities.push(prisma.activity.create({
-          data: {
-            leadId: id,
-            type: ActivityType.NOTE_ADDED, // Using NOTE_ADDED as a generic type for now
-            details: `Prospect assigné à ${newAgent} par ${session.user.name}`,
-          },
-        }));
+      if (assignedToId && assignedToId !== lead.assignedToId) {
+        const newAgent = await prisma.user.findUnique({ where: { id: assignedToId } });
+        if (newAgent) {
+          activities.push(prisma.activity.create({
+            data: {
+              leadId: id,
+              type: ActivityType.NOTE_ADDED, // Using NOTE_ADDED as a generic type for now
+              details: `Prospect assigné à ${newAgent.name} par ${session.user.name}`,
+            },
+          }));
+
+          // Send SMS to the lead with the new agent's info
+          await sendSms(lead, newAgent);
+        }
+        updateData.assignedToId = assignedToId;
+      }
+
+      // Handle appointmentDate
+      if (status === LeadStatus.APPOINTMENT_SCHEDULED && appointmentDate) {
+        const newAppointmentDate = new Date(appointmentDate);
+        if (lead.appointmentDate?.toISOString() !== newAppointmentDate.toISOString()) {
+          activities.push(prisma.activity.create({
+            data: {
+              leadId: id,
+              type: ActivityType.NOTE_ADDED, // Consider a more specific ActivityType if available
+              details: `Rendez-vous programmé pour le ${newAppointmentDate.toLocaleDateString()}`,
+            },
+          }));
+          updateData.appointmentDate = newAppointmentDate;
+        }
+      } else if (status !== LeadStatus.APPOINTMENT_SCHEDULED && lead.appointmentDate) {
+        // If status changes from APPOINTMENT_SCHEDULED, clear the date
+        updateData.appointmentDate = null;
       }
 
       const updatedLead = prisma.lead.update({
         where: { id },
-        data: {
-          ...(status && { status }),
-          ...(assignedToId !== undefined && { assignedToId }),
-        },
+        data: updateData,
       });
 
       await prisma.$transaction([...activities, updatedLead]);

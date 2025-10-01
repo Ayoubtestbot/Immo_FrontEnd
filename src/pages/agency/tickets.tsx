@@ -68,7 +68,7 @@ const TicketsPage = ({ tickets, ticketPriorities, ticketCategories }: TicketsPag
         <Button onClick={() => setShowCreateModal(true)} className="btn-primary">Ouvrir un ticket</Button>
       </div>
 
-      <div className="card">
+      <div className="table-responsive-wrapper">
         {tickets.length > 0 ? (
         <Table hover responsive>
           <thead>
@@ -92,7 +92,7 @@ const TicketsPage = ({ tickets, ticketPriorities, ticketCategories }: TicketsPag
                 <td>{ticketCategoryTranslations[ticket.category]}</td>
                 <td>{new Date(ticket.createdAt).toLocaleDateString()}</td>
                 <td>
-                  <Button size="sm" onClick={() => handleShowViewModal(ticket)} className="btn-outline-primary">Voir</Button>
+                  <Button size="sm" onClick={() => handleShowViewModal(ticket)} className="btn-primary">Voir</Button>
                 </td>
               </tr>
             ))}

@@ -111,7 +111,7 @@ const AdminAgenciesPage = ({ agencies, plans }: AdminAgenciesPageProps) => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette agence ?')) return;
+    if (!confirm('Etes-vous sur de vouloir supprimer cette agence ?')) return;
 
     try {
       const res = await fetch(`/api/admin/agencies/${id}`, {
@@ -136,7 +136,7 @@ const AdminAgenciesPage = ({ agencies, plans }: AdminAgenciesPageProps) => {
         <button className="primary-action-button" onClick={handleShowAddModal}>Ajouter une Agence</button>
       </div>
 
-      <div className="content-card">
+      <div className="table-responsive-wrapper">
         <input
           type="text"
           placeholder="Rechercher une agence..."
@@ -179,17 +179,17 @@ const AdminAgenciesPage = ({ agencies, plans }: AdminAgenciesPageProps) => {
       {/* Add/Edit Agency Modal */}
       <Modal show={showAddModal || showEditModal} onHide={handleClose} centered>
         <Modal.Header closeButton>
-          <Modal.Title>{currentAgency ? "Modifier l'Agence" : "Ajouter une Nouvelle Agence"}</Modal.Title>
+          <Modal.Title>{currentAgency ? "Modifier l&apos;Agence" : "Ajouter une Nouvelle Agence"}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {error && <Alert variant="danger">{error}</Alert>}
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3">
-              <Form.Label>Nom de l'Agence</Form.Label>
+              <Form.Label>Nom de l&apos;Agence</Form.Label>
               <Form.Control type="text" value={name} onChange={(e) => setName(e.target.value)} required />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Plan d'Abonnement</Form.Label>
+              <Form.Label>Plan d&apos;Abonnement</Form.Label>
               <Form.Select value={selectedPlanId} onChange={(e) => setSelectedPlanId(e.target.value)}>
                 <option value="">Sélectionner un plan</option>
                 {plans.map((plan) => (

@@ -1,4 +1,3 @@
-import { Bar, Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -8,7 +7,10 @@ import {
   Title,
   Tooltip,
   Legend,
+  LineElement, // New import
+  PointElement, // New import
 } from 'chart.js';
+import { Bar, Doughnut, Line } from 'react-chartjs-2'; // Added Line import
 
 ChartJS.register(
   CategoryScale,
@@ -17,7 +19,9 @@ ChartJS.register(
   ArcElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  LineElement, // New registration
+  PointElement, // New registration
 );
 
 type ModernChartProps = {
@@ -26,10 +30,15 @@ type ModernChartProps = {
     datasets: {
       label: string;
       data: number[];
-      backgroundColor: string[];
+      backgroundColor?: string[];
+      borderColor?: string;
+      tension?: number;
+      fill?: boolean;
+      pointRadius?: number;
+      pointHoverRadius?: number;
     }[];
   };
-  type?: 'bar' | 'doughnut';
+  type?: 'bar' | 'doughnut' | 'line';
   title?: string;
 };
 
@@ -79,18 +88,49 @@ const ModernChart = ({ chartData, type = 'bar', title }: ModernChartProps) => {
     },
   };
 
+  const lineOptions = {
+    ...baseOptions,
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: { color: '#34495e' },
+        grid: { color: '#e0e0e0' },
+      },
+      x: {
+        ticks: { color: '#34495e' },
+        grid: { display: false },
+      },
+    },
+    elements: {
+      line: {
+        tension: 0.4, // Smooth curves
+        borderColor: '#1A2C49', // Default line color
+        fill: false,
+      },
+      point: {
+        radius: 3,
+        backgroundColor: '#1A2C49',
+        hoverRadius: 5,
+      },
+    },
+  };
+
   const doughnutOptions = {
     ...baseOptions,
     plugins: {
-        ...baseOptions.plugins,
-        legend: {
-            position: 'right' as const,
-        }
-    }
+      ...baseOptions.plugins,
+      legend: {
+        position: 'right' as const,
+      },
+    },
   };
 
   if (type === 'doughnut') {
     return <Doughnut options={doughnutOptions} data={chartData} />;
+  }
+
+  if (type === 'line') {
+    return <Line options={lineOptions} data={chartData} />;
   }
 
   return <Bar options={barOptions} data={chartData} />;

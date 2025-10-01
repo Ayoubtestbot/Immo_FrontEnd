@@ -12,6 +12,7 @@ const AddLeadModal = ({ show, handleClose, onLeadAdded }: AddLeadModalProps) => 
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [city, setCity] = useState(''); // New state for city
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -24,7 +25,7 @@ const AddLeadModal = ({ show, handleClose, onLeadAdded }: AddLeadModalProps) => 
       const res = await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ firstName, lastName, email, phone }),
+        body: JSON.stringify({ firstName, lastName, email, phone, city }), // Include city
       });
 
       if (!res.ok) {
@@ -37,6 +38,7 @@ const AddLeadModal = ({ show, handleClose, onLeadAdded }: AddLeadModalProps) => 
       setLastName('');
       setEmail('');
       setPhone('');
+      setCity(''); // Reset city
 
       setLoading(false);
       onLeadAdded(); // This will trigger a refresh on the parent page
@@ -70,6 +72,10 @@ const AddLeadModal = ({ show, handleClose, onLeadAdded }: AddLeadModalProps) => 
           <Form.Group className="mb-3">
             <Form.Label>Téléphone</Form.Label>
             <Form.Control type="text" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+          </Form.Group>
+          <Form.Group className="mb-3"> {/* New Form Group for City */}
+            <Form.Label>Ville (optionnel)</Form.Label>
+            <Form.Control type="text" value={city} onChange={(e) => setCity(e.target.value)} />
           </Form.Group>
           <div className="d-flex justify-content-end mt-4">
             <Button variant="secondary" onClick={handleClose} className="me-2">

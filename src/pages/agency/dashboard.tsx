@@ -88,6 +88,7 @@ const AgencyDashboard = (props: AgencyDashboardProps) => {
   };
 
   const handleOpenCallLeadModal = (lead: LeadWithAssignedTo) => {
+    console.log('Opening call lead modal for:', lead);
     setSelectedLead(lead);
     setShowCallLeadModal(true);
   };
@@ -155,7 +156,7 @@ const AgencyDashboard = (props: AgencyDashboardProps) => {
         <Col lg={7} className="mb-4">
           <Card className="card" style={{ minHeight: '400px' }}>
             <Card.Body className="d-flex flex-column h-100">
-              <h5 className="mb-4">Vue d'ensemble de l'activité</h5>
+              <h5 className="mb-4">Vue d&apos;ensemble de l&apos;activité</h5>
               <div className="flex-grow-1 d-flex align-items-center justify-content-center">
                 <ModernChart chartData={overviewChartData} type="bar" />
               </div>
@@ -187,22 +188,19 @@ const AgencyDashboard = (props: AgencyDashboardProps) => {
                       <li key={lead.id} className="d-flex justify-content-between align-items-center mb-2">
                         <div>
                           <span className="status-dot urgent-lead me-2"></span>
-                          <Link href={`/agency/leads/${lead.id}`} className="text-decoration-none text-dark fw-bold">
+                          <span className="text-decoration-none text-dark fw-bold" style={{ cursor: 'pointer' }} onClick={() => handleOpenViewLeadModal(lead as LeadWithAssignedTo)}>
                             {lead.firstName} {lead.lastName}
-                          </Link>
+                          </span>
                         </div>
                         <div className="d-flex">
-                          <Button className="btn-outline-secondary btn-xs me-2" onClick={() => router.push(`/agency/leads/${lead.id}`)}>Voir</Button>
-                          <a
-                            href={lead.phone ? `tel:${lead.phone}` : '#'}
-                            className="btn btn-xs btn-outline-primary"
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <Button className="btn-primary btn-xs me-2" onClick={() => handleOpenViewLeadModal(lead as LeadWithAssignedTo)}>Voir</Button>
+                          <Button
+                            className="btn btn-xs btn-primary"
                             disabled={!lead.phone}
                             onClick={() => handleOpenCallLeadModal(lead as LeadWithAssignedTo)}
                           >
                             Appeler
-                          </a>
+                          </Button>
                         </div>
                       </li>
                     ))}
@@ -318,7 +316,21 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }),
     prisma.lead.findMany({
       where: { agencyId, isUrgent: true }, // Fetch urgent leads
-      select: { id: true, firstName: true, lastName: true, phone: true },
+      select: { 
+        id: true, 
+        firstName: true, 
+        lastName: true, 
+        phone: true, 
+        email: true, // Added email
+        city: true, // Added city
+        trafficSource: true, // Added trafficSource
+        status: true, // Added status
+        createdAt: true, // Added createdAt
+        assignedTo: true, // Added assignedTo
+        notes: { include: { author: true } }, // Added notes
+        activities: true, // Added activities
+        properties: true, // Added properties
+      },
       take: 5,
       orderBy: { createdAt: 'desc' },
     }),
