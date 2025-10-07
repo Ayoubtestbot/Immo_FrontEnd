@@ -51,8 +51,8 @@ const AdminSubscriptionsPage = ({ subscriptions, plans }: AdminSubscriptionsPage
   const handleShowEditModal = (subscription: SubscriptionWithDetails) => {
     setCurrentSubscription(subscription);
     setStatus(subscription.status);
-    setStartDate(subscription.startDate.split('T')[0]);
-    setEndDate(subscription.endDate?.split('T')[0] || '');
+    setStartDate(new Date(subscription.startDate).toISOString().split('T')[0]);
+    setEndDate(subscription.endDate ? new Date(subscription.endDate).toISOString().split('T')[0] : '');
     setSelectedPlanId(subscription.planId);
     setShowEditModal(true);
   };

@@ -16,10 +16,7 @@ import CustomDropdownMenu from '@/components/CustomDropdownMenu';
 import useDebounce from '@/hooks/useDebounce'; // New import
 import { isTrialActive } from '@/lib/subscription';
 
-type PropertyWithDetails = Property & {
-  images: Image[];
-  leads: Lead[];
-};
+import { PropertyWithDetails } from '@/types';
 
 type PropertiesPageProps = {
   properties: PropertyWithDetails[];
@@ -225,7 +222,7 @@ const PropertiesPage = ({ properties, leads, filterPropertyNumber: initialFilter
               <td>{property.price}</td>
               <td>{property.status}</td>
               <td>
-                <Dropdown align="end" popperConfig={{ strategy: 'fixed' }}>
+                <Dropdown align="end">
                                       <Dropdown.Toggle variant="outline-secondary" size="sm">
                                         Actions
                                       </Dropdown.Toggle>
@@ -233,7 +230,7 @@ const PropertiesPage = ({ properties, leads, filterPropertyNumber: initialFilter
                                         <Dropdown.Item onClick={() => handleOpenViewModal(property)}>Visualiser</Dropdown.Item>
                                         <Dropdown.Item onClick={() => handleOpenEditModal(property)}>Modifier</Dropdown.Item>
                                         <Dropdown.Item onClick={() => handleOpenLinkLeadModal(property)}>Lier à un prospect</Dropdown.Item>
-                                        <Dropdown.Item variant="danger" onClick={() => handleDeleteProperty(property.id)}>Supprimer</Dropdown.Item>
+                                        <Dropdown.Item className="text-danger" onClick={() => handleDeleteProperty(property.id)}>Supprimer</Dropdown.Item>
                                       </CustomDropdownMenu>                </Dropdown>
               </td>
             </tr>
@@ -287,8 +284,18 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
   const filterMinPrice = minPrice ? parseFloat(String(minPrice)) : undefined;
   const filterMaxPrice = maxPrice ? parseFloat(String(maxPrice)) : undefined;
 
+  const agencyId = session.user.agencyId;
+  if (!agencyId) {
+    return {
+      redirect: {
+        destination: '/login',
+        permanent: false,
+      },
+    };
+  }
+
   const whereClause: Prisma.PropertyWhereInput = {
-    agencyId: session.user.agencyId,
+    agencyId: agencyId,
   };
 
   if (filterPropertyNumber) {
@@ -344,10 +351,10 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
     }),
     prisma.lead.findMany({
       where: {
-        agencyId: session.user.agencyId,
+        agencyId: agencyId,
       },
     }),
-    isTrialActive(session.user.agencyId),
+    isTrialActive(agencyId),
   ]);
 
   return {

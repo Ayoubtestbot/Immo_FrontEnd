@@ -1,0 +1,5 @@
+
+> leadestate_cli@1.0.0 dev
+> dotenv -e .env next dev -p 3002
+
+

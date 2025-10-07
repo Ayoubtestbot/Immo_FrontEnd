@@ -69,7 +69,7 @@ const ModernChart = ({ chartData, type = 'bar', title }: ModernChartProps) => {
     },
     animation: {
       duration: 1000,
-      easing: 'easeInOutQuart',
+      easing: 'easeInOutQuart' as any,
     },
   };
 

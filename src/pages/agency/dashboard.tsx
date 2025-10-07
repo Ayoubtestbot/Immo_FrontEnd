@@ -11,11 +11,13 @@ import ModernChart from '@/components/ModernChart';
 import Link from 'next/link';
 import KpiCard from '@/components/KpiCard';
 import { getTranslatedUserRole } from '@/utils/userRoleTranslations';
+import { LeadWithAssignedTo } from '@/types';
 import ViewLeadModal from '@/components/ViewLeadModal';
+import FunnelChart from '@/components/FunnelChart';
+import { leadStatusTranslations } from '@/utils/leadStatusTranslations';
 
-type LeadWithAssignedTo = Lead & {
-  assignedTo: User | null;
-};
+
+
 
 type AgencyDashboardProps = {
   agencyId: string;
@@ -33,6 +35,7 @@ type AgencyDashboardProps = {
     urgentTickets: { id: string; subject: string }[];
     urgentLeads: { id: string; firstName: string; lastName: string; phone: string | null }[]; // New field
   };
+  funnelData: { status: LeadStatus; _count: { status: number } }[];
 };
 
 const AgencyDashboard = (props: AgencyDashboardProps) => {
@@ -47,7 +50,17 @@ const AgencyDashboard = (props: AgencyDashboardProps) => {
     leadsByStatus,
     agencyAgents,
     urgentTasks,
+    funnelData,
   } = props;
+
+  const funnelStages: LeadStatus[] = ['NEW', 'CONTACTED', 'QUALIFIED', 'APPOINTMENT_SCHEDULED', 'CONVERTED'];
+  const funnelChartData = funnelStages.map(stage => {
+    const stageData = funnelData.find(d => d.status === stage);
+    return {
+      name: leadStatusTranslations[stage] || stage,
+      value: stageData ? stageData._count.status : 0,
+    };
+  });
 
   const router = useRouter();
 
@@ -63,7 +76,7 @@ const AgencyDashboard = (props: AgencyDashboardProps) => {
   };
 
   const leadsByStatusChartData = {
-    labels: leadsByStatus.map(item => item.status),
+    labels: leadsByStatus.map(item => leadStatusTranslations[item.status as LeadStatus] || item.status),
     datasets: [
       {
         label: 'Répartition des prospects',
@@ -176,6 +189,19 @@ const AgencyDashboard = (props: AgencyDashboardProps) => {
       </Row>
 
       <Row className="mt-4">
+        <Col lg={12} className="mb-4">
+          <Card className="card" style={{ minHeight: '400px' }}>
+            <Card.Body className="d-flex flex-column h-100">
+              <h5 className="mb-4">Conversion Funnel</h5>
+              <div className="flex-grow-1 d-flex align-items-center justify-content-center">
+                <FunnelChart data={funnelChartData} />
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+
+      <Row className="mt-4">
         <Col md={6} className="mb-4">
           <Card className="card" style={{ minHeight: '300px' }}>
             <Card.Body className="d-flex flex-column h-100">
@@ -281,7 +307,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const [totalLeads, leadsToday, totalProperties, propertiesToday, totalTickets, ticketsToday, convertedLeads, leadsByStatusRaw, agencyAgents, newLeads, urgentTickets, urgentLeads] = await Promise.all([
+  const [totalLeads, leadsToday, totalProperties, propertiesToday, totalTickets, ticketsToday, convertedLeads, leadsByStatusRaw, agencyAgents, newLeads, urgentTickets, urgentLeads, funnelData] = await Promise.all([
     prisma.lead.count({ where: { agencyId } }),
     prisma.lead.count({ where: { agencyId, createdAt: { gte: today } } }),
     prisma.property.count({ where: { agencyId } }),
@@ -296,46 +322,40 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }),
     prisma.user.findMany({
       where: { agencyId },
-      include: {
-        _count: {
-          select: { assignedLeads: true },
-        },
-      },
+      include: { _count: { select: { assignedLeads: true } } },
     }),
     prisma.lead.findMany({
       where: { agencyId, status: LeadStatus.NEW },
       select: { id: true, firstName: true, lastName: true },
-      take: 5,
       orderBy: { createdAt: 'desc' },
+      take: 5,
     }),
     prisma.ticket.findMany({
-      where: { agencyId, priority: TicketPriority.URGENT },
+      where: { agencyId, priority: TicketPriority.URGENT, status: { not: 'CLOSED' } },
       select: { id: true, subject: true },
-      take: 5,
       orderBy: { createdAt: 'desc' },
+      take: 5,
     }),
     prisma.lead.findMany({
-      where: { agencyId, isUrgent: true }, // Fetch urgent leads
-      select: { 
-        id: true, 
-        firstName: true, 
-        lastName: true, 
-        phone: true, 
-        email: true, // Added email
-        city: true, // Added city
-        trafficSource: true, // Added trafficSource
-        status: true, // Added status
-        createdAt: true, // Added createdAt
-        assignedTo: true, // Added assignedTo
-        notes: { include: { author: true } }, // Added notes
-        activities: true, // Added activities
-        properties: true, // Added properties
-      },
-      take: 5,
+      where: { agencyId, isUrgent: true, status: { not: LeadStatus.CONVERTED } },
+      select: { id: true, firstName: true, lastName: true, phone: true },
       orderBy: { createdAt: 'desc' },
+      take: 5,
+    }),
+    prisma.lead.groupBy({
+      by: ['status'],
+      where: {
+        agencyId: agencyId,
+        status: {
+          in: ['NEW', 'CONTACTED', 'QUALIFIED', 'APPOINTMENT_SCHEDULED', 'CONVERTED'],
+        },
+      },
+      _count: {
+        status: true,
+      },
     }),
   ]);
-  
+
   const conversionRate = totalLeads > 0 ? (convertedLeads / totalLeads) * 100 : 0;
   const leadsByStatus = leadsByStatusRaw.map(item => ({ status: item.status, count: item._count.status }));
 
@@ -356,6 +376,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         urgentTickets: JSON.parse(JSON.stringify(urgentTickets)),
         urgentLeads: JSON.parse(JSON.stringify(urgentLeads)),
       },
+      funnelData: JSON.parse(JSON.stringify(funnelData)),
     },
   };
 };

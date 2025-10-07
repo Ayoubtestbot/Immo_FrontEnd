@@ -1,5 +1,5 @@
 import type { GetServerSideProps } from 'next';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { withAuth } from '@/lib/withAuth';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -13,12 +13,15 @@ import CustomDropdownMenu from '@/components/CustomDropdownMenu';
 import { prisma } from '@/lib/prisma';
 import type { Lead, User, Note, Activity, Property, Prisma } from '@prisma/client';
 import { LeadStatus, UserRole } from '@prisma/client'; // Added UserRole
+import { FaWhatsapp, FaEnvelope, FaPhone } from 'react-icons/fa';
 import { Table, Button, Alert, Form, Row, Col, Dropdown } from 'react-bootstrap';
 import { leadStatusTranslations, getTranslatedLeadStatus, leadStatusColors } from '@/utils/leadStatusTranslations';
 import useDebounce from '@/hooks/useDebounce'; // New import
 import { isTrialActive } from '@/lib/subscription';
 import { useSession } from 'next-auth/react'; // New import
 import AssignAgentModal from '@/components/AssignAgentModal'; // New import
+import BulkStatusChangeModal from '@/components/BulkStatusChangeModal'; // New import
+import BulkDeleteModal from '@/components/BulkDeleteModal'; // New import
 
 type LeadWithAssignedTo = Lead & {
   assignedTo: User | null;
@@ -50,18 +53,44 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
   const [showViewModal, setShowViewModal] = useState(false);
   const [showLinkPropertyModal, setShowLinkPropertyModal] = useState(false);
   const [showAssignAgentModal, setShowAssignAgentModal] = useState(false); // New state
+  const [showBulkAssignAgentModal, setShowBulkAssignAgentModal] = useState(false); // New state for bulk assign
+  const [showBulkStatusChangeModal, setShowBulkStatusChangeModal] = useState(false); // New state for bulk status change
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false); // New state for bulk delete
   const [editingLead, setEditingLead] = useState<LeadWithAssignedTo | null>(null);
   const [assigningLeadId, setAssigningLeadId] = useState<string | null>(null); // New state
   const [assigningLeadCurrentAgentId, setAssigningLeadCurrentAgentId] = useState<string | null>(null); // New state
+  const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]); // New state for bulk actions
   const [filterName, setFilterName] = useState(initialFilterName);
   const [filterAgentId, setFilterAgentId] = useState(initialFilterAgentId);
   const [statusFilter, setStatusFilter] = useState(currentStatus);
   const router = useRouter();
 
   const debouncedFilterName = useDebounce(filterName, 500);
+  const selectAllRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = selectedLeadIds.length > 0 && selectedLeadIds.length < leads.length;
+    }
+  }, [selectedLeadIds, leads]);
 
   const refreshData = () => {
     router.replace(router.asPath);
+  };
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      const allLeadIds = leads.map(lead => lead.id);
+      setSelectedLeadIds(allLeadIds);
+    } else {
+      setSelectedLeadIds([]);
+    }
+  };
+
+  const handleSelectLead = (leadId: string) => {
+    setSelectedLeadIds(prev =>
+      prev.includes(leadId) ? prev.filter(id => id !== leadId) : [...prev, leadId]
+    );
   };
 
   useEffect(() => {
@@ -227,6 +256,23 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
         </div>
       </div>
 
+      {selectedLeadIds.length > 0 && (
+        <div className="d-flex justify-content-start align-items-center mb-3">
+          <span className="me-2">{selectedLeadIds.length} prospect(s) sélectionné(s)</span>
+          <Dropdown>
+            <Dropdown.Toggle variant="primary" id="dropdown-bulk-actions">
+              Actions groupées
+            </Dropdown.Toggle>
+
+            <Dropdown.Menu>
+              <Dropdown.Item onClick={() => setShowBulkAssignAgentModal(true)}>Assigner un agent (en masse)</Dropdown.Item>
+              <Dropdown.Item onClick={() => setShowBulkStatusChangeModal(true)}>Changer le statut (en masse)</Dropdown.Item>
+              <Dropdown.Item onClick={() => setShowBulkDeleteModal(true)}>Supprimer (en masse)</Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown>
+        </div>
+      )}
+
       <div className="table-responsive-wrapper">
         <Row className="mb-4">
           <Col md={4}>
@@ -274,6 +320,14 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
         <Table hover responsive>
           <thead>
             <tr>
+              <th>
+                <Form.Check
+                  ref={selectAllRef}
+                  type="checkbox"
+                  onChange={handleSelectAll}
+                  checked={selectedLeadIds.length === leads.length && leads.length > 0}
+                />
+              </th>
               <th>Nom</th>
               <th>Email</th>
               <th>Téléphone</th>
@@ -289,9 +343,40 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
             {leads.map((lead) => {
               return (
                 <tr key={lead.id} className={!isTrialActive ? 'text-muted' : ''}>
+                  <td>
+                    <Form.Check
+                      type="checkbox"
+                      checked={selectedLeadIds.includes(lead.id)}
+                      onChange={() => handleSelectLead(lead.id)}
+                    />
+                  </td>
                   <td>{`${lead.firstName} ${lead.lastName}`}</td>
-                  <td>{lead.email}</td>
-                  <td>{lead.phone || '-'}</td>
+                  <td>
+                    {lead.email}
+                    {lead.email && (
+                      <a href={`mailto:${lead.email}`} className="ms-2">
+                        <FaEnvelope style={{ color: '#007bff' }} />
+                      </a>
+                    )}
+                  </td>
+                  <td>
+                    {lead.phone}
+                    {lead.phone && (
+                      <a href={`tel:${lead.phone}`} className="ms-2">
+                        <FaPhone />
+                      </a>
+                    )}
+                    {lead.phone && (
+                      <a
+                        href={`https://wa.me/${lead.phone}?text=Bonjour, je vous contacte concernant une propriété.`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ms-2"
+                      >
+                        <FaWhatsapp style={{ color: '#25D366' }} />
+                      </a>
+                    )}
+                  </td>
                   <td>{lead.city || '-'}</td>
                   <td>{lead.trafficSource || '-'}</td>
                   <td>
@@ -299,7 +384,7 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
                   </td>
                   <td>{lead.assignedTo?.name || <span className="text-muted">Non assigné</span>}</td>
                   <td>
-                    <Dropdown align="end" popperConfig={{ strategy: 'fixed' }}>
+                    <Dropdown align="end">
                                           <Dropdown.Toggle variant="outline-secondary" size="sm" id={`dropdown-${lead.id}`}>
                                             Actions
                                           </Dropdown.Toggle>
@@ -309,7 +394,7 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
                                             <Dropdown.Item as="button" onClick={() => handleOpenAddNoteModal(lead)}>Ajouter Note</Dropdown.Item>
                                             <Dropdown.Item as="button" onClick={() => handleOpenLinkPropertyModal(lead)}>Lier une propriété</Dropdown.Item>
                                             <Dropdown.Item as="button" onClick={() => handleOpenAssignAgentModal(lead)}>Assigner un agent</Dropdown.Item> {/* New Dropdown Item */}
-                                            <Dropdown.Item as="button" variant="danger" onClick={() => handleDeleteLead(lead.id)}>Supprimer</Dropdown.Item>
+                                            <Dropdown.Item as="button" className="text-danger" onClick={() => handleDeleteLead(lead.id)}>Supprimer</Dropdown.Item>
                                           </CustomDropdownMenu>                    </Dropdown>
                   </td>
                   <td>
@@ -425,6 +510,30 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
           onAgentAssigned={refreshData}
         />
       )}
+
+      {/* Bulk Assign Agent Modal */}
+      <AssignAgentModal
+        show={showBulkAssignAgentModal}
+        onClose={() => setShowBulkAssignAgentModal(false)}
+        leadId={null} // No single leadId for bulk assign
+        currentAssignedAgentId={null} // No single current agent for bulk assign
+        selectedLeadIds={selectedLeadIds} // Pass selected lead IDs for bulk action
+        onAgentAssigned={() => {
+          refreshData();
+          setSelectedLeadIds([]); // Clear selection after bulk action
+        }}
+      />
+
+      {/* Bulk Status Change Modal */}
+      <BulkStatusChangeModal
+        show={showBulkStatusChangeModal}
+        onClose={() => setShowBulkStatusChangeModal(false)}
+        selectedLeadIds={selectedLeadIds}
+        onLeadsUpdated={() => {
+          refreshData();
+          setSelectedLeadIds([]); // Clear selection after bulk action
+        }}
+      />
     </DashboardLayout>
   );
 };
@@ -437,8 +546,18 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
   const filterName = name ? String(name) : '';
   const filterAgentId = agentId ? String(agentId) : 'ALL';
 
+  const agencyId = session.user.agencyId;
+  if (!agencyId) {
+    return {
+      redirect: {
+        destination: '/login',
+        permanent: false,
+      },
+    };
+  }
+
   const whereClause: Prisma.LeadWhereInput = {
-    agencyId: session.user.agencyId,
+    agencyId: agencyId,
     ...(currentStatus !== 'ALL' && { status: currentStatus }),
     ...(filterName && {
       OR: [
@@ -483,15 +602,15 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
     prisma.lead.count({ where: whereClause }), // Get total count for pagination
     prisma.user.findMany({
       where: {
-        agencyId: session.user.agencyId,
+        agencyId: agencyId,
       },
     }),
     prisma.property.findMany({
       where: {
-        agencyId: session.user.agencyId,
+        agencyId: agencyId,
       },
     }),
-    isTrialActive(session.user.agencyId),
+    isTrialActive(agencyId),
   ]);
 
   const totalPages = Math.ceil(totalLeadsCount / currentSize);

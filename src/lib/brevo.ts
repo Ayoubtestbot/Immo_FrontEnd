@@ -1,34 +1,47 @@
-import * as Brevo from '@getbrevo/brevo';
-import { User, Lead } from '@prisma/client';
+import { Lead, User } from '@prisma/client';
 
-const apiInstance = new Brevo.TransactionalSMSApi();
-apiInstance.authentications['apiKey'].apiKey = process.env.BREVO_API_KEY || '';
+const ZAPIER_WEBHOOK_URL = 'https://hooks.zapier.com/hooks/catch/8799995/u9e0rqn/';
 
 export const sendSms = async (lead: Lead, agent?: User) => {
-  let recipientPhone = lead.phone;
-  let textContent: string; // Declare textContent here
-
-  if (!recipientPhone) {
-    console.log('Lead does not have a valid phone number, skipping SMS.');
-    return;
-  }
-
-  if (agent && agent.phone) {
-    textContent = `Bonjour ${lead.firstName}, nous avons bien reçu vos informations. Votre agent ${agent.name} vous contactera bientôt. Son numéro de téléphone est le ${agent.phone}.`;
-  } else {
-    textContent = `Bonjour ${lead.firstName}, nous avons bien reçu vos informations. Un agent vous contactera bientôt.`;
-  }
-
-  const sendSms = new Brevo.SendTransacSms();
-  sendSms.sender = 'LeadEstate';
-  sendSms.recipient = recipientPhone;
-  sendSms.content = textContent; // Use the defined textContent
-  sendSms.type = 'transactional';
+  const payload = {
+    lead: {
+      id: lead.id,
+      firstName: lead.firstName,
+      lastName: lead.lastName,
+      email: lead.email,
+      phone: lead.phone,
+      city: lead.city,
+      trafficSource: lead.trafficSource,
+      status: lead.status,
+      isUrgent: lead.isUrgent,
+      createdAt: lead.createdAt,
+      updatedAt: lead.updatedAt,
+    },
+    agent: agent ? {
+      id: agent.id,
+      name: agent.name,
+      email: agent.email,
+      phone: agent.phone,
+    } : null,
+  };
 
   try {
-    await apiInstance.sendTransacSms(sendSms);
-    console.log('SMS sent successfully.');
+    const response = await fetch(ZAPIER_WEBHOOK_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Zapier webhook failed with status ${response.status}`);
+    }
+
+    console.log('Successfully sent data to Zapier webhook');
   } catch (error) {
-    console.error('Failed to send SMS:', error);
+    console.error('Error sending data to Zapier webhook:', error);
+    // Optionally, re-throw the error if you want the caller to handle it
+    // throw error;
   }
 };

@@ -12,12 +12,7 @@ import interactionPlugin from '@fullcalendar/interaction'; // for dateClick
 import ViewLeadModal from '@/components/ViewLeadModal'; // New import
 import type { Lead, User, Note, Activity, Property } from '@prisma/client';
 
-interface LeadWithAssignedTo extends Lead {
-  assignedTo: User | null;
-  notes: (Note & { author: User })[];
-  activities: Activity[];
-  properties: Property[];
-}
+import { LeadWithAssignedTo } from '@/types';
 
 interface CalendarEvent {
   id: string;
@@ -64,6 +59,7 @@ const CalendarPage = () => {
           const isAllDay = appointmentDateTime.getHours() === 0 && appointmentDateTime.getMinutes() === 0 && appointmentDateTime.getSeconds() === 0;
 
           return {
+            ...event,
             id: event.id,
             title: `${event.firstName} ${event.lastName} (${event.assignedTo?.name || 'Unassigned'})`,
             start: event.appointmentDate, // FullCalendar can handle ISO strings directly
@@ -72,7 +68,7 @@ const CalendarPage = () => {
               lead: { // Store the full lead object here
                 ...event,
                 assignedTo: event.assignedTo ? { ...event.assignedTo, id: '' } : null, // Mock assignedTo.id as it's not returned by API
-              } as LeadWithAssignedTo,
+              } as any,
             },
           };
         });

@@ -69,7 +69,7 @@ async function main() {
         price: 0.00, // Price on quote
         prospectsLimit: -1,
         usersLimit: -1, // Added usersLimit
-        features: 'Accès complet à toutes les fonctionnalités, Support dédié 24/7, Personnalisation et intégration sur mesure, Formation de l'équipe',
+        features: 'Accès complet à toutes les fonctionnalités, Support dédié 24/7, Personnalisation et intégration sur mesure, Formation de l\'équipe',
       },
     });
     console.log(`Created plan: ${enterprisePlan.name}`);

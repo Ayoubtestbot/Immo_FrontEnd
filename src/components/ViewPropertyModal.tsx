@@ -3,11 +3,7 @@ import type { Property, Image as PrismaImage, Lead } from '@prisma/client';
 import DynamicMap from './DynamicMap';
 import Image from 'next/image';
 
-type PropertyWithDetails = Property & {
-  images: PrismaImage[];
-  leads: Lead[];
-  propertyNumber: number; // New field
-};
+import { PropertyWithDetails } from '@/types';
 
 type ViewPropertyModalProps = {
   show: boolean;

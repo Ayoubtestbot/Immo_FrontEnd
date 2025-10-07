@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { FiGrid, FiUsers, FiArchive, FiTag, FiSettings, FiLogOut, FiUser, FiMenu } from 'react-icons/fi';
+import { FiGrid, FiUsers, FiArchive, FiTag, FiSettings, FiLogOut, FiUser, FiMenu, FiCalendar } from 'react-icons/fi';
 import Link from 'next/link';
 import { signOut, useSession } from 'next-auth/react';
-
-import { Dropdown, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { Dropdown } from 'react-bootstrap';
 import { UserRole } from '@prisma/client';
+import styles from '../styles/NewDashboard.module.css';
+import Image from 'next/image';
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const { data: session } = useSession();
@@ -14,65 +15,50 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
   };
 
-  const renderTooltip = (text: string) => (
-    <Tooltip id={`tooltip-${text}`}>{text}</Tooltip>
-  );
-
   return (
-    <div className={`dashboard-container ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-      <div className='sidebar'>
-        <div className="sidebar-header">
-          <h4 className="full-logo">LeadEstate</h4>
-          <button onClick={toggleSidebar} className="sidebar-toggle">
-            <FiMenu />
-          </button>
+    <div className={styles.layout}>
+      <div className={`${styles.sidebar} ${isSidebarCollapsed ? styles.sidebarCollapsed : ''}`}>
+        <div className={styles.sidebarHeader}>
+          <Image
+            src={isSidebarCollapsed ? "/logo-small.png" : "/logo.png"}
+            alt="LeadEstate"
+            width={isSidebarCollapsed ? 40 : 120}
+            height={40}
+            className={styles.logo}
+          />
         </div>
-        <nav className="sidebar-nav">
-          <OverlayTrigger placement="right" overlay={isSidebarCollapsed ? renderTooltip('Tableau de bord') : <></>}>
-            <Link href="/agency/dashboard" className="sidebar-link">
-              <FiGrid /> <span>Tableau de bord</span>
-            </Link>
-          </OverlayTrigger>
-          <OverlayTrigger placement="right" overlay={isSidebarCollapsed ? renderTooltip('Prospects') : <></>}>
-            <Link href="/agency/leads" className="sidebar-link">
-              <FiUsers /> <span>Prospects</span>
-            </Link>
-          </OverlayTrigger>
-          <OverlayTrigger placement="right" overlay={isSidebarCollapsed ? renderTooltip('Propriétés') : <></>}>
-            <Link href="/agency/properties" className="sidebar-link">
-              <FiArchive /> <span>Propriétés</span>
-            </Link>
-          </OverlayTrigger>
-          <OverlayTrigger placement="right" overlay={isSidebarCollapsed ? renderTooltip('Calendrier') : <></>}>
-            <Link href="/agency/calendar" className="sidebar-link">
-              <FiGrid /> <span>Calendrier</span>
-            </Link>
-          </OverlayTrigger>
-          <OverlayTrigger placement="right" overlay={isSidebarCollapsed ? renderTooltip('Tickets') : <></>}>
-            <Link href="/agency/tickets" className="sidebar-link">
-              <FiTag /> <span>Tickets</span>
-            </Link>
-          </OverlayTrigger>
+        <nav className={styles.sidebarNav}>
+          <Link href="/agency/dashboard" className={styles.sidebarLink}>
+            <FiGrid /> <span>Tableau de bord</span>
+          </Link>
+          <Link href="/agency/leads" className={styles.sidebarLink}>
+            <FiUsers /> <span>Prospects</span>
+          </Link>
+          <Link href="/agency/properties" className={styles.sidebarLink}>
+            <FiArchive /> <span>Propriétés</span>
+          </Link>
+          <Link href="/agency/calendar" className={styles.sidebarLink}>
+            <FiCalendar /> <span>Calendrier</span>
+          </Link>
+          <Link href="/agency/tickets" className={styles.sidebarLink}>
+            <FiTag /> <span>Tickets</span>
+          </Link>
           {session?.user?.role === UserRole.AGENCY_OWNER && (
             <>
-              <OverlayTrigger placement="right" overlay={isSidebarCollapsed ? renderTooltip('Équipe') : <></>}>
-                <Link href="/agency/users" className="sidebar-link">
-                  <FiUsers /> <span>Équipe</span>
-                </Link>
-              </OverlayTrigger>
-              <OverlayTrigger placement="right" overlay={isSidebarCollapsed ? renderTooltip('Paramètres') : <></>}>
-                <Link href="/agency/settings" className="sidebar-link">
-                  <FiSettings /> <span>Paramètres</span>
-                </Link>
-              </OverlayTrigger>
+              <Link href="/agency/users" className={styles.sidebarLink}>
+                <FiUsers /> <span>Équipe</span>
+              </Link>
+              <Link href="/agency/settings" className={styles.sidebarLink}>
+                <FiSettings /> <span>Paramètres</span>
+              </Link>
             </>
           )}
         </nav>
-        <div className="sidebar-footer">
+        <div className={styles.sidebarFooter}>
           <Dropdown drop="up">
-            <Dropdown.Toggle variant="transparent" id="dropdown-user" className="user-menu">
+            <Dropdown.Toggle variant="transparent" id="dropdown-user" className={styles.userMenu}>
                 <FiUser size={24} />
-                <span className="ms-2">{session?.user?.name}</span>
+                {!isSidebarCollapsed && <span className="ms-2">{session?.user?.name}</span>}
             </Dropdown.Toggle>
             <Dropdown.Menu>
               <Dropdown.Item onClick={() => signOut({ callbackUrl: '/' })}>
@@ -83,9 +69,9 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
           </Dropdown>
         </div>
       </div>
-      <div className="main-content">
-        <div className="header">
-          <button onClick={toggleSidebar} className="sidebar-mobile-toggle">
+      <div className={`${styles.mainContent} ${isSidebarCollapsed ? styles.mainContentCollapsed : ''}`}>
+        <div className={styles.header}>
+          <button onClick={toggleSidebar} className={styles.sidebarMobileToggle}>
             <FiMenu />
           </button>
           {/* Header content can go here, like a search bar */}

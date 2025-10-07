@@ -18,8 +18,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {
     };
   }, []);
   const initialOptions = {
-    clientId: process.env.PAYPAL_CLIENT_ID || "sb", // Use "sb" for sandbox if not defined
-    currency: "EUR", // Assuming Euro as currency
+            clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "sb", // Use "sb" for sandbox if not defined    currency: "EUR", // Assuming Euro as currency
     intent: "capture",
     "data-sdk-integration-source": "integrationbuilder_sc", // Recommended for custom integrations
     "data-namespace": "paypal_sdk", // Custom namespace to avoid conflicts
@@ -28,6 +27,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {
   return (
     <SessionProvider session={session}>
       <Head>
+        <title>LeadEstate</title>
       </Head>
       <PayPalScriptProvider options={initialOptions}>
         <Component {...pageProps} />
