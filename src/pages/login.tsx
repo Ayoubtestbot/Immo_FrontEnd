@@ -81,7 +81,7 @@ const LoginPage = () => {
   return (
     <div className={styles.loginContainer}>
       <div className={styles.imageContainer}>
-        <Image src="/logo.png" alt="LeadEstate Logo" width={150} height={150} />
+        <Image src="/Lead.png" alt="LeadEstate Logo" width={150} height={150} />
         <h1 className={styles.title}>LeadEstate</h1>
         <p className={styles.subtitle}>Votre partenaire immobilier de confiance</p>
       </div>
@@ -110,6 +110,11 @@ const LoginPage = () => {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
+          <div className="d-flex justify-content-end mb-3">
+            <Link href="/forgot-password" legacyBehavior>
+              <a className={styles.link}>Mot de passe oublié ?</a>
+            </Link>
+          </div>
           <button type="submit" className={styles.button} disabled={loading}>
             {loading ? 'Connexion en cours...' : 'Se connecter'}
           </button>

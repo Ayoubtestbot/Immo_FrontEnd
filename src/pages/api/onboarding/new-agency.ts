@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/pages/api/auth/[...nextauth]';
 import { prisma } from '@/lib/prisma';
 import { UserRole } from '@prisma/client';
+import * as brevo from '@getbrevo/brevo';
 
 export default async function handler(
   req: NextApiRequest,
@@ -61,6 +62,28 @@ export default async function handler(
 
         return user;
       });
+
+      // Send welcome email
+      const apiInstance = new brevo.TransactionalEmailsApi();
+      apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_EMAIL_KEY || '');
+
+      const sendSmtpEmail = new brevo.SendSmtpEmail();
+      sendSmtpEmail.subject = "Bienvenue sur LeadEstate";
+      sendSmtpEmail.htmlContent = `
+        <div style="font-family: Arial, sans-serif; color: #333;">
+          <h2>Bienvenue sur LeadEstate, ${session.user.name}!</h2>
+          <p>Nous sommes ravis de vous compter parmi nous. Votre agence, ${agencyName}, a été créée avec succès.</p>
+          <p>Vous pouvez maintenant commencer à gérer vos prospects et vos propriétés plus efficacement.</p>
+          <p>Pour commencer, connectez-vous à votre compte.</p>
+          <p>Si vous avez des questions, n'hésitez pas à nous contacter.</p>
+          <p>Merci,</p>
+          <p>L'équipe LeadEstate</p>
+        </div>
+      `;
+      sendSmtpEmail.sender = { name: 'LeadEstate', email: 'no-reply@leadestate.com' };
+      sendSmtpEmail.to = [{ email: session.user.email, name: session.user.name }];
+
+      await apiInstance.sendTransacEmail(sendSmtpEmail);
 
       res.status(200).json(updatedUser);
     } catch (error: any) {

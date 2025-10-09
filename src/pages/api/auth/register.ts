@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { hash } from 'bcrypt';
 import { UserRole } from '@prisma/client'; // New import
+import * as brevo from '@getbrevo/brevo';
 
 export default async function handler(
   req: NextApiRequest,
@@ -69,9 +70,31 @@ export default async function handler(
         return user;
       });
 
+      // Send welcome email
+      const apiInstance = new brevo.TransactionalEmailsApi();
+      apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_EMAIL_KEY || '');
+
+      const sendSmtpEmail = new brevo.SendSmtpEmail();
+      sendSmtpEmail.subject = "Bienvenue sur LeadEstate";
+      sendSmtpEmail.htmlContent = `
+        <div style="font-family: Arial, sans-serif; color: #333;">
+          <h2>Bienvenue sur LeadEstate, ${name}!</h2>
+          <p>Nous sommes ravis de vous compter parmi nous. Votre agence, ${agencyName}, a été créée avec succès.</p>
+          <p>Vous pouvez maintenant commencer à gérer vos prospects et vos propriétés plus efficacement.</p>
+          <p>Pour commencer, connectez-vous à votre compte en utilisant votre adresse e-mail et votre mot de passe.</p>
+          <p>Si vous avez des questions, n'hésitez pas à nous contacter.</p>
+          <p>Merci,</p>
+          <p>L'équipe LeadEstate</p>
+        </div>
+      `;
+      sendSmtpEmail.sender = { name: 'LeadEstate', email: 'no-reply@leadestate.com' };
+      sendSmtpEmail.to = [{ email, name }];
+
+      await apiInstance.sendTransacEmail(sendSmtpEmail);
+
       res.status(201).json(newUser);
     } catch (error: any) {
-      console.error(error);
+      console.error('Brevo API Error:', error.response?.body || error.message);
       res.status(500).json({ error: 'Failed to create user and agency', details: error.message });
     }
   } else {

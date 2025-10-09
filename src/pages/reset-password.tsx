@@ -1,19 +1,15 @@
-import { useState } from 'react';
-import { useRouter } from 'next/router';
-import { signIn, getSession } from 'next-auth/react';
-import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { useState, useEffect } from 'react';
 import { Alert } from 'react-bootstrap';
-import Link from 'next/link';
 import styles from '@/styles/Login.module.css';
-
+import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/router';
 
-const RegisterPage = () => {
-  const [name, setName] = useState('');
+const ResetPasswordPage = () => {
   const [email, setEmail] = useState('');
+  const [token, setToken] = useState('');
   const [password, setPassword] = useState('');
-  const [agencyName, setAgencyName] = useState('');
+  const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
@@ -23,6 +19,12 @@ const RegisterPage = () => {
     hasSpecialChar: false,
   });
   const router = useRouter();
+
+  useEffect(() => {
+    if (router.query.email) {
+      setEmail(router.query.email as string);
+    }
+  }, [router.query.email]);
 
   const validatePassword = (password: string) => {
     setPasswordValidation({
@@ -38,53 +40,34 @@ const RegisterPage = () => {
     validatePassword(newPassword);
   };
 
-  const handleGoogleSignUp = async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const idToken = await result.user.getIdToken();
-      
-      const res = await signIn('firebase', { idToken, redirect: false });
-
-      if (res?.ok) {
-        const session = await getSession();
-        if (session?.user) {
-          router.push(`/onboarding/new-agency?name=${session.user.name}&email=${session.user.email}`);
-        }
-      } else {
-        setError(res?.error || 'Firebase sign-up failed');
-      }
-    } catch (error) {
-      console.error("Google sign-up error", error);
-      setError('An error occurred during Google sign-up.');
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('handleSubmit called');
-    console.log('passwordValidation:', passwordValidation);
     setLoading(true);
     setError('');
+    setMessage('');
 
     try {
-      const res = await fetch('/api/auth/register', {
+      const res = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, agencyName }),
+        body: JSON.stringify({ email, token, password }),
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        const body = await res.json();
-        throw new Error(body.error || 'Failed to register');
+        throw new Error(data.error || 'Something went wrong');
       }
 
-      setLoading(false);
-      router.push('/login?registered=true');
+      setMessage(data.message);
+      setTimeout(() => {
+        router.push('/login');
+      }, 3000);
     } catch (err: any) {
-      setLoading(false);
       setError(err.message);
     }
+
+    setLoading(false);
   };
 
   return (
@@ -92,31 +75,33 @@ const RegisterPage = () => {
       <div className={styles.imageContainer}>
         <Image src="/Lead.png" alt="LeadEstate Logo" width={150} height={150} />
         <h1 className={styles.title}>LeadEstate</h1>
-        <p className={styles.subtitle}>Rejoignez notre communauté et commencez à gérer vos prospects efficacement.</p>
+        <p className={styles.subtitle}>Votre partenaire immobilier de confiance</p>
       </div>
       <div className={styles.formContainer}>
         <form className={styles.form} onSubmit={handleSubmit}>
-          <h2 className="text-center mb-4">Inscription</h2>
+          <h2 className="text-center mb-4">Réinitialiser le mot de passe</h2>
+          {message && <Alert variant="success">{message}</Alert>}
           {error && <Alert variant="danger">{error}</Alert>}
-          <input
-            type="text"
-            placeholder="Votre Nom"
-            className={styles.input}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
           <input
             type="email"
             placeholder="Email"
             className={styles.input}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            readOnly
+            required
+          />
+          <input
+            type="text"
+            placeholder="Code temporaire"
+            className={styles.input}
+            value={token}
+            onChange={(e) => setToken(e.target.value)}
             required
           />
           <input
             type="password"
-            placeholder="Mot de passe"
+            placeholder="Nouveau mot de passe"
             className={styles.input}
             value={password}
             onChange={handlePasswordChange}
@@ -139,27 +124,11 @@ const RegisterPage = () => {
               </small>
             </div>
           )}
-          <input
-            type="text"
-            placeholder="Nom de votre Agence"
-            className={styles.input}
-            value={agencyName}
-            onChange={(e) => setAgencyName(e.target.value)}
-            required
-          />
           <button type="submit" className={styles.button} disabled={loading || !passwordValidation.hasUpperCase || !passwordValidation.hasNumber || !passwordValidation.hasSpecialChar}>
-            {loading ? 'Inscription en cours...' : "S'inscrire"}
-          </button>
-          <hr className="my-4" />
-          <button
-            type="button"
-            className={`${styles.button} ${styles.googleButton}`}
-            onClick={handleGoogleSignUp}
-          >
-            S&apos;inscrire avec Google
+            {loading ? 'Réinitialisation en cours...' : 'Réinitialiser le mot de passe'}
           </button>
           <p className={styles.link}>
-            Déjà un compte ? <Link href="/login" legacyBehavior>Connectez-vous ici</Link>
+            Retour à la <Link href="/login" legacyBehavior>connexion</Link>
           </p>
         </form>
       </div>
@@ -167,4 +136,4 @@ const RegisterPage = () => {
   );
 };
 
-export default RegisterPage;
+export default ResetPasswordPage;
