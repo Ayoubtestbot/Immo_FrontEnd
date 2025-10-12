@@ -77,9 +77,6 @@ model User {
   assignedLeads Lead[] @relation("LeadAssignedTo")
   notes         Note[]
   ticketMessages TicketMessage[]
-
-  resetPasswordToken       String?
-  resetPasswordTokenExpiry DateTime?
 }
 
 model Account {

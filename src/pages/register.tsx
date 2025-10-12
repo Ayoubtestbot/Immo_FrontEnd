@@ -16,27 +16,7 @@ const RegisterPage = () => {
   const [agencyName, setAgencyName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
-  const [passwordValidation, setPasswordValidation] = useState({
-    hasUpperCase: false,
-    hasNumber: false,
-    hasSpecialChar: false,
-  });
   const router = useRouter();
-
-  const validatePassword = (password: string) => {
-    setPasswordValidation({
-      hasUpperCase: /[A-Z]/.test(password),
-      hasNumber: /[0-9]/.test(password),
-      hasSpecialChar: /[^A-Za-z0-9]/.test(password),
-    });
-  };
-
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newPassword = e.target.value;
-    setPassword(newPassword);
-    validatePassword(newPassword);
-  };
 
   const handleGoogleSignUp = async () => {
     const provider = new GoogleAuthProvider();
@@ -62,8 +42,6 @@ const RegisterPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('handleSubmit called');
-    console.log('passwordValidation:', passwordValidation);
     setLoading(true);
     setError('');
 
@@ -90,7 +68,7 @@ const RegisterPage = () => {
   return (
     <div className={styles.loginContainer}>
       <div className={styles.imageContainer}>
-        <Image src="/Lead.png" alt="LeadEstate Logo" width={150} height={150} />
+        <Image src="/logo.png" alt="LeadEstate Logo" width={150} height={150} />
         <h1 className={styles.title}>LeadEstate</h1>
         <p className={styles.subtitle}>Rejoignez notre communauté et commencez à gérer vos prospects efficacement.</p>
       </div>
@@ -119,26 +97,9 @@ const RegisterPage = () => {
             placeholder="Mot de passe"
             className={styles.input}
             value={password}
-            onChange={handlePasswordChange}
-            onFocus={() => setIsPasswordFocused(true)}
-            onBlur={() => setIsPasswordFocused(false)}
+            onChange={(e) => setPassword(e.target.value)}
             required
           />
-          {isPasswordFocused && (!passwordValidation.hasUpperCase || !passwordValidation.hasNumber || !passwordValidation.hasSpecialChar) && (
-            <div className="mb-3">
-              <small className={passwordValidation.hasUpperCase ? 'text-success' : 'text-danger'}>
-                Au moins une lettre majuscule
-              </small>
-              <br />
-              <small className={passwordValidation.hasNumber ? 'text-success' : 'text-danger'}>
-                Au moins un chiffre
-              </small>
-              <br />
-              <small className={passwordValidation.hasSpecialChar ? 'text-success' : 'text-danger'}>
-                Au moins un caractère spécial
-              </small>
-            </div>
-          )}
           <input
             type="text"
             placeholder="Nom de votre Agence"
@@ -147,8 +108,8 @@ const RegisterPage = () => {
             onChange={(e) => setAgencyName(e.target.value)}
             required
           />
-          <button type="submit" className={styles.button} disabled={loading || !passwordValidation.hasUpperCase || !passwordValidation.hasNumber || !passwordValidation.hasSpecialChar}>
-            {loading ? 'Inscription en cours...' : "S'inscrire"}
+          <button type="submit" className={styles.button} disabled={loading}>
+            {loading ? 'Inscription en cours...' : "S&apos;inscrire"}
           </button>
           <hr className="my-4" />
           <button

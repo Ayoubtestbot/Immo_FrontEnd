@@ -20,7 +20,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
       <div className={`${styles.sidebar} ${isSidebarCollapsed ? styles.sidebarCollapsed : ''}`}>
         <div className={styles.sidebarHeader}>
           <Image
-            src={isSidebarCollapsed ? "/Lead.png" : "/Lead.png"}
+            src={isSidebarCollapsed ? "/logo-small.png" : "/logo.png"}
             alt="LeadEstate"
             width={isSidebarCollapsed ? 40 : 120}
             height={40}
