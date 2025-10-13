@@ -214,6 +214,7 @@ model Plan {
   yearlyPrice Float? // New field for yearly pricing
   prospectsLimit Int
   usersLimit  Int      @default(5) // New field
+  propertiesLimit Int  @default(0)
   features    String
 
   subscriptions Subscription[]

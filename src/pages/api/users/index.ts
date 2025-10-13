@@ -1,18 +1,17 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../auth/[...nextauth]';
 import { hash } from 'bcrypt';
 import { UserRole } from '@prisma/client';
 import { isTrialActive } from '@/lib/subscription';
+import { withApiAuth } from '@/lib/withApiAuth';
+import { Session } from 'next-auth';
 
-export default async function handler(
+async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
+  session: Session
 ) {
-  const session = await getServerSession(req, res, authOptions);
-
-  if (!session || !session.user.agencyId || session.user.role !== UserRole.AGENCY_OWNER) {
+  if (!session.user.agencyId) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
@@ -53,7 +52,7 @@ export default async function handler(
       }
 
       const currentUsersCount = agency.users.length;
-      const planUsersLimit = agency.subscription.plan.usersLimit; // Using the new usersLimit field
+      const planUsersLimit = agency.subscription.plan.usersLimit;
 
       if (currentUsersCount >= planUsersLimit) {
         return res.status(403).json({ error: 'User limit reached for your current plan' });
@@ -88,3 +87,5 @@ export default async function handler(
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
+
+export default withApiAuth(handler, [UserRole.AGENCY_OWNER]);

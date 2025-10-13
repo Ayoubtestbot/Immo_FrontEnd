@@ -1,27 +1,20 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
-import { getSession } from 'next-auth/react';
 import formidable from 'formidable';
 import csv from 'csv-parser';
 import { Readable } from 'stream';
 import { LeadStatus } from '@prisma/client';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/pages/api/auth/[...nextauth]';
 
-// Disable Next.js body parsing for formidable
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
-export default async function handler(
+async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const session = await getSession({ req });
-  if (!session || !session.user?.agencyId) {
+  const session = await getServerSession(req, res, authOptions);
+  if (!session || !session.user) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
-
   if (req.method === 'POST') {
     const form = formidable({
       multiples: false,
@@ -80,3 +73,5 @@ export default async function handler(
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
+
+export default handler;

@@ -1,21 +1,20 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../auth/[...nextauth]';
 import { isTrialActive } from '@/lib/subscription';
 import { sendSms } from '@/lib/brevo';
+import { withApiAuth } from '@/lib/withApiAuth';
+import { Session } from 'next-auth';
+import { UserRole } from '@prisma/client';
 
-export default async function handler(
+async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
+  session: Session
 ) {
-  const session = await getServerSession(req, res, authOptions);
-
-  if (!session || !session.user?.email) {
+  if (!session.user.email) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  // Find the user's agencyId from their own user record
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
     select: { agencyId: true },
@@ -75,3 +74,5 @@ export default async function handler(
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
+
+export default withApiAuth(handler, [UserRole.AGENCY_OWNER, UserRole.AGENCY_MEMBER]);

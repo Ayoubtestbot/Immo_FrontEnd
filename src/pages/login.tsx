@@ -34,12 +34,17 @@ const LoginPage = () => {
 
       if (res?.ok) {
         const session = await getSession();
-        if (session?.user?.role === 'ADMIN') {
-          router.push('/admin/dashboard');
-        } else if (session?.user?.agencyId) {
-          router.push('/agency/dashboard');
+        if (session) { // Add null check here
+          if (session.user?.role === 'ADMIN') {
+            router.push('/admin/dashboard');
+          } else if (session.user?.agencyId) {
+            router.push('/agency/dashboard');
+          } else {
+            router.push(`/onboarding/new-agency?name=${session.user.name}&email=${session.user.email}`);
+          }
         } else {
-          router.push(`/onboarding/new-agency?name=${session.user.name}&email=${session.user.email}`);
+          // Handle the case where session is null
+          setError('Failed to get session information.');
         }
       } else {
         setError(res?.error || 'Firebase sign-in failed');

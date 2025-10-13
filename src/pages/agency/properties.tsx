@@ -1,24 +1,26 @@
-import type { GetServerSideProps } from 'next';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
+import { GetServerSideProps } from 'next';
+import { Prisma } from '@prisma/client';
 import { withAuth } from '@/lib/withAuth';
+import { isTrialActive } from '@/lib/subscription';
+import { propertyStatusTranslations } from '@/utils/propertyStatusTranslations';
+import { Lead, PropertyType } from '@prisma/client';
+import { PropertyWithDetails } from '@/types';
 import DashboardLayout from '@/components/DashboardLayout';
+import { Button, Row, Col, Form, Table, Dropdown, Alert } from 'react-bootstrap';
+import Select from 'react-select';
+import useDebounce from '@/hooks/useDebounce';
+import DynamicMap from '@/components/DynamicMap';
 import AddPropertyModal from '@/components/AddPropertyModal';
 import ViewPropertyModal from '@/components/ViewPropertyModal';
 import EditPropertyModal from '@/components/EditPropertyModal';
 import LinkLeadModal from '@/components/LinkLeadModal';
-import { prisma } from '@/lib/prisma';
-import type { Property, Image, Lead, Prisma } from '@prisma/client';
-import { PropertyType } from '@prisma/client';
-import { Table, Button, Dropdown, Form, Row, Col, Alert } from 'react-bootstrap';
-import { useRouter } from 'next/router';
-import DynamicMap from '@/components/DynamicMap';
 import CustomDropdownMenu from '@/components/CustomDropdownMenu';
-import useDebounce from '@/hooks/useDebounce'; // New import
-import { isTrialActive } from '@/lib/subscription';
+import { prisma } from '@/lib/prisma';
 
-import { PropertyWithDetails } from '@/types';
 
-type PropertiesPageProps = {
+interface PropertiesPageProps {
   properties: PropertyWithDetails[];
   leads: Lead[];
   filterPropertyNumber: string;
@@ -27,14 +29,17 @@ type PropertiesPageProps = {
   filterMinPrice: string;
   filterMaxPrice: string;
   isTrialActive: boolean;
-};
+  agencyCurrency: string;
+}
 
-const PropertiesPage = ({ properties, leads, filterPropertyNumber: initialFilterPropertyNumber, filterCity: initialFilterCity, filterType: initialFilterType, filterMinPrice: initialFilterMinPrice, filterMaxPrice: initialFilterMaxPrice, isTrialActive }: PropertiesPageProps) => {
+const PropertiesPage = ({ properties, leads, filterPropertyNumber: initialFilterPropertyNumber, filterCity: initialFilterCity, filterType: initialFilterType, filterMinPrice: initialFilterMinPrice, filterMaxPrice: initialFilterMaxPrice, isTrialActive, agencyCurrency }: PropertiesPageProps) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showLinkLeadModal, setShowLinkLeadModal] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<PropertyWithDetails | null>(null);
+  const [clientProperties, setClientProperties] = useState(properties);
+  const [selectedCity, setSelectedCity] = useState<{ value: string; label: string } | null>(null);
   const [filterPropertyNumber, setFilterPropertyNumber] = useState(initialFilterPropertyNumber);
   const [filterCity, setFilterCity] = useState(initialFilterCity);
   const [filterType, setFilterType] = useState(initialFilterType);
@@ -45,8 +50,10 @@ const PropertiesPage = ({ properties, leads, filterPropertyNumber: initialFilter
   const debouncedPropertyNumber = useDebounce(filterPropertyNumber, 500);
   const debouncedCity = useDebounce(filterCity, 500);
 
-  const refreshData = () => {
-    router.replace(router.asPath);
+  const refreshData = async () => {
+    const res = await fetch('/api/properties');
+    const data = await res.json();
+    setClientProperties(data);
   };
 
   useEffect(() => {
@@ -120,6 +127,12 @@ const PropertiesPage = ({ properties, leads, filterPropertyNumber: initialFilter
     }
   };
 
+  const cityOptions = [...new Set(clientProperties.map(p => p.city))].map(city => ({ value: city, label: city }));
+
+  const filteredProperties = selectedCity
+    ? clientProperties.filter(p => p.city === selectedCity.value)
+    : clientProperties;
+
   return (
     <DashboardLayout>
       {!isTrialActive && (
@@ -135,7 +148,24 @@ const PropertiesPage = ({ properties, leads, filterPropertyNumber: initialFilter
       </div>
 
       <div className="mb-4">
-        <DynamicMap properties={properties} />
+        <Row>
+          <Col md={3}>
+            <Form.Group controlId="cityFilter">
+              <Form.Label>Filtrer par Ville</Form.Label>
+              <Select
+                options={cityOptions}
+                onChange={(option) => setSelectedCity(option)}
+                isClearable
+                isSearchable
+                placeholder="Sélectionner une ville"
+              />
+            </Form.Group>
+          </Col>
+        </Row>
+      </div>
+
+      <div className="mb-4">
+        <DynamicMap properties={filteredProperties} />
       </div>
 
       <div className="table-responsive-wrapper">
@@ -148,17 +178,6 @@ const PropertiesPage = ({ properties, leads, filterPropertyNumber: initialFilter
               placeholder="Ex: PR000001"
               value={filterPropertyNumber}
               onChange={(e) => setFilterPropertyNumber(e.target.value)}
-            />
-          </Form.Group>
-        </Col>
-        <Col md={3}>
-          <Form.Group controlId="cityFilter">
-            <Form.Label>Filtrer par Ville</Form.Label>
-            <Form.Control
-              type="text"
-              placeholder="Ex: Paris"
-              value={filterCity}
-              onChange={(e) => setFilterCity(e.target.value)}
             />
           </Form.Group>
         </Col>
@@ -212,7 +231,7 @@ const PropertiesPage = ({ properties, leads, filterPropertyNumber: initialFilter
           </tr>
         </thead>
         <tbody>
-          {properties.map((property) => (
+          {filteredProperties.map((property) => (
             <tr key={property.id} className={!isTrialActive ? 'text-muted' : ''}>
               <td>{`PR${String(property.propertyNumber).padStart(6, '0')}`}</td>
               <td>{property.address}</td>
@@ -220,7 +239,7 @@ const PropertiesPage = ({ properties, leads, filterPropertyNumber: initialFilter
               <td>{property.zipCode}</td>
               <td>{property.type}</td>
               <td>{property.price}</td>
-              <td>{property.status}</td>
+              <td>{propertyStatusTranslations[property.status]}</td>
               <td>
                 <Dropdown align="end">
                                       <Dropdown.Toggle variant="outline-secondary" size="sm">
@@ -251,6 +270,7 @@ const PropertiesPage = ({ properties, leads, filterPropertyNumber: initialFilter
           show={showViewModal}
           handleClose={() => setShowViewModal(false)}
           property={selectedProperty}
+          agencyCurrency={agencyCurrency}
         />
       )}
 
@@ -277,6 +297,7 @@ const PropertiesPage = ({ properties, leads, filterPropertyNumber: initialFilter
 };
 
 export const getServerSideProps: GetServerSideProps = withAuth(async (context, session) => {
+  try {
   const { propertyNumber, city, type, minPrice, maxPrice } = context.query;
   const filterPropertyNumber = propertyNumber ? String(propertyNumber) : '';
   const filterCity = city ? String(city) : '';
@@ -303,10 +324,11 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
     if (numberPart) {
       // Use a raw query for partial matching on the string representation of propertyNumber
       // This is a workaround for SQLite's limitations with 'contains' on Int fields
+      const existingAnd = whereClause.AND;
       whereClause.AND = [
-        ...(whereClause.AND || []),
-        Prisma.sql`CAST("propertyNumber" AS TEXT) LIKE ${'%' + numberPart + '%'}`, // Use Prisma.sql
-      ];
+        ...(Array.isArray(existingAnd) ? existingAnd : (existingAnd ? [existingAnd] : [])),
+        Prisma.sql`CAST("propertyNumber" AS TEXT) LIKE ${'%' + numberPart + '%'}`,
+      ] as any;
     }
   }
 
@@ -320,10 +342,14 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
     whereClause.price = { gte: filterMinPrice };
   }
   if (filterMaxPrice) {
-    whereClause.price = { ...(whereClause.price || {}), lte: filterMaxPrice };
+    if (typeof whereClause.price === 'object' && whereClause.price !== null) {
+      whereClause.price = { ...whereClause.price, lte: filterMaxPrice };
+    } else {
+      whereClause.price = { lte: filterMaxPrice };
+    }
   }
 
-  const [properties, leads, trialIsActive] = await Promise.all([
+  const [properties, leads, trialIsActive, agency] = await Promise.all([
     prisma.property.findMany({
       where: whereClause,
       select: {
@@ -355,6 +381,10 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
       },
     }),
     isTrialActive(agencyId),
+    prisma.agency.findUnique({
+        where: { id: agencyId },
+        select: { currency: true }
+    })
   ]);
 
   return {
@@ -367,8 +397,25 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
       filterMinPrice: filterMinPrice || '',
       filterMaxPrice: filterMaxPrice || '',
       isTrialActive: trialIsActive,
+      agencyCurrency: agency?.currency || 'MAD',
+    },
+  }
+} catch (error) {
+  console.error(error);
+  return {
+    props: {
+      properties: [],
+      leads: [],
+      filterPropertyNumber: '',
+      filterCity: '',
+      filterType: 'ALL',
+      filterMinPrice: '',
+      filterMaxPrice: '',
+      isTrialActive: false,
+      agencyCurrency: 'MAD',
     },
   };
+}
 }, ['AGENCY_OWNER', 'AGENCY_MEMBER']);
 
 export default PropertiesPage;

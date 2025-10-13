@@ -87,13 +87,13 @@ const UsersPage = ({ users, agencyName, isTrialActive }: UsersPageProps) => {
               <td>{user.phone || '-'}</td>
               <td>{getTranslatedUserRole(user.role)}</td>
               <td>
-                <Dropdown align="end" popperConfig={{ strategy: 'fixed' }}>
+                <Dropdown align="end">
                                       <Dropdown.Toggle variant="outline-secondary" size="sm">
                                         Actions
                                       </Dropdown.Toggle>
                                       <CustomDropdownMenu className="dropdown-menu-fix">
                                         <Dropdown.Item onClick={() => handleOpenEditModal(user)}>Modifier</Dropdown.Item>
-                                        <Dropdown.Item variant="danger" onClick={() => handleDeleteUser(user.id)}>Supprimer</Dropdown.Item>
+                                        <Dropdown.Item className="text-danger" onClick={() => handleDeleteUser(user.id)}>Supprimer</Dropdown.Item>
                                       </CustomDropdownMenu>                </Dropdown>
               </td>
             </tr>

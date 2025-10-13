@@ -1,37 +1,33 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../auth/[...nextauth]';
+import { withApiAuth } from '@/lib/withApiAuth';
 import { UserRole } from '@prisma/client';
+import { Session } from 'next-auth';
 
-export default async function handler(
+async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
+  session: Session
 ) {
-  const session = await getServerSession(req, res, authOptions);
-
-  if (!session || !session.user.agencyId || session.user.role !== UserRole.AGENCY_OWNER) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-
   if (req.method === 'PUT') {
-    const { currency } = req.body;
+    const { currency, name } = req.body;
 
-    if (!currency) {
-      return res.status(400).json({ error: 'Missing currency' });
-    }
-
-    // Basic validation for currency format (e.g., 3 uppercase letters)
-    if (!/^[A-Z]{3}$/.test(currency)) {
+    if (currency && !/^[A-Z]{3}$/.test(currency)) {
       return res.status(400).json({ error: 'Invalid currency format' });
     }
 
     try {
+      const dataToUpdate: { currency?: string; name?: string } = {};
+      if (currency) dataToUpdate.currency = currency;
+      if (name) dataToUpdate.name = name;
+
+      if (Object.keys(dataToUpdate).length === 0) {
+        return res.status(400).json({ error: 'No settings to update' });
+      }
+
       const updatedAgency = await prisma.agency.update({
         where: { id: session.user.agencyId },
-        data: {
-          currency,
-        },
+        data: dataToUpdate,
       });
       return res.status(200).json(updatedAgency);
     } catch (error: any) {
@@ -43,3 +39,5 @@ export default async function handler(
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
+
+export default withApiAuth(handler, [UserRole.AGENCY_OWNER]);

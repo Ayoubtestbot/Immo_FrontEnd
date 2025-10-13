@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Modal, Button, Form, Alert } from 'react-bootstrap';
 import { Property, PropertyType, PropertyStatus } from '@prisma/client';
+import { propertyStatusTranslations } from '@/utils/propertyStatusTranslations';
+import { countries } from '@/utils/locations';
+import Select from 'react-select';
 
 type EditPropertyModalProps = {
   show: boolean;
@@ -14,6 +17,7 @@ const EditPropertyModal = ({ show, handleClose, property, onPropertyUpdated }: E
   const [city, setCity] = useState('');
   const [zipCode, setZipCode] = useState('');
   const [country, setCountry] = useState('');
+  const [cities, setCities] = useState<string[]>([]);
   const [type, setType] = useState<PropertyType>(PropertyType.MAISON);
   const [price, setPrice] = useState(0);
   const [status, setStatus] = useState<PropertyStatus>(PropertyStatus.A_VENDRE);
@@ -24,15 +28,25 @@ const EditPropertyModal = ({ show, handleClose, property, onPropertyUpdated }: E
   useEffect(() => {
     if (property) {
       setAddress(property.address);
+      setCountry(property.country);
+      const selectedCountry = countries.find(c => c.name === property.country);
+      setCities(selectedCountry ? selectedCountry.cities : []);
       setCity(property.city);
       setZipCode(property.zipCode);
-      setCountry(property.country);
       setType(property.type);
       setPrice(property.price);
       setStatus(property.status);
       setDescription(property.description || '');
     }
   }, [property]);
+
+  useEffect(() => {
+    if (country) {
+      const selectedCountry = countries.find(c => c.name === country);
+      setCities(selectedCountry ? selectedCountry.cities : []);
+      setCity('');
+    }
+  }, [country]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +76,9 @@ const EditPropertyModal = ({ show, handleClose, property, onPropertyUpdated }: E
     }
   };
 
+  const countryOptions = countries.map(country => ({ value: country.name, label: country.name }));
+  const cityOptions = cities.map(city => ({ value: city, label: city }));
+
   return (
     <Modal show={show} onHide={handleClose} centered>
       <Modal.Header closeButton>
@@ -75,16 +92,31 @@ const EditPropertyModal = ({ show, handleClose, property, onPropertyUpdated }: E
             <Form.Control type="text" value={address} onChange={(e) => setAddress(e.target.value)} required />
           </Form.Group>
           <Form.Group className="mb-3">
+            <Form.Label>Pays</Form.Label>
+            <Select
+              options={countryOptions}
+              onChange={(option) => setCountry(option ? option.value : '')}
+              isClearable
+              isSearchable
+              placeholder="Sélectionner un pays"
+              value={countryOptions.find(c => c.value === country)}
+            />
+          </Form.Group>
+          <Form.Group className="mb-3">
             <Form.Label>Ville</Form.Label>
-            <Form.Control type="text" value={city} onChange={(e) => setCity(e.target.value)} required />
+            <Select
+              options={cityOptions}
+              onChange={(option) => setCity(option ? option.value : '')}
+              isClearable
+              isSearchable
+              placeholder="Sélectionner une ville"
+              isDisabled={!country}
+              value={cityOptions.find(c => c.value === city)}
+            />
           </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label>Code Postal</Form.Label>
             <Form.Control type="text" value={zipCode} onChange={(e) => setZipCode(e.target.value)} required />
-          </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>Pays</Form.Label>
-            <Form.Control type="text" value={country} onChange={(e) => setCountry(e.target.value)} required />
           </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label>Type</Form.Label>
@@ -103,10 +135,8 @@ const EditPropertyModal = ({ show, handleClose, property, onPropertyUpdated }: E
           <Form.Group className="mb-3">
             <Form.Label>Statut</Form.Label>
             <Form.Select value={status} onChange={(e) => setStatus(e.target.value as PropertyStatus)}>
-              {Object.values(PropertyStatus).map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
+              {Object.entries(propertyStatusTranslations).map(([key, value]) => (
+                <option key={key} value={key}>{value}</option>
               ))}
             </Form.Select>
           </Form.Group>

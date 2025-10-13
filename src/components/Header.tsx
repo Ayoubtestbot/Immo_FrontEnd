@@ -42,7 +42,7 @@ const Header = () => {
         {status === 'authenticated' && (
           <>
             <Link href={getDashboardUrl()} legacyBehavior><a className="btn-primary me-2">Tableau de bord</a></Link>
-            <button onClick={() => signOut()} className="btn-outline-secondary">Déconnexion</button>
+            <button onClick={() => signOut()} className="btn-primary">Déconnexion</button>
           </>
         )}
       </div>

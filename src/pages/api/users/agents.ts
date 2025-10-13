@@ -1,19 +1,17 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../auth/[...nextauth]';
 import { UserRole } from '@prisma/client';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/pages/api/auth/[...nextauth]';
 
-export default async function handler(
+async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   const session = await getServerSession(req, res, authOptions);
-
-  if (!session || !session.user?.agencyId) {
+  if (!session || !session.user || !session.user.role) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
-
   if (req.method === 'GET') {
     try {
       const agents = await prisma.user.findMany({
@@ -40,3 +38,5 @@ export default async function handler(
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
+
+export default handler;

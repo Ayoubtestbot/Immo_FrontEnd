@@ -54,27 +54,31 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
             </>
           )}
         </nav>
-        <div className={styles.sidebarFooter}>
-          <Dropdown drop="up">
-            <Dropdown.Toggle variant="transparent" id="dropdown-user" className={styles.userMenu}>
-                <FiUser size={24} />
-                {!isSidebarCollapsed && <span className="ms-2">{session?.user?.name}</span>}
-            </Dropdown.Toggle>
-            <Dropdown.Menu>
-              <Dropdown.Item onClick={() => signOut({ callbackUrl: '/' })}>
-                <FiLogOut className="me-2" />
-                Déconnexion
-              </Dropdown.Item>
-            </Dropdown.Menu>
-          </Dropdown>
-        </div>
       </div>
       <div className={`${styles.mainContent} ${isSidebarCollapsed ? styles.mainContentCollapsed : ''}`}>
         <div className={styles.header}>
           <button onClick={toggleSidebar} className={styles.sidebarMobileToggle}>
             <FiMenu />
           </button>
-          {/* Header content can go here, like a search bar */}
+          <div className="ms-auto d-flex align-items-center">
+            <Dropdown align="end">
+              <Dropdown.Toggle variant="transparent" id="dropdown-user-header" className="d-flex align-items-center">
+                <FiUser size={20} className="me-2" />
+                <span>{session?.user?.name}</span>
+              </Dropdown.Toggle>
+              <Dropdown.Menu>
+                <Dropdown.Item as={Link} href="/agency/settings">
+                    <FiSettings className="me-2" />
+                    Paramètres
+                </Dropdown.Item>
+                <Dropdown.Divider />
+                <Dropdown.Item onClick={() => signOut({ callbackUrl: '/' })}>
+                    <FiLogOut className="me-2" />
+                    Déconnexion
+                </Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown>
+          </div>
         </div>
         <main className="p-4">
           {children}

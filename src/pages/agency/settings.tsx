@@ -3,34 +3,43 @@ import { useState } from 'react';
 import { withAuth } from '@/lib/withAuth';
 import DashboardLayout from '@/components/DashboardLayout';
 import { prisma } from '@/lib/prisma';
-import type { Agency, Plan, Subscription } from '@prisma/client';
-import { Card, Form, Button, Alert } from 'react-bootstrap';
-import { useRouter } from 'next/router';
+import type { Agency, Plan, Subscription, User } from '@prisma/client';
+import { Card, Form, Button, Alert, Modal, Col, Row } from 'react-bootstrap';
 import { format } from 'date-fns';
 
 type AgencyWithDetails = Agency & {
-  subscription: (Subscription & { plan: Plan & { usersLimit: number } }) | null;
+  subscription: (Subscription & { plan: Plan }) | null;
 };
 
 type SettingsPageProps = {
+  user: {
+    id: string;
+    name: string | null;
+    email: string | null;
+  };
   agency: AgencyWithDetails;
-  availablePlans: Plan[];
 };
 
-const CURRENCIES = ['EUR', 'USD', 'GBP', 'MAD']; // Added MAD
+const CURRENCIES = ['EUR', 'USD', 'GBP', 'MAD'];
 
-const SettingsPage = ({ agency, availablePlans }: SettingsPageProps) => {
+const SettingsPage = ({ user, agency }: SettingsPageProps) => {
+  // Agency state
+  const [agencyName, setAgencyName] = useState(agency.name);
   const [selectedCurrency, setSelectedCurrency] = useState(agency.currency);
+
+  // Password state
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  // General state
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
-  console.log('Agency currency (from component state):', agency.currency); // Keep debug log
-
-  const handleCurrencyChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newCurrency = e.target.value;
-    setSelectedCurrency(newCurrency);
+  const handleAgencySettingsUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
     setMessage('');
     setError('');
@@ -39,14 +48,47 @@ const SettingsPage = ({ agency, availablePlans }: SettingsPageProps) => {
       const res = await fetch('/api/agency/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ currency: newCurrency }),
+        body: JSON.stringify({ name: agencyName, currency: selectedCurrency }),
       });
 
       if (!res.ok) {
         const body = await res.json();
-        throw new Error(body.error || 'Failed to update currency');
+        throw new Error(body.error || 'Failed to update settings');
       }
-      setMessage('Devise mise à jour avec succès !');
+      setMessage('Agency settings updated successfully!');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      setError('New passwords do not match.');
+      return;
+    }
+    setLoading(true);
+    setMessage('');
+    setError('');
+
+    try {
+      const res = await fetch('/api/user/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json();
+        throw new Error(body.error || 'Failed to change password');
+      }
+      setMessage('Password updated successfully!');
+      setShowPasswordModal(false);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -56,62 +98,131 @@ const SettingsPage = ({ agency, availablePlans }: SettingsPageProps) => {
 
   return (
     <DashboardLayout>
-      <h1>Paramètres de l&apos;agence</h1>
+      <h1>Paramètres</h1>
 
-      {message && <Alert variant="success">{message}</Alert>}
-      {error && <Alert variant="danger">{error}</Alert>}
+      {message && <Alert variant="success" onClose={() => setMessage('')} dismissible>{message}</Alert>}
+      {error && <Alert variant="danger" onClose={() => setError('')} dismissible>{error}</Alert>}
 
-      <Card className="mb-4">
-        <Card.Header>Votre Plan Actuel</Card.Header>
-        <Card.Body>
-          {agency.subscription && agency.subscription.plan ? (
-            <>
-              <p><strong>Plan:</strong> {agency.subscription.plan.name}</p>
-              <p><strong>Prix:</strong> {agency.subscription.plan.price.toLocaleString('fr-FR', { style: 'currency', currency: agency.currency || 'EUR' })} / mois</p>
-              <p><strong>Limite de prospects:</strong> {agency.subscription.plan.prospectsLimit}</p>
-              <p><strong>Limite d&apos;utilisateurs:</strong> {agency.subscription.plan.usersLimit}</p> {/* New line */}
-              <p><strong>Date de fin:</strong> {agency.subscription.endDate ? format(new Date(agency.subscription.endDate), 'dd/MM/yyyy') : 'N/A'}</p>
-              <Button className="btn-primary">Mettre à niveau le plan</Button>
-            </>
-          ) : (
-            <>
-              <p>Vous n&apos;avez pas de plan actif.</p>
-              <Button className="btn-primary">Choisir un plan</Button>
-            </>
-          )}
-        </Card.Body>
-      </Card>
+      <Row>
+        <Col md={6}>
+          <Card className="mb-4">
+            <Card.Header>Profil Utilisateur</Card.Header>
+            <Card.Body>
+              <p><strong>Nom:</strong> {user.name}</p>
+              <p><strong>Email:</strong> {user.email}</p>
+              <Button variant="secondary" onClick={() => setShowPasswordModal(true)}>Changer le mot de passe</Button>
+            </Card.Body>
+          </Card>
 
-      <Card className="mb-4">
-        <Card.Header>Choix de la Devise</Card.Header>
-        <Card.Body>
-          <Form.Group controlId="currencySelect">
-            <Form.Label>Sélectionner votre devise préférée</Form.Label>
-            <Form.Select value={selectedCurrency} onChange={handleCurrencyChange} disabled={loading}>
-              {CURRENCIES.map(curr => (
-                <option key={curr} value={curr}>{curr}</option>
-              ))}
-            </Form.Select>
-          </Form.Group>
-        </Card.Body>
-      </Card>
+          <Card className="mb-4">
+            <Card.Header>Paramètres de l'agence</Card.Header>
+            <Card.Body>
+              <Form onSubmit={handleAgencySettingsUpdate}>
+                <Form.Group className="mb-3" controlId="agencyName">
+                  <Form.Label>Nom de l'agence</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={agencyName}
+                    onChange={(e) => setAgencyName(e.target.value)}
+                    required
+                  />
+                </Form.Group>
+                <Form.Group className="mb-3" controlId="currencySelect">
+                  <Form.Label>Devise</Form.Label>
+                  <Form.Select value={selectedCurrency} onChange={(e) => setSelectedCurrency(e.target.value)}>
+                    {CURRENCIES.map(curr => (
+                      <option key={curr} value={curr}>{curr}</option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+                <Button type="submit" className="btn-primary" disabled={loading}>
+                  {loading ? 'Sauvegarde...' : 'Sauvegarder les changements'}
+                </Button>
+              </Form>
+            </Card.Body>
+          </Card>
+        </Col>
 
-      {/* Other parameters section can be added here */}
+        <Col md={6}>
+          <Card className="mb-4">
+            <Card.Header>Votre Plan Actuel</Card.Header>
+            <Card.Body>
+              {agency.subscription && agency.subscription.plan ? (
+                <>
+                  <p><strong>Plan:</strong> {agency.subscription.plan.name}</p>
+                  <p><strong>Limite de prospects:</strong> {agency.subscription.plan.prospectsLimit === -1 ? 'Illimité' : agency.subscription.plan.prospectsLimit}</p>
+                  <p><strong>Limite d'utilisateurs:</strong> {agency.subscription.plan.usersLimit === -1 ? 'Illimité' : agency.subscription.plan.usersLimit}</p>
+                  <p><strong>Limite de propriétés:</strong> {agency.subscription.plan.propertiesLimit === -1 ? 'Illimité' : agency.subscription.plan.propertiesLimit}</p>
+                  {agency.subscription.endDate && <p><strong>Date de fin:</strong> {format(new Date(agency.subscription.endDate), 'dd/MM/yyyy')}</p>}
+                  <Button className="btn-primary">Mettre à niveau le plan</Button>
+                </>
+              ) : (
+                <>
+                  <p>Vous n'avez pas de plan actif.</p>
+                  <Button className="btn-primary">Choisir un plan</Button>
+                </>
+              )}
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Change Password Modal */}
+      <Modal show={showPasswordModal} onHide={() => setShowPasswordModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Changer le mot de passe</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={handlePasswordChange}>
+            <Form.Group className="mb-3" controlId="currentPassword">
+              <Form.Label>Mot de passe actuel</Form.Label>
+              <Form.Control
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                required
+              />
+            </Form.Group>
+            <Form.Group className="mb-3" controlId="newPassword">
+              <Form.Label>Nouveau mot de passe</Form.Label>
+              <Form.Control
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+              />
+            </Form.Group>
+            <Form.Group className="mb-3" controlId="confirmPassword">
+              <Form.Label>Confirmer le nouveau mot de passe</Form.Label>
+              <Form.Control
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+              />
+            </Form.Group>
+            <Button type="submit" className="btn-primary" disabled={loading}>
+              {loading ? 'Sauvegarde...' : 'Changer le mot de passe'}
+            </Button>
+          </Form>
+        </Modal.Body>
+      </Modal>
     </DashboardLayout>
   );
 };
 
 export const getServerSideProps: GetServerSideProps = withAuth(async (context, session) => {
   const agencyId = session.user.agencyId;
+  const userId = session.user.id;
 
-  if (!agencyId) {
-    return {
-      redirect: {
-        destination: '/login',
-        permanent: false,
-      },
-    };
+  if (!agencyId || !userId) {
+    return { redirect: { destination: '/login', permanent: false } };
   }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, name: true, email: true },
+  });
 
   const agency = await prisma.agency.findUnique({
     where: { id: agencyId },
@@ -124,23 +235,16 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
     },
   });
 
-  const availablePlans = await prisma.plan.findMany();
-
-  if (!agency) {
-    return {
-      redirect: {
-        destination: '/login',
-        permanent: false,
-      },
-    };
+  if (!agency || !user) {
+    return { redirect: { destination: '/login', permanent: false } };
   }
 
   return {
     props: {
+      user: JSON.parse(JSON.stringify(user)),
       agency: JSON.parse(JSON.stringify(agency)),
-      availablePlans: JSON.parse(JSON.stringify(availablePlans)),
     },
   };
-}, ['AGENCY_OWNER']); // Only AGENCY_OWNER can manage settings
+}, ['AGENCY_OWNER', 'AGENCY_MEMBER', 'AGENCY_SUPER_AGENT']);
 
 export default SettingsPage;

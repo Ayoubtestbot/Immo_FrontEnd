@@ -44,6 +44,9 @@ const AdminDashboardLayout = ({ children }: { children: React.ReactNode }) => {
           <Link href="/admin/tickets" className={styles.sidebarLink}>
             <FaTicketAlt /> <span>Tickets</span>
           </Link>
+          <a href="#" onClick={() => signOut({ callbackUrl: '/' })} className={styles.sidebarLink}>
+            <FaSignOutAlt /> <span>Déconnexion</span>
+          </a>
         </nav>
         <div className={styles.sidebarFooter}>
           <Dropdown drop="up">
@@ -52,10 +55,10 @@ const AdminDashboardLayout = ({ children }: { children: React.ReactNode }) => {
               {!isSidebarCollapsed && <span className="ms-2">{userName}</span>}
             </Dropdown.Toggle>
             <Dropdown.Menu>
-              <Dropdown.Item onClick={() => signOut({ callbackUrl: '/' })}>
+              {/*<Dropdown.Item onClick={() => signOut({ callbackUrl: '/' })}>
                 <FaSignOutAlt className="me-2" />
                 Déconnexion
-              </Dropdown.Item>
+              </Dropdown.Item>*/}
             </Dropdown.Menu>
           </Dropdown>
         </div>

@@ -1,24 +1,17 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../auth/[...nextauth]';
 import { UserRole } from '@prisma/client';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/pages/api/auth/[...nextauth]';
 
-export default async function handler(
+async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== 'GET') {
-    res.setHeader('Allow', ['GET']);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-
   const session = await getServerSession(req, res, authOptions);
-
-  if (!session || !session.user?.agencyId || session.user.role !== UserRole.AGENCY_OWNER) {
-    return res.status(401).json({ error: 'Unauthorized - AGENCY_OWNER role required' });
+  if (!session || !session.user || session.user.role !== UserRole.AGENCY_OWNER) {
+    return res.status(401).json({ error: 'Unauthorized' });
   }
-
   try {
     const leads = await prisma.lead.findMany({
       where: {
@@ -68,3 +61,5 @@ export default async function handler(
     res.status(500).json({ error: 'Failed to export leads', details: error.message });
   }
 }
+
+export default handler;

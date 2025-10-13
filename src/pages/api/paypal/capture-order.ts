@@ -4,6 +4,10 @@ import fetch from 'node-fetch';
 const { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET } = process.env;
 const base = "https://api-m.paypal.com"; // Use live for production
 
+interface PayPalAccessToken {
+  access_token: string;
+}
+
 // Function to generate an access token
 async function generateAccessToken() {
   const auth = Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_CLIENT_SECRET}`).toString("base64");
@@ -15,7 +19,7 @@ async function generateAccessToken() {
       "Content-Type": "application/x-www-form-urlencoded",
     },
   });
-  const data = await response.json();
+  const data = await response.json() as PayPalAccessToken;
   return data.access_token;
 }
 

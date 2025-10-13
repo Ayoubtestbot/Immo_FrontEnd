@@ -1,25 +1,59 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../auth/[...nextauth]';
 import fetch from 'node-fetch';
-import type { Prisma } from '@prisma/client'; // New import
 import { isTrialActive } from '@/lib/subscription';
+import { withApiAuth } from '@/lib/withApiAuth';
+import { Session } from 'next-auth';
+import { UserRole } from '@prisma/client';
 
-export default async function handler(
+async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
+  session: Session
 ) {
-  const session = await getServerSession(req, res, authOptions);
-
-  if (!session || !session.user.agencyId) {
+  if (!session.user.agencyId) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  if (req.method === 'POST') {
-    const trialActive = await isTrialActive(session.user.agencyId);
-    if (!trialActive) {
-      return res.status(403).json({ error: 'Your free trial has expired. Please upgrade your plan to add new properties.' });
+  if (req.method === 'GET') {
+    try {
+      const properties = await prisma.property.findMany({
+        where: { agencyId: session.user.agencyId },
+        include: {
+          images: true,
+          leads: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+      return res.status(200).json(properties);
+    } catch (error) {
+      console.error('Failed to fetch properties:', error);
+      return res.status(500).json({ error: 'Failed to fetch properties' });
+    }
+  } else if (req.method === 'POST') {
+    const agencyId = session.user.agencyId;
+
+    const subscription = await prisma.subscription.findUnique({
+        where: { agencyId: agencyId },
+        include: { plan: true },
+    });
+
+    if (!subscription) {
+        return res.status(403).json({ error: "No active subscription found." });
+    }
+
+    const { propertiesLimit } = subscription.plan;
+
+    if (propertiesLimit !== -1) {
+        const propertyCount = await prisma.property.count({
+            where: { agencyId: agencyId },
+        });
+
+        if (propertyCount >= propertiesLimit) {
+            return res.status(403).json({ error: `You have reached the limit of ${propertiesLimit} properties for your current plan.` });
+        }
     }
 
     const { address, city, zipCode, country, type, price, status, description, images } = req.body;
@@ -33,10 +67,12 @@ export default async function handler(
 
     try {
       const geoQuery = `${address}, ${zipCode} ${city}, ${country}`;
+      console.log('Geocoding query:', geoQuery);
       const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(geoQuery)}`);
       // @ts-ignore
       const geoData = await geoRes.json();
-      if (geoData && geoData.length > 0) {
+      console.log('Geocoding response:', geoData);
+      if (Array.isArray(geoData) && geoData.length > 0) {
         latitude = parseFloat(geoData[0].lat);
         longitude = parseFloat(geoData[0].lon);
       }
@@ -49,7 +85,7 @@ export default async function handler(
       // Generate propertyNumber
       const latestProperty = await prisma.property.findFirst({
         where: { agencyId: session.user.agencyId },
-        orderBy: { propertyNumber: { sort: 'desc', nulls: 'last' } as Prisma.SortOrder }, // Updated orderBy
+        orderBy: { propertyNumber: { sort: 'desc', nulls: 'last' } }, // Updated orderBy
         select: { propertyNumber: true },
       });
 
@@ -89,3 +125,5 @@ export default async function handler(
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
+
+export default withApiAuth(handler, [UserRole.AGENCY_OWNER, UserRole.AGENCY_MEMBER]);

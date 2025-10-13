@@ -61,7 +61,7 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           role: user.role,
-          agencyId: user.agencyId,
+          agencyId: user.agencyId ?? undefined,
         };
       },
     }),
@@ -103,7 +103,7 @@ export const authOptions: NextAuthOptions = {
             email: user.email,
             name: user.name,
             role: user.role,
-            agencyId: user.agencyId,
+            agencyId: user.agencyId ?? undefined,
           };
         } catch (error) {
           console.error("Firebase auth error", error);

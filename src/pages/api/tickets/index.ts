@@ -1,16 +1,10 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/pages/api/auth/[...nextauth]';
 import { prisma } from '@/lib/prisma';
 import { UserRole } from '@prisma/client';
+import { withApiAuth } from '@/lib/withApiAuth';
+import { Session } from 'next-auth';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const session = await getServerSession(req, res, authOptions);
-
-  if (!session || (session.user.role !== UserRole.AGENCY_OWNER && session.user.role !== UserRole.AGENCY_MEMBER && session.user.role !== UserRole.AGENCY_SUPER_AGENT)) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-
+async function handler(req: NextApiRequest, res: NextApiResponse, session: Session) {
   if (req.method === 'POST') {
     const { subject, description, priority, category } = req.body;
 
@@ -39,3 +33,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
+
+export default withApiAuth(handler, [UserRole.AGENCY_OWNER, UserRole.AGENCY_MEMBER, UserRole.AGENCY_SUPER_AGENT]);

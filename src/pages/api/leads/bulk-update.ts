@@ -1,19 +1,22 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../auth/[...nextauth]';
 import { LeadStatus, ActivityType, Prisma } from '@prisma/client';
 import { leadStatusTranslations } from '@/utils/leadStatusTranslations';
 import { sendSms } from '@/lib/brevo';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/pages/api/auth/[...nextauth]';
+import { UserRole } from '@prisma/client';
 
-export default async function handler(
+async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   const session = await getServerSession(req, res, authOptions);
-
-  if (!session || !session.user?.agencyId) {
+  if (!session) {
     return res.status(401).json({ error: 'Unauthorized' });
+  }
+  if (!session.user.role) {
+    return res.status(403).json({ error: 'Forbidden' });
   }
 
   if (req.method === 'PATCH') {
@@ -31,7 +34,7 @@ export default async function handler(
         updateData.status = status;
       }
       if (assignedToId) {
-        updateData.assignedToId = assignedToId;
+        updateData.assignedTo = { connect: { id: assignedToId } };
       }
 
       if (Object.keys(updateData).length === 0) {
@@ -75,7 +78,7 @@ export default async function handler(
               type: ActivityType.NOTE_ADDED, // Using NOTE_ADDED for now
               details: `Prospect assigné à ${newAgent.name} par ${session.user.name} (action groupée)`,
             });
-            individualUpdateData.assignedToId = assignedToId;
+            individualUpdateData.assignedTo = { connect: { id: assignedToId } };
 
             // Send SMS to the lead with the new agent's info
             await sendSms(lead, newAgent);
@@ -107,3 +110,5 @@ export default async function handler(
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
+
+export default handler;

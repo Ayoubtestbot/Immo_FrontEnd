@@ -306,14 +306,15 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const todayTimestamp = today;
 
   const [totalLeads, leadsToday, totalProperties, propertiesToday, totalTickets, ticketsToday, convertedLeads, leadsByStatusRaw, agencyAgents, newLeads, urgentTickets, urgentLeads, funnelData] = await Promise.all([
     prisma.lead.count({ where: { agencyId } }),
-    prisma.lead.count({ where: { agencyId, createdAt: { gte: today } } }),
+    prisma.lead.count({ where: { agencyId, createdAt: { gte: todayTimestamp } } }),
     prisma.property.count({ where: { agencyId } }),
-    prisma.property.count({ where: { agencyId, createdAt: { gte: today } } }),
+    prisma.property.count({ where: { agencyId, createdAt: { gte: todayTimestamp } } }),
     prisma.ticket.count({ where: { agencyId } }),
-    prisma.ticket.count({ where: { agencyId, createdAt: { gte: today } } }),
+    prisma.ticket.count({ where: { agencyId, createdAt: { gte: todayTimestamp } } }),
     prisma.lead.count({ where: { agencyId, status: LeadStatus.CONVERTED } }),
     prisma.lead.groupBy({
       by: ['status'],

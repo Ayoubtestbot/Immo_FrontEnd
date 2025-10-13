@@ -9,9 +9,10 @@ type ViewPropertyModalProps = {
   show: boolean;
   handleClose: () => void;
   property: PropertyWithDetails | null;
+  agencyCurrency: string;
 };
 
-const ViewPropertyModal = ({ show, handleClose, property }: ViewPropertyModalProps) => {
+const ViewPropertyModal = ({ show, handleClose, property, agencyCurrency }: ViewPropertyModalProps) => {
   if (!property) {
     return null;
   }
@@ -40,7 +41,7 @@ const ViewPropertyModal = ({ show, handleClose, property }: ViewPropertyModalPro
         )}
         <h5>Détails de la propriété <Badge bg="primary">{property.status}</Badge></h5>
         <p><strong>Type:</strong> {property.type}</p>
-        <p><strong>Prix:</strong> {property.price.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</p>
+        <p><strong>Prix:</strong> {property.price.toLocaleString('fr-FR', { style: 'currency', currency: agencyCurrency })}</p>
         <p><strong>Description:</strong></p>
         <p>{property.description || '-'}</p>
         <hr />

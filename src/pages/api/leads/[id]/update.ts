@@ -1,3 +1,6 @@
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 import { getServerSession } from 'next-auth/next'; // Correct import
 import { authOptions } from '../../auth/[...nextauth]'; // Import authOptions
 import { sendSms } from '@/lib/brevo';
@@ -64,7 +67,7 @@ export default async function handler(
           // Send SMS to the lead with the new agent's info
           await sendSms(lead, newAgent);
         }
-        updateData.assignedToId = assignedToId;
+        updateData.assignedTo = { connect: { id: assignedToId } };
       }
 
       // Handle appointmentDate
