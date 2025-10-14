@@ -10,6 +10,8 @@ import '@/styles/modern.css';
 import '@/styles/new-design.css';
 import { useEffect } from 'react';
 
+import { NotificationsProvider } from '@/contexts/NotificationsContext';
+
 function MyApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {
   useEffect(() => {
     document.body.classList.add('cozy-theme');
@@ -26,12 +28,14 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {
 
   return (
     <SessionProvider session={session}>
-      <Head>
-        <title>LeadEstate</title>
-      </Head>
-      <PayPalScriptProvider options={initialOptions}>
-        <Component {...pageProps} />
-      </PayPalScriptProvider>
+      <NotificationsProvider>
+        <Head>
+          <title>LeadEstate</title>
+        </Head>
+        <PayPalScriptProvider options={initialOptions}>
+          <Component {...pageProps} />
+        </PayPalScriptProvider>
+      </NotificationsProvider>
     </SessionProvider>
   );
 }

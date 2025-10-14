@@ -56,6 +56,20 @@ async function handler(
         return res.status(404).json({ error: 'No leads found or access denied for provided IDs.' });
       }
 
+      // Create a single notification for the bulk assignment
+      if (assignedToId) {
+        const leadsBeingReassigned = leadsToUpdate.filter(lead => lead.assignedToId !== assignedToId);
+        if (leadsBeingReassigned.length > 0) {
+            await prisma.notification.create({
+                data: {
+                    recipientId: assignedToId,
+                    message: `Vous avez été assigné à ${leadsBeingReassigned.length} nouveaux prospects.`,
+                    link: `/agency/leads`
+                }
+            });
+        }
+      }
+
       const updateOperations = leadsToUpdate.map(async (lead) => {
         const individualUpdateData: Prisma.LeadUpdateInput = {};
 

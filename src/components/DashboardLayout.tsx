@@ -1,18 +1,28 @@
 import React, { useState } from 'react';
-import { FiGrid, FiUsers, FiArchive, FiTag, FiSettings, FiLogOut, FiUser, FiMenu, FiCalendar } from 'react-icons/fi';
+import { FiGrid, FiUsers, FiArchive, FiTag, FiSettings, FiLogOut, FiUser, FiMenu, FiCalendar, FiBell } from 'react-icons/fi';
 import Link from 'next/link';
 import { signOut, useSession } from 'next-auth/react';
-import { Dropdown } from 'react-bootstrap';
+import { Dropdown, Badge } from 'react-bootstrap';
 import { UserRole } from '@prisma/client';
 import styles from '../styles/NewDashboard.module.css';
 import Image from 'next/image';
+import { formatDistanceToNow } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { useNotifications } from '@/contexts/NotificationsContext';
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const { data: session } = useSession();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const { notifications, unreadCount, markAsRead } = useNotifications();
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
+  };
+
+  const handleNotificationDropdownToggle = (isOpen: boolean) => {
+    if (isOpen && unreadCount > 0) {
+      markAsRead();
+    }
   };
 
   return (
@@ -61,9 +71,34 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
             <FiMenu />
           </button>
           <div className="ms-auto d-flex align-items-center">
+            <Dropdown onToggle={handleNotificationDropdownToggle} align="end">
+              <Dropdown.Toggle variant="transparent" id="dropdown-notifications" className="position-relative">
+                <FiBell size={20} />
+                {unreadCount > 0 && (
+                  <Badge pill bg="danger" className="position-absolute top-0 start-100 translate-middle">
+                    {unreadCount}
+                  </Badge>
+                )}
+              </Dropdown.Toggle>
+              <Dropdown.Menu>
+                <Dropdown.Header>Notifications</Dropdown.Header>
+                <div className={styles.notificationMenu}>
+                  {notifications.map(notification => (
+                    <Dropdown.Item key={notification.id} as={Link} href={notification.link || '#'} className={!notification.read ? 'fw-bold' : ''}>
+                      <div>{notification.message}</div>
+                      <small className="text-muted">
+                        {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true, locale: fr })}
+                      </small>
+                    </Dropdown.Item>
+                  ))}
+                  {notifications.length === 0 && <Dropdown.Item disabled>Vous n'avez aucune notification</Dropdown.Item>}
+                </div>
+              </Dropdown.Menu>
+            </Dropdown>
+
             <Dropdown align="end">
               <Dropdown.Toggle variant="transparent" id="dropdown-user-header" className="d-flex align-items-center">
-                <FiUser size={20} className="me-2" />
+                <FiUser size={20} className="mx-2" />
                 <span>{session?.user?.name}</span>
               </Dropdown.Toggle>
               <Dropdown.Menu>

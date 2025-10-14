@@ -18,7 +18,7 @@ async function handler(
         where: {
           agencyId: session.user.agencyId,
           role: {
-            in: [UserRole.AGENCY_MEMBER, UserRole.AGENCY_SUPER_AGENT], // Filter by agent roles
+            in: [UserRole.AGENCY_OWNER, UserRole.AGENCY_MEMBER, UserRole.AGENCY_SUPER_AGENT], // Filter by agent roles
           },
         },
         select: {

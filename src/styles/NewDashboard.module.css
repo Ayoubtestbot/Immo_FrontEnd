@@ -120,3 +120,8 @@
   font-size: 1.5rem;
   cursor: pointer;
 }
+
+.notificationMenu {
+  max-height: 150px;
+  overflow-y: auto;
+}

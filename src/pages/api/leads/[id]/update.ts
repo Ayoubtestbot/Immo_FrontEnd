@@ -38,6 +38,7 @@ export default async function handler(
       }
 
       const activities = [];
+      const notifications = [];
       const updateData: Prisma.LeadUpdateInput = {};
 
       if (status && status !== lead.status) {
@@ -62,6 +63,14 @@ export default async function handler(
               type: ActivityType.NOTE_ADDED, // Using NOTE_ADDED as a generic type for now
               details: `Prospect assigné à ${newAgent.name} par ${session.user.name}`,
             },
+          }));
+
+          notifications.push(prisma.notification.create({
+            data: {
+                recipientId: newAgent.id,
+                message: `Vous avez été assigné à un nouveau prospect : ${lead.firstName} ${lead.lastName}`,
+                link: `/agency/leads?leadId=${lead.id}`
+            }
           }));
 
           // Send SMS to the lead with the new agent's info
@@ -93,7 +102,7 @@ export default async function handler(
         data: updateData,
       });
 
-      await prisma.$transaction([...activities, updatedLead]);
+      await prisma.$transaction([...activities, ...notifications, updatedLead]);
 
       res.status(200).json(updatedLead);
     } catch (error) {
