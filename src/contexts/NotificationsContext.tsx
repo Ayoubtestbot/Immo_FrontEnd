@@ -48,7 +48,7 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
   };
 
   useEffect(() => {
-    if (session) {
+    if (session && session.user.role !== 'ADMIN') {
       fetchNotifications();
       const interval = setInterval(fetchNotifications, 60000);
       return () => clearInterval(interval);

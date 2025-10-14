@@ -1,74 +1,81 @@
 import React, { useState } from 'react';
-import { FaTachometerAlt, FaBuilding, FaDollarSign, FaUsers, FaTicketAlt, FaSignOutAlt, FaUserCircle, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { FiGrid, FiUsers, FiArchive, FiDollarSign, FiTag, FiLogOut, FiUser, FiMenu } from 'react-icons/fi';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { signOut, useSession } from 'next-auth/react';
 import { Dropdown } from 'react-bootstrap';
-import Image from 'next/image';
 import styles from '../styles/NewDashboard.module.css';
+import Image from 'next/image';
 
 const AdminDashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const { data: session } = useSession();
+  const router = useRouter();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
   };
 
-  const userName = session?.user?.name || 'Admin User';
+  const navItems = [
+    { href: '/admin/dashboard', icon: <FiGrid />, label: 'Tableau de bord' },
+    { href: '/admin/agencies', icon: <FiUsers />, label: 'Agences' },
+    { href: '/admin/plans', icon: <FiDollarSign />, label: 'Plans' },
+    { href: '/admin/subscriptions', icon: <FiArchive />, label: 'Abonnements' },
+    { href: '/admin/tickets', icon: <FiTag />, label: 'Tickets' },
+  ];
 
   return (
     <div className={styles.layout}>
       <div className={`${styles.sidebar} ${isSidebarCollapsed ? styles.sidebarCollapsed : ''}`}>
         <div className={styles.sidebarHeader}>
           <Image
-            src={isSidebarCollapsed ? "/logo-small.png" : "/logo.png"}
+            src={isSidebarCollapsed ? "/Logo_Only.png" : "/Logo_page.png"}
             alt="LeadEstate"
-            width={isSidebarCollapsed ? 40 : 120}
-            height={40}
+            width={isSidebarCollapsed ? 32 : 130}
+            height={32}
             className={styles.logo}
           />
         </div>
         <nav className={styles.sidebarNav}>
-          <Link href="/admin/dashboard" className={styles.sidebarLink}>
-            <FaTachometerAlt /> <span>Tableau de bord</span>
-          </Link>
-          <Link href="/admin/agencies" className={styles.sidebarLink}>
-            <FaBuilding /> <span>Agences</span>
-          </Link>
-          <Link href="/admin/plans" className={styles.sidebarLink}>
-            <FaDollarSign /> <span>Plans</span>
-          </Link>
-          <Link href="/admin/subscriptions" className={styles.sidebarLink}>
-            <FaUsers /> <span>Abonnements</span>
-          </Link>
-          <Link href="/admin/tickets" className={styles.sidebarLink}>
-            <FaTicketAlt /> <span>Tickets</span>
-          </Link>
-          <a href="#" onClick={() => signOut({ callbackUrl: '/' })} className={styles.sidebarLink}>
-            <FaSignOutAlt /> <span>Déconnexion</span>
-          </a>
+          {navItems.map((item) => (
+            <Link key={item.href} href={item.href} className={`${styles.sidebarLink} ${router.pathname === item.href ? styles.active : ''}`}>
+              {item.icon}
+              <span>{item.label}</span>
+              <span className={styles.tooltip}>{item.label}</span>
+            </Link>
+          ))}
         </nav>
-        <div className={styles.sidebarFooter}>
-          <Dropdown drop="up">
-            <Dropdown.Toggle variant="transparent" id="dropdown-user" className={styles.userMenu}>
-              <FaUserCircle size={24} />
-              {!isSidebarCollapsed && <span className="ms-2">{userName}</span>}
-            </Dropdown.Toggle>
-            <Dropdown.Menu>
-              {/*<Dropdown.Item onClick={() => signOut({ callbackUrl: '/' })}>
-                <FaSignOutAlt className="me-2" />
-                Déconnexion
-              </Dropdown.Item>*/}
-            </Dropdown.Menu>
-          </Dropdown>
+
+        <div className={styles.userProfile}>
+            <Dropdown drop="up">
+                <Dropdown.Toggle as="div" className="d-flex align-items-center" style={{ cursor: 'pointer' }}>
+                    <div className={styles.userProfileImg}>
+                        {session?.user?.image ? (
+                            <Image src={session.user.image} alt={session.user.name || 'Admin'} width={40} height={40} style={{ borderRadius: '50%' }} />
+                        ) : (
+                            <FiUser />
+                        )}
+                    </div>
+                    <div className={styles.userProfileInfo}>
+                        <span>{session?.user?.name}</span>
+                        <small>{session?.user?.email}</small>
+                    </div>
+                </Dropdown.Toggle>
+                <Dropdown.Menu popperConfig={{ strategy: 'fixed' }}>
+                    <Dropdown.Item onClick={() => signOut({ callbackUrl: '/' })}>
+                        <FiLogOut className="me-2" />
+                        Déconnexion
+                    </Dropdown.Item>
+                </Dropdown.Menu>
+            </Dropdown>
         </div>
       </div>
+
       <div className={`${styles.mainContent} ${isSidebarCollapsed ? styles.mainContentCollapsed : ''}`}>
         <div className={styles.header}>
           <button onClick={toggleSidebar} className={styles.sidebarMobileToggle}>
-            {isSidebarCollapsed ? <FaChevronRight /> : <FaChevronLeft />}
+            <FiMenu />
           </button>
-          {/* Header content can go here, like a search bar */}
         </div>
         <main className="p-4">
           {children}

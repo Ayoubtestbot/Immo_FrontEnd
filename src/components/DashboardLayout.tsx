@@ -89,7 +89,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                         <small>{session?.user?.email}</small>
                     </div>
                 </Dropdown.Toggle>
-                <Dropdown.Menu>
+<Dropdown.Menu popperConfig={{ strategy: 'fixed' }}>
                     <Dropdown.Item onClick={() => signOut({ callbackUrl: '/' })}>
                         <FiLogOut className="me-2" />
                         Déconnexion
