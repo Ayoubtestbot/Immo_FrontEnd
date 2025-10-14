@@ -3,8 +3,8 @@ import type { GetServerSideProps } from 'next';
 import DashboardLayout from '@/components/DashboardLayout';
 import { UserRole, LeadStatus, TicketPriority, User, Lead } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
-import { Row, Col, Card, Button, Modal } from 'react-bootstrap';
-import { FaUserCircle } from 'react-icons/fa';
+import { Row, Col, Card, Button, Modal, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { FaUserCircle, FaPhone, FaSyncAlt, FaCalendarDay, FaUsers, FaPlus, FaChartLine, FaBullseye, FaBuilding, FaTicketAlt, FaEye } from 'react-icons/fa';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import ModernChart from '@/components/ModernChart';
@@ -13,44 +13,58 @@ import KpiCard from '@/components/KpiCard';
 import { getTranslatedUserRole } from '@/utils/userRoleTranslations';
 import { LeadWithAssignedTo } from '@/types';
 import ViewLeadModal from '@/components/ViewLeadModal';
-import FunnelChart from '@/components/FunnelChart';
-import { leadStatusTranslations } from '@/utils/leadStatusTranslations';
+import HorizontalFunnelChart from '@/components/HorizontalFunnelChart';
+import { getTranslatedLeadStatus, leadStatusColors, leadStatusTranslations } from '@/utils/leadStatusTranslations';
+import styles from '@/styles/Dashboard.module.css';
 
 
 
 
 type AgencyDashboardProps = {
-  agencyId: string;
+  userRole: UserRole;
   totalLeads: number;
+  totalLeadsTrend: number;
   leadsToday: number;
+  leadsTodayTrend: number;
   totalProperties: number;
   propertiesToday: number;
   totalTickets: number;
   ticketsToday: number;
   conversionRate: number;
+  conversionRateTrend: number;
   leadsByStatus: { status: LeadStatus; count: number }[];
-  agencyAgents: (User & { _count?: { assignedLeads: number } })[]; // Updated type
+  agencyAgents?: (User & { _count?: { assignedLeads: number } })[];
   urgentTasks: {
     newLeads: { id: string; firstName: string; lastName: string }[];
     urgentTickets: { id: string; subject: string }[];
-    urgentLeads: { id: string; firstName: string; lastName: string; phone: string | null }[]; // New field
+    urgentLeads: { id: string; firstName: string; lastName: string; phone: string | null; status: LeadStatus }[]; // New field
   };
   funnelData: { status: LeadStatus; _count: { status: number } }[];
+  leadsToContact: number;
+  leadsToFollowUp: number;
+  appointmentsToday: number;
 };
 
 const AgencyDashboard = (props: AgencyDashboardProps) => {
   const {
+    userRole,
     totalLeads,
+    totalLeadsTrend,
     leadsToday,
+    leadsTodayTrend,
     totalProperties,
     propertiesToday,
     totalTickets,
     ticketsToday,
     conversionRate,
+    conversionRateTrend,
     leadsByStatus,
     agencyAgents,
     urgentTasks,
     funnelData,
+    leadsToContact,
+    leadsToFollowUp,
+    appointmentsToday,
   } = props;
 
   const funnelStages: LeadStatus[] = ['NEW', 'CONTACTED', 'QUALIFIED', 'APPOINTMENT_SCHEDULED', 'CONVERTED'];
@@ -89,10 +103,22 @@ const AgencyDashboard = (props: AgencyDashboardProps) => {
   const [showViewLeadModal, setShowViewLeadModal] = useState(false);
   const [showCallLeadModal, setShowCallLeadModal] = useState(false);
   const [selectedLead, setSelectedLead] = useState<LeadWithAssignedTo | null>(null);
+  const [selectedUrgentLead, setSelectedUrgentLead] = useState<{ id: string; firstName: string; lastName: string; phone: string | null; status: LeadStatus } | null>(null);
 
-  const handleOpenViewLeadModal = (lead: LeadWithAssignedTo) => {
-    setSelectedLead(lead);
-    setShowViewLeadModal(true);
+
+  const handleOpenViewLeadModal = async (leadId: string) => {
+    try {
+      const response = await fetch(`/api/leads/${leadId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch lead details');
+      }
+      const leadDetails = await response.json();
+      setSelectedLead(leadDetails);
+      setShowViewLeadModal(true);
+    } catch (error) {
+      console.error(error);
+      // Handle error, e.g., show a notification
+    }
   };
 
   const handleCloseViewLeadModal = () => {
@@ -111,6 +137,16 @@ const AgencyDashboard = (props: AgencyDashboardProps) => {
     setShowCallLeadModal(false);
   };
 
+  const handleOpenUrgentLeadCallModal = (lead: { id: string; firstName: string; lastName: string; phone: string | null; status: LeadStatus }) => {
+    setSelectedUrgentLead(lead);
+    setShowCallLeadModal(true);
+  };
+
+  const handleCloseUrgentLeadCallModal = () => {
+    setSelectedUrgentLead(null);
+    setShowCallLeadModal(false);
+  };
+
   return (
     <DashboardLayout>
       {selectedLead && (
@@ -121,25 +157,25 @@ const AgencyDashboard = (props: AgencyDashboardProps) => {
         />
       )}
 
-      {selectedLead && (
-        <Modal show={showCallLeadModal} onHide={handleCloseCallLeadModal} centered>
+      {(selectedLead || selectedUrgentLead) && (
+        <Modal show={showCallLeadModal} onHide={selectedLead ? handleCloseCallLeadModal : handleCloseUrgentLeadCallModal} centered>
           <Modal.Header closeButton>
             <Modal.Title>Appeler le prospect</Modal.Title>
           </Modal.Header>
           <Modal.Body className="text-center">
-            {selectedLead.phone ? (
+            {(selectedLead?.phone || selectedUrgentLead?.phone) ? (
               <>
                 <p className="lead mb-3">Numéro de téléphone:</p>
-                <h3><a href={`tel:${selectedLead.phone}`}>{selectedLead.phone}</a></h3>
+                <h3><a href={`tel:${selectedLead?.phone || selectedUrgentLead?.phone}`}>{selectedLead?.phone || selectedUrgentLead?.phone}</a></h3>
               </>
             ) : (
               <p className="lead text-danger">Aucun numéro de téléphone disponible pour ce prospect.</p>
             )}
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={handleCloseCallLeadModal}>Fermer</Button>
-            {selectedLead.phone && (
-              <a href={`tel:${selectedLead.phone}`} className="btn btn-primary">Appeler maintenant</a>
+            <Button variant="secondary" onClick={selectedLead ? handleCloseCallLeadModal : handleCloseUrgentLeadCallModal}>Fermer</Button>
+            {(selectedLead?.phone || selectedUrgentLead?.phone) && (
+              <a href={`tel:${selectedLead?.phone || selectedUrgentLead?.phone}`} className="btn btn-primary">Appeler maintenant</a>
             )}
           </Modal.Footer>
         </Modal>
@@ -148,36 +184,66 @@ const AgencyDashboard = (props: AgencyDashboardProps) => {
       <h1 className="h2 mb-4">Tableau de bord</h1>
 
       <Row>
-        <Col md={4} className="mb-4">
-          <KpiCard title="Prospects totaux" value={totalLeads} />
-        </Col>
-        <Col md={4} className="mb-4">
-          <KpiCard title="Prospects créés aujourd'hui" value={leadsToday} />
-        </Col>
-        <Col md={4} className="mb-4">
-          <KpiCard title="Taux de conversion" value={conversionRate} suffix="%" />
-        </Col>
-        <Col md={4} className="mb-4">
-          <KpiCard title="Propriétés gérées" value={totalProperties} />
-        </Col>
-        <Col md={4} className="mb-4">
-          <KpiCard title="Tickets totaux" value={totalTickets} />
-        </Col>
+        {userRole !== UserRole.AGENCY_MEMBER && (
+          <>
+            <Col md={4} className="mb-4">
+              <KpiCard title="Prospects totaux (Agence)" value={totalLeads} icon={<FaBullseye />} trend={totalLeadsTrend} />
+            </Col>
+            <Col md={4} className="mb-4">
+              <KpiCard title="Nouveaux prospects (Aujourd'hui)" value={leadsToday} icon={<FaPlus />} trend={leadsTodayTrend} />
+            </Col>
+            <Col md={4} className="mb-4">
+              <KpiCard title="Taux de conversion (Agence)" value={conversionRate} suffix="%" icon={<FaChartLine />} trend={conversionRateTrend} />
+            </Col>
+            <Col md={4} className="mb-4">
+              <KpiCard title="Propriétés gérées" value={totalProperties} icon={<FaBuilding />} />
+            </Col>
+            <Col md={4} className="mb-4">
+              <KpiCard title="Tickets totaux" value={totalTickets} icon={<FaTicketAlt />} />
+            </Col>
+          </>
+        )}
+        {userRole === UserRole.AGENCY_MEMBER && (
+          <>
+            <Col md={4} className="mb-4">
+              <KpiCard title="Mes prospects à contacter" value={leadsToContact} icon={<FaPhone />} />
+            </Col>
+            <Col md={4} className="mb-4">
+              <KpiCard title="Mes prospects à relancer" value={leadsToFollowUp} icon={<FaSyncAlt />} />
+            </Col>
+            <Col md={4} className="mb-4">
+              <KpiCard title="Mes RV aujourd'hui" value={appointmentsToday} icon={<FaCalendarDay />} />
+            </Col>
+             <Col md={4} className="mb-4">
+              <KpiCard title="Mes prospects" value={totalLeads} icon={<FaUsers />} trend={totalLeadsTrend} />
+            </Col>
+            <Col md={4} className="mb-4">
+              <KpiCard title="Nouveaux prospects (Aujourd'hui)" value={leadsToday} icon={<FaPlus />} trend={leadsTodayTrend} />
+            </Col>
+            <Col md={4} className="mb-4">
+              <KpiCard title="Mon taux de conversion" value={conversionRate} suffix="%" icon={<FaChartLine />} trend={conversionRateTrend} />
+            </Col>
+          </>
+        )}
       </Row>
 
       <Row className="mt-4">
-        <Col lg={7} className="mb-4">
-          <Card className="card" style={{ minHeight: '400px' }}>
-            <Card.Body className="d-flex flex-column h-100">
-              <h5 className="mb-4">Vue d&apos;ensemble de l&apos;activité</h5>
-              <div className="flex-grow-1 d-flex align-items-center justify-content-center">
-                <ModernChart chartData={overviewChartData} type="bar" />
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col lg={5} className="mb-4">
-          <Card className="card" style={{ minHeight: '400px' }}>
+        {userRole !== UserRole.AGENCY_MEMBER && (
+          <Col lg={12} className="mb-4">
+            <Card className="card" style={{ minHeight: '400px' }}>
+              <Card.Body className="d-flex flex-column h-100">
+                <h5 className="mb-4">Vue d&apos;ensemble de l&apos;activité</h5>
+                <div className="flex-grow-1 d-flex align-items-center justify-content-center">
+                  <ModernChart chartData={overviewChartData} type="bar" />
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+        )}
+      </Row>
+      <Row className="mt-4 d-flex">
+        <Col lg={6} className="mb-4">
+          <Card className="card h-100" style={{ minHeight: '400px' }}>
             <Card.Body className="d-flex flex-column h-100">
               <h5 className="mb-4">Répartition des prospects</h5>
               <div className="flex-grow-1 d-flex align-items-center justify-content-center">
@@ -186,15 +252,12 @@ const AgencyDashboard = (props: AgencyDashboardProps) => {
             </Card.Body>
           </Card>
         </Col>
-      </Row>
-
-      <Row className="mt-4">
-        <Col lg={12} className="mb-4">
-          <Card className="card" style={{ minHeight: '400px' }}>
+        <Col lg={6} className="mb-4">
+          <Card className="card h-100" style={{ minHeight: '400px' }}>
             <Card.Body className="d-flex flex-column h-100">
               <h5 className="mb-4">Conversion Funnel</h5>
               <div className="flex-grow-1 d-flex align-items-center justify-content-center">
-                <FunnelChart data={funnelChartData} />
+                <HorizontalFunnelChart data={funnelChartData} />
               </div>
             </Card.Body>
           </Card>
@@ -202,91 +265,116 @@ const AgencyDashboard = (props: AgencyDashboardProps) => {
       </Row>
 
       <Row className="mt-4">
-        <Col md={6} className="mb-4">
-          <Card className="card" style={{ minHeight: '300px' }}>
+        <Col md={userRole !== UserRole.AGENCY_MEMBER ? 6 : 12} className="mb-4">
+          <Card className="card">
             <Card.Body className="d-flex flex-column h-100">
-              <Card.Title as="h5" className="mb-4">Tâches Urgentes</Card.Title>
-              <div className="flex-grow-1 overflow-auto">
+              <div className="flex-grow-1">
                 <h6 className="text-muted mb-2">Prospects urgents</h6>
                 {urgentTasks.urgentLeads.length > 0 ? (
-                  <ul className="list-unstyled">
+                  <Row>
                     {urgentTasks.urgentLeads.map(lead => (
-                      <li key={lead.id} className="d-flex justify-content-between align-items-center mb-2">
-                        <div>
-                          <span className="status-dot urgent-lead me-2"></span>
-                          <span className="text-decoration-none text-dark fw-bold" style={{ cursor: 'pointer' }} onClick={() => handleOpenViewLeadModal(lead as LeadWithAssignedTo)}>
-                            {lead.firstName} {lead.lastName}
-                          </span>
-                        </div>
-                        <div className="d-flex">
-                          <Button className="btn-primary btn-xs me-2" onClick={() => handleOpenViewLeadModal(lead as LeadWithAssignedTo)}>Voir</Button>
-                          <Button
-                            className="btn btn-xs btn-primary"
-                            disabled={!lead.phone}
-                            onClick={() => handleOpenCallLeadModal(lead as LeadWithAssignedTo)}
-                          >
-                            Appeler
-                          </Button>
-                        </div>
-                      </li>
+                      <Col md={6} key={lead.id}>
+                        <Card className={`mb-3 ${styles.urgentTaskCard} ${styles.smallUrgentTaskCard}`}>
+                          <Card.Body>
+                            <div className="d-flex">
+                              <div className={styles.taskCheckbox}></div>
+                              <div className="flex-grow-1">
+                                <div className="d-flex justify-content-between align-items-center">
+                                  <div>
+                                    <Card.Title className="mb-1">{lead.firstName} {lead.lastName}</Card.Title>
+                                    <Card.Subtitle className="mb-0 text-muted">
+                                      <span className={`badge ${leadStatusColors[lead.status]}`}>
+                                        {getTranslatedLeadStatus(lead.status)}
+                                      </span>
+                                    </Card.Subtitle>
+                                  </div>
+                                  <div className="d-flex">
+                                    <OverlayTrigger overlay={<Tooltip id={`tooltip-view-${lead.id}`}>Voir</Tooltip>}>
+                                      <Button variant="outline-secondary" className="btn-sm me-2" onClick={() => handleOpenViewLeadModal(lead.id)}>
+                                        <FaEye />
+                                      </Button>
+                                    </OverlayTrigger>
+                                    <OverlayTrigger overlay={<Tooltip id={`tooltip-call-${lead.id}`}>Appeler</Tooltip>}>
+                                      <Button
+                                        variant="outline-primary"
+                                        className="btn-sm"
+                                        disabled={!lead.phone}
+                                        onClick={() => handleOpenUrgentLeadCallModal(lead)}
+                                      >
+                                        <FaPhone />
+                                      </Button>
+                                    </OverlayTrigger>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </Card.Body>
+                        </Card>
+                      </Col>
                     ))}
-                  </ul>
+                  </Row>
                 ) : (
                   <p className="text-muted">Aucun prospect urgent</p>
                 )}
 
-                <h6 className="text-muted mt-4 mb-2">Tickets urgents</h6>
-                {urgentTasks.urgentTickets.length > 0 ? (
-                  <ul className="list-unstyled">
-                    {urgentTasks.urgentTickets.map(ticket => (
-                      <li key={ticket.id} className="d-flex justify-content-between align-items-center mb-2">
-                        <div>
-                          <span className="status-dot urgent-ticket me-2"></span>
-                          <Link href={`/agency/tickets/${ticket.id}`} className="text-decoration-none text-dark fw-bold">
-                            {ticket.subject}
-                          </Link>
-                        </div>
-                        <div className="task-actions">
-                          <Button size="sm" className="btn-outline-secondary me-2" onClick={() => router.push(`/agency/tickets/${ticket.id}`)}>Voir</Button>
-                          <Button size="sm" className="btn-outline-primary" onClick={() => router.push(`/agency/tickets/${ticket.id}`)}>Répondre</Button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-muted">Aucun ticket urgent</p>
+                {userRole !== UserRole.AGENCY_MEMBER && (
+                  <>
+                    <h6 className="text-muted mt-4 mb-2">Tickets urgents</h6>
+                    {urgentTasks.urgentTickets.length > 0 ? (
+                      <ul className="list-unstyled">
+                        {urgentTasks.urgentTickets.map(ticket => (
+                          <li key={ticket.id} className="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                              <span className="status-dot urgent-ticket me-2"></span>
+                              <Link href={`/agency/tickets/${ticket.id}`} className="text-decoration-none text-dark fw-bold">
+                                {ticket.subject}
+                              </Link>
+                            </div>
+                            <div className="task-actions">
+                              <Button size="sm" className="btn-outline-secondary me-2" onClick={() => router.push(`/agency/tickets/${ticket.id}`)}>Voir</Button>
+                              <Button size="sm" className="btn-outline-primary" onClick={() => router.push(`/agency/tickets/${ticket.id}`)}>Répondre</Button>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-muted">Aucun ticket urgent</p>
+                    )}
+                  </>
                 )}
               </div>
             </Card.Body>
           </Card>
         </Col>
-        <Col md={6} className="mb-4">
-          <Card className="card" style={{ minHeight: '300px' }}>
-            <Card.Body className="d-flex flex-column h-100">
-              <Card.Title as="h5" className="mb-4">Activité des agents</Card.Title>
-              <div className="flex-grow-1 overflow-auto">
-                {agencyAgents.length > 0 ? (
-                  <ul className="list-unstyled">
-                    {agencyAgents.map(agent => (
-                      <li key={agent.id} className="mb-3 p-2 border rounded d-flex align-items-center">
-                        <FaUserCircle size={30} className="me-3 text-muted" />
-                        <div className="flex-grow-1">
-                          <h6 className="mb-0">{agent.name}</h6>
-                          <small className="text-muted">{agent.email} - {getTranslatedUserRole(agent.role)}</small>
-                        </div>
-                        <div className="text-end">
-                          <span className="badge bg-info text-dark">{agent._count?.assignedLeads || 0} Prospects</span>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-muted">Aucun agent trouvé pour cette agence.</p>
-                )}
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
+        {userRole !== UserRole.AGENCY_MEMBER && agencyAgents && (
+          <Col md={6} className="mb-4">
+            <Card className="card" style={{ minHeight: '300px' }}>
+              <Card.Body className="d-flex flex-column h-100">
+                <Card.Title as="h5" className="mb-4">Activité des agents</Card.Title>
+                <div className="flex-grow-1 overflow-auto">
+                  {agencyAgents.length > 0 ? (
+                    <ul className="list-unstyled">
+                      {agencyAgents.map(agent => (
+                        <li key={agent.id} className="mb-3 p-2 border rounded d-flex align-items-center">
+                          <FaUserCircle size={30} className="me-3 text-muted" />
+                          <div className="flex-grow-1">
+                            <h6 className="mb-0">{agent.name}</h6>
+                            <small className="text-muted">{agent.email} - {getTranslatedUserRole(agent.role)}</small>
+                          </div>
+                          <div className="text-end">
+                            <span className="badge bg-info text-dark">{agent._count?.assignedLeads || 0} Prospects</span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-muted">Aucun agent trouvé pour cette agence.</p>
+                  )}
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+        )}
       </Row>
     </DashboardLayout>
   );
@@ -299,54 +387,62 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     return { redirect: { destination: '/login', permanent: false } };
   }
 
-  const agencyId = session.user.agencyId;
+  const { user } = session;
+  const agencyId = user.agencyId;
   if (!agencyId) {
     return { redirect: { destination: '/login', permanent: false } };
   }
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const todayTimestamp = today;
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
 
-  const [totalLeads, leadsToday, totalProperties, propertiesToday, totalTickets, ticketsToday, convertedLeads, leadsByStatusRaw, agencyAgents, newLeads, urgentTickets, urgentLeads, funnelData] = await Promise.all([
-    prisma.lead.count({ where: { agencyId } }),
-    prisma.lead.count({ where: { agencyId, createdAt: { gte: todayTimestamp } } }),
-    prisma.property.count({ where: { agencyId } }),
-    prisma.property.count({ where: { agencyId, createdAt: { gte: todayTimestamp } } }),
-    prisma.ticket.count({ where: { agencyId } }),
-    prisma.ticket.count({ where: { agencyId, createdAt: { gte: todayTimestamp } } }),
-    prisma.lead.count({ where: { agencyId, status: LeadStatus.CONVERTED } }),
+  const isAgent = user.role === UserRole.AGENCY_MEMBER;
+  const baseWhere = {
+    agencyId,
+    ...(isAgent && { assignedToId: user.id }),
+  };
+
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  const [totalLeads, leadsToday, leadsYesterday, totalProperties, propertiesToday, totalTickets, ticketsToday, convertedLeads, convertedLeadsYesterday, totalLeadsYesterday, leadsByStatusRaw, agencyAgents, urgentTickets, urgentLeads, funnelData, leadsToContact, leadsToFollowUp, appointmentsToday] = await Promise.all([
+    prisma.lead.count({ where: baseWhere }),
+    prisma.lead.count({ where: { ...baseWhere, createdAt: { gte: today } } }),
+    prisma.lead.count({ where: { ...baseWhere, createdAt: { gte: yesterday, lt: today } } }),
+    isAgent ? Promise.resolve(0) : prisma.property.count({ where: { agencyId } }),
+    isAgent ? Promise.resolve(0) : prisma.property.count({ where: { agencyId, createdAt: { gte: today } } }),
+    isAgent ? Promise.resolve(0) : prisma.ticket.count({ where: { agencyId } }),
+    isAgent ? Promise.resolve(0) : prisma.ticket.count({ where: { agencyId, createdAt: { gte: today } } }),
+    prisma.lead.count({ where: { ...baseWhere, status: LeadStatus.CONVERTED } }),
+    prisma.lead.count({ where: { ...baseWhere, status: LeadStatus.CONVERTED, updatedAt: { lt: today } } }),
+    prisma.lead.count({ where: { ...baseWhere, createdAt: { lt: today } } }),
     prisma.lead.groupBy({
       by: ['status'],
-      where: { agencyId },
+      where: baseWhere,
       _count: { status: true },
     }),
-    prisma.user.findMany({
+    isAgent ? Promise.resolve([]) : prisma.user.findMany({
       where: { agencyId },
       include: { _count: { select: { assignedLeads: true } } },
     }),
-    prisma.lead.findMany({
-      where: { agencyId, status: LeadStatus.NEW },
-      select: { id: true, firstName: true, lastName: true },
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-    }),
-    prisma.ticket.findMany({
+    isAgent ? Promise.resolve([]) : prisma.ticket.findMany({
       where: { agencyId, priority: TicketPriority.URGENT, status: { not: 'CLOSED' } },
       select: { id: true, subject: true },
       orderBy: { createdAt: 'desc' },
       take: 5,
     }),
     prisma.lead.findMany({
-      where: { agencyId, isUrgent: true, status: { not: LeadStatus.CONVERTED } },
-      select: { id: true, firstName: true, lastName: true, phone: true },
+      where: { ...baseWhere, isUrgent: true, status: { not: LeadStatus.CONVERTED } },
+      select: { id: true, firstName: true, lastName: true, phone: true, status: true },
       orderBy: { createdAt: 'desc' },
       take: 5,
     }),
     prisma.lead.groupBy({
       by: ['status'],
       where: {
-        agencyId: agencyId,
+        ...baseWhere,
         status: {
           in: ['NEW', 'CONTACTED', 'QUALIFIED', 'APPOINTMENT_SCHEDULED', 'CONVERTED'],
         },
@@ -355,29 +451,45 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         status: true,
       },
     }),
+    prisma.lead.count({ where: { ...baseWhere, status: LeadStatus.NEW } }),
+    prisma.lead.count({ where: { ...baseWhere, status: LeadStatus.FOLLOW_UP } }),
+    prisma.lead.count({ where: { ...baseWhere, appointmentDate: { gte: today, lt: tomorrow } } })
   ]);
 
   const conversionRate = totalLeads > 0 ? (convertedLeads / totalLeads) * 100 : 0;
+  const conversionRateYesterday = totalLeadsYesterday > 0 ? (convertedLeadsYesterday / totalLeadsYesterday) * 100 : 0;
+  const conversionRateTrend = conversionRateYesterday > 0 ? ((conversionRate - conversionRateYesterday) / conversionRateYesterday) * 100 : conversionRate > 0 ? 100 : 0;
+
   const leadsByStatus = leadsByStatusRaw.map(item => ({ status: item.status, count: item._count.status }));
+
+  const leadsTodayTrend = leadsYesterday > 0 ? ((leadsToday - leadsYesterday) / leadsYesterday) * 100 : leadsToday > 0 ? 100 : 0;
+
+  const totalLeadsTrend = totalLeadsYesterday > 0 ? ((totalLeads - totalLeadsYesterday) / totalLeadsYesterday) * 100 : totalLeads > 0 ? 100 : 0;
 
   return {
     props: {
-      agencyId,
+      userRole: user.role,
       totalLeads,
+      totalLeadsTrend: parseFloat(totalLeadsTrend.toFixed(2)),
       leadsToday,
+      leadsTodayTrend: parseFloat(leadsTodayTrend.toFixed(2)),
       totalProperties,
       propertiesToday,
       totalTickets,
       ticketsToday,
-      conversionRate,
+      conversionRate: parseFloat(conversionRate.toFixed(2)),
+      conversionRateTrend: parseFloat(conversionRateTrend.toFixed(2)),
       leadsByStatus: JSON.parse(JSON.stringify(leadsByStatus)),
       agencyAgents: JSON.parse(JSON.stringify(agencyAgents)),
       urgentTasks: {
-        newLeads: JSON.parse(JSON.stringify(newLeads)),
+        newLeads: [], // This was seemingly unused, so clarifying its state
         urgentTickets: JSON.parse(JSON.stringify(urgentTickets)),
         urgentLeads: JSON.parse(JSON.stringify(urgentLeads)),
       },
       funnelData: JSON.parse(JSON.stringify(funnelData)),
+      leadsToContact,
+      leadsToFollowUp,
+      appointmentsToday,
     },
   };
 };

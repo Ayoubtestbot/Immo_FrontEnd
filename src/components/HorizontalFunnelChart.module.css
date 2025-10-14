@@ -1,0 +1,45 @@
+.funnelContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 1rem;
+}
+
+.segment {
+  display: flex;
+  flex-direction: column;
+}
+
+.segmentInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.stageName {
+  font-weight: bold;
+}
+
+.stageValue {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.dropOff {
+  color: #dc3545;
+  font-size: 0.9rem;
+}
+
+.progressBar {
+  width: 100%;
+  background-color: #e9ecef;
+  border-radius: 5px;
+  height: 20px;
+}
+
+.progressBarFill {
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.5s ease-in-out;
+}

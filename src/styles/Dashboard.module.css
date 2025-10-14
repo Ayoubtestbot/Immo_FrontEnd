@@ -3,14 +3,21 @@
   border-radius: var(--card-border-radius);
   box-shadow: var(--card-box-shadow);
   padding: 1.5rem;
-  text-align: center;
+  text-align: left;
   border: 1px solid var(--border-color);
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.kpiCard:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--card-box-shadow-hover);
 }
 
 .kpiCard h2 {
   font-size: 2.5rem;
   font-weight: 700;
   color: var(--primary-accent-color);
+  margin-bottom: 0;
 }
 
 .kpiCard p {
@@ -24,4 +31,49 @@
   box-shadow: var(--card-box-shadow);
   padding: 1.5rem;
   border: 1px solid var(--border-color);
+}
+
+.kpiIcon {
+  font-size: 1.5rem;
+  color: var(--secondary-action-color);
+  opacity: 0.8;
+}
+
+.trendIndicator {
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-left: 0.5rem;
+}
+
+.trendIndicator span {
+  margin-left: 0.25rem;
+}
+
+.trendUp {
+  color: #28a745; /* Green */
+}
+
+.trendDown {
+  color: #dc3545; /* Red */
+}
+
+.trendNeutral {
+  color: #6c757d; /* Gray */
+}
+
+.urgentTaskCard {
+  border-left: 5px solid #dc3545; /* Red border for urgency */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.taskCheckbox {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #ced4da;
+  margin-right: 1rem;
+  flex-shrink: 0;
+  margin-top: 5px;
 }
