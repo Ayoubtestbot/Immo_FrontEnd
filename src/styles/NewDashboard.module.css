@@ -1,9 +1,16 @@
+/* General Layout */
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #eef2f5; /* Contrasting darker background for the main UI */
+}
 
+/* Sidebar Styles */
 .sidebar {
-  width: 250px;
+  width: 260px;
   height: 100vh;
-  background-color: #1a202c;
-  color: #a0aec0;
+  background-color: #ffffff; /* Light and neutral background */
+  color: #333;
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -11,95 +18,176 @@
   top: 0;
   transition: width 0.3s ease;
   z-index: 1000;
+  border-right: 1px solid #e0e0e0;
 }
 
+.sidebarHeader {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.logo {
+  max-width: 130px;
+  transition: all 0.3s ease;
+}
+
+.sidebarNav {
+  flex-grow: 1;
+  padding: 1rem 0;
+}
+
+.sidebarLink {
+  display: flex;
+  align-items: center;
+  padding: 0.8rem 1.5rem;
+  margin: 0.25rem 1rem;
+  color: #555;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: background-color 0.2s, color 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+  position: relative; /* For tooltip positioning */
+}
+
+.sidebarLink:hover {
+  background-color: #f0f0f0;
+  color: #000;
+}
+
+.sidebarLink.active {
+  background-color: #007FFF; /* Vibrant accent color */
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 127, 255, 0.3);
+}
+
+.sidebarLink.active:hover {
+  background-color: #0066CC;
+}
+
+.sidebarLink svg {
+  min-width: 24px;
+  margin-right: 1rem;
+  font-size: 1.2rem;
+}
+
+.separator {
+  border-top: 1px solid #e0e0e0;
+  margin: 1rem;
+}
+
+/* User Profile Section */
+.userProfile {
+  padding: 1rem;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.userProfileImg {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #ccc;
+  margin-right: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: #fff;
+}
+
+.userProfileInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.userProfileInfo span {
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.userProfileInfo small {
+  font-size: 0.75rem;
+  color: #777;
+}
+
+/* Collapsed State */
 .sidebarCollapsed {
   width: 80px;
 }
 
-.sidebarHeader {
-  padding: 1.5rem 1.5rem;
-  display: flex;
-  align-items: center;
+.sidebarCollapsed .sidebarHeader {
   justify-content: center;
-  border-bottom: 1px solid #2d3748;
-}
-
-.logo {
-  max-width: 120px;
-  transition: all 0.3s ease;
 }
 
 .sidebarCollapsed .logo {
   max-width: 40px;
 }
 
-.sidebarNav {
-  flex-grow: 1;
-  padding-top: 1rem;
-}
-
-.sidebarLink {
-  display: flex;
-  align-items: center;
-  padding: 0.75rem 1.5rem;
-  color: #a0aec0;
-  text-decoration: none;
-  transition: background-color 0.2s, color 0.2s;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-.sidebarLink:hover,
-.sidebarLink.active {
-  background-color: #2d3748;
-  color: #ffffff;
-}
-
-.sidebarLink svg {
-  min-width: 24px; /* Ensure icons have a fixed width */
-  margin-right: 1rem;
-}
-
-.sidebarLink span {
-  opacity: 1;
-  transition: opacity 0.3s ease;
+.sidebarCollapsed .sidebarLink {
+  justify-content: center;
+  margin: 0.25rem 0.5rem;
 }
 
 .sidebarCollapsed .sidebarLink span {
+  display: none;
+}
+
+.sidebarCollapsed .sidebarLink svg {
+  margin-right: 0;
+}
+
+.sidebarCollapsed .userProfile {
+  justify-content: center;
+}
+
+.sidebarCollapsed .userProfileInfo {
+  display: none;
+}
+
+.sidebarCollapsed .userProfileImg {
+  margin-right: 0;
+}
+
+/* Tooltip for Collapsed State */
+.tooltip {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 15px;
+  padding: 0.5rem 1rem;
+  background-color: #333;
+  color: #fff;
+  border-radius: 6px;
+  white-space: nowrap;
+  visibility: hidden;
   opacity: 0;
-  width: 0;
+  transition: opacity 0.2s;
+  z-index: 1001;
 }
 
-.sidebarFooter {
-  padding: 1.5rem;
-  border-top: 1px solid #2d3748;
+.sidebarCollapsed .sidebarLink:hover .tooltip {
+  visibility: visible;
+  opacity: 1;
 }
 
-.userMenu {
-  display: flex;
-  align-items: center;
-  color: #a0aec0;
-}
-
-.userMenu:hover {
-  color: #ffffff;
-}
-
+/* Main Content Area */
 .mainContent {
-  margin-left: 250px;
+  margin-left: 260px;
   transition: margin-left 0.3s ease;
-  padding: 2rem;
-  width: calc(100% - 250px);
+  width: calc(100% - 260px);
 }
 
 .mainContentCollapsed {
   margin-left: 80px;
   width: calc(100% - 80px);
-}
-
-.sidebarToggle {
-  display: none; /* Hide the old toggle button */
 }
 
 .header {
@@ -119,9 +207,4 @@
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
-}
-
-.notificationMenu {
-  max-height: 150px;
-  overflow-y: auto;
 }

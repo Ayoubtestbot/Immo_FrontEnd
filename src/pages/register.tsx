@@ -68,7 +68,7 @@ const RegisterPage = () => {
   return (
     <div className={styles.loginContainer}>
       <div className={styles.imageContainer}>
-        <Image src="/logo.png" alt="LeadEstate Logo" width={150} height={150} />
+        <Image src="/Logo_name.png" alt="LeadEstate Logo" width={150} height={150} />
         <h1 className={styles.title}>LeadEstate</h1>
         <p className={styles.subtitle}>Rejoignez notre communauté et commencez à gérer vos prospects efficacement.</p>
       </div>
