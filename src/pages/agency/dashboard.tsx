@@ -228,43 +228,6 @@ const AgencyDashboard = (props: AgencyDashboardProps) => {
       </Row>
 
       <Row className="mt-4">
-        {userRole !== UserRole.AGENCY_MEMBER && (
-          <Col lg={12} className="mb-4">
-            <Card className="card" style={{ minHeight: '400px' }}>
-              <Card.Body className="d-flex flex-column h-100">
-                <h5 className="mb-4">Vue d&apos;ensemble de l&apos;activité</h5>
-                <div className="flex-grow-1 d-flex align-items-center justify-content-center">
-                  <ModernChart chartData={overviewChartData} type="bar" />
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
-        )}
-      </Row>
-      <Row className="mt-4 d-flex">
-        <Col lg={6} className="mb-4">
-          <Card className="card h-100" style={{ minHeight: '400px' }}>
-            <Card.Body className="d-flex flex-column h-100">
-              <h5 className="mb-4">Répartition des prospects</h5>
-              <div className="flex-grow-1 d-flex align-items-center justify-content-center">
-                <ModernChart chartData={leadsByStatusChartData} type="doughnut" />
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col lg={6} className="mb-4">
-          <Card className="card h-100" style={{ minHeight: '400px' }}>
-            <Card.Body className="d-flex flex-column h-100">
-              <h5 className="mb-4">Conversion Funnel</h5>
-              <div className="flex-grow-1 d-flex align-items-center justify-content-center">
-                <HorizontalFunnelChart data={funnelChartData} />
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-
-      <Row className="mt-4">
         <Col md={userRole !== UserRole.AGENCY_MEMBER ? 6 : 12} className="mb-4">
           <Card className="card">
             <Card.Body className="d-flex flex-column h-100">
@@ -289,11 +252,9 @@ const AgencyDashboard = (props: AgencyDashboardProps) => {
                                     </Card.Subtitle>
                                   </div>
                                   <div className="d-flex">
-                                    <OverlayTrigger overlay={<Tooltip id={`tooltip-view-${lead.id}`}>Voir</Tooltip>}>
                                       <Button variant="outline-secondary" className="btn-sm me-2" onClick={() => handleOpenViewLeadModal(lead.id)}>
                                         <FaEye />
                                       </Button>
-                                    </OverlayTrigger>
                                     <OverlayTrigger overlay={<Tooltip id={`tooltip-call-${lead.id}`}>Appeler</Tooltip>}>
                                       <Button
                                         variant="outline-primary"
@@ -375,6 +336,43 @@ const AgencyDashboard = (props: AgencyDashboardProps) => {
             </Card>
           </Col>
         )}
+      </Row>
+
+      <Row className="mt-4">
+        {userRole !== UserRole.AGENCY_MEMBER && (
+          <Col lg={12} className="mb-4">
+            <Card className="card" style={{ minHeight: '400px' }}>
+              <Card.Body className="d-flex flex-column h-100">
+                <h5 className="mb-4">Vue d&apos;ensemble de l&apos;activité</h5>
+                <div className="flex-grow-1 d-flex align-items-center justify-content-center">
+                  <ModernChart chartData={overviewChartData} type="bar" />
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+        )}
+      </Row>
+      <Row className="mt-4 d-flex">
+        <Col lg={6} className="mb-4">
+          <Card className="card h-100" style={{ minHeight: '400px' }}>
+            <Card.Body className="d-flex flex-column h-100">
+              <h5 className="mb-4">Répartition des prospects</h5>
+              <div className="flex-grow-1 d-flex align-items-center justify-content-center">
+                <ModernChart chartData={leadsByStatusChartData} type="doughnut" />
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col lg={6} className="mb-4">
+          <Card className="card h-100" style={{ minHeight: '400px' }}>
+            <Card.Body className="d-flex flex-column h-100">
+              <h5 className="mb-4">Conversion Funnel</h5>
+              <div className="flex-grow-1 d-flex align-items-center justify-content-center">
+                <HorizontalFunnelChart data={funnelChartData} />
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
       </Row>
     </DashboardLayout>
   );

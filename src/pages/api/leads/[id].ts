@@ -15,7 +15,32 @@ export default async function handler(
 
   const { id } = req.query as { id: string };
 
-  if (req.method === 'DELETE') {
+  if (req.method === 'GET') {
+    try {
+      const lead = await prisma.lead.findUnique({
+        where: { id },
+        include: {
+          assignedTo: true,
+          notes: {
+            include: {
+              author: true,
+            },
+          },
+          activities: true,
+          properties: true,
+        },
+      });
+
+      if (!lead) {
+        return res.status(404).json({ error: 'Lead not found' });
+      }
+
+      return res.status(200).json(lead);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ error: 'Failed to fetch lead' });
+    }
+  } else if (req.method === 'DELETE') {
     try {
       await prisma.lead.delete({
         where: { id },
@@ -43,7 +68,7 @@ export default async function handler(
       return res.status(500).json({ error: 'Failed to update lead urgency' });
     }
   } else {
-    res.setHeader('Allow', ['DELETE', 'PUT']); // Allow PUT method
+    res.setHeader('Allow', ['GET', 'DELETE', 'PUT']); // Allow PUT method
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
