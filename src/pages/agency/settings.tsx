@@ -115,11 +115,11 @@ const SettingsPage = ({ user, agency }: SettingsPageProps) => {
           </Card>
 
           <Card className="mb-4">
-            <Card.Header>Paramètres de l'agence</Card.Header>
+            <Card.Header>Paramètres de l&apos;agence</Card.Header>
             <Card.Body>
               <Form onSubmit={handleAgencySettingsUpdate}>
                 <Form.Group className="mb-3" controlId="agencyName">
-                  <Form.Label>Nom de l'agence</Form.Label>
+                  <Form.Label>Nom de l&apos;agence</Form.Label>
                   <Form.Control
                     type="text"
                     value={agencyName}
@@ -151,14 +151,14 @@ const SettingsPage = ({ user, agency }: SettingsPageProps) => {
                 <>
                   <p><strong>Plan:</strong> {agency.subscription.plan.name}</p>
                   <p><strong>Limite de prospects:</strong> {agency.subscription.plan.prospectsLimit === -1 ? 'Illimité' : agency.subscription.plan.prospectsLimit}</p>
-                  <p><strong>Limite d'utilisateurs:</strong> {agency.subscription.plan.usersLimit === -1 ? 'Illimité' : agency.subscription.plan.usersLimit}</p>
+                  <p><strong>Limite d&apos;utilisateurs:</strong> {agency.subscription.plan.usersLimit === -1 ? 'Illimité' : agency.subscription.plan.usersLimit}</p>
                   <p><strong>Limite de propriétés:</strong> {agency.subscription.plan.propertiesLimit === -1 ? 'Illimité' : agency.subscription.plan.propertiesLimit}</p>
                   {agency.subscription.endDate && <p><strong>Date de fin:</strong> {format(new Date(agency.subscription.endDate), 'dd/MM/yyyy')}</p>}
                   <Button className="btn-primary">Mettre à niveau le plan</Button>
                 </>
               ) : (
                 <>
-                  <p>Vous n'avez pas de plan actif.</p>
+                  <p>Vous n&apos;avez pas de plan actif.</p>
                   <Button className="btn-primary">Choisir un plan</Button>
                 </>
               )}

@@ -125,7 +125,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                       </small>
                     </Dropdown.Item>
                   ))}
-                  {notifications.length === 0 && <Dropdown.Item disabled>Vous n'avez aucune notification</Dropdown.Item>}
+                  {notifications.length === 0 && <Dropdown.Item disabled>Vous n&apos;avez aucune notification</Dropdown.Item>}
                 </div>
               </Dropdown.Menu>
             </Dropdown>

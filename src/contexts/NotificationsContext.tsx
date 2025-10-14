@@ -33,21 +33,21 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
     }
   };
 
-  const fetchNotifications = async () => {
-    try {
-      const { data } = await axios.get('/api/notifications');
-      if (data.unreadCount > previousUnreadCountRef.current) {
-        playSound();
-      }
-      setNotifications(data.notifications);
-      setUnreadCount(data.unreadCount);
-      previousUnreadCountRef.current = data.unreadCount;
-    } catch (error) {
-      console.error('Failed to fetch notifications', error);
-    }
-  };
-
   useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const { data } = await axios.get('/api/notifications');
+        if (data.unreadCount > previousUnreadCountRef.current) {
+          playSound();
+        }
+        setNotifications(data.notifications);
+        setUnreadCount(data.unreadCount);
+        previousUnreadCountRef.current = data.unreadCount;
+      } catch (error) {
+        console.error('Failed to fetch notifications', error);
+      }
+    };
+
     if (session && session.user.role !== 'ADMIN') {
       fetchNotifications();
       const interval = setInterval(fetchNotifications, 60000);
