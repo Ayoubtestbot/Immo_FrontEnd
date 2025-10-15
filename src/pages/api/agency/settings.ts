@@ -10,16 +10,17 @@ async function handler(
   session: Session
 ) {
   if (req.method === 'PUT') {
-    const { currency, name } = req.body;
+    const { currency, name, country } = req.body;
 
     if (currency && !/^[A-Z]{3}$/.test(currency)) {
       return res.status(400).json({ error: 'Invalid currency format' });
     }
 
     try {
-      const dataToUpdate: { currency?: string; name?: string } = {};
+      const dataToUpdate: { currency?: string; name?: string; country?: string } = {};
       if (currency) dataToUpdate.currency = currency;
       if (name) dataToUpdate.name = name;
+      if (country) dataToUpdate.country = country;
 
       if (Object.keys(dataToUpdate).length === 0) {
         return res.status(400).json({ error: 'No settings to update' });

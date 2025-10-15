@@ -1,20 +1,30 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Modal, Button, Form, Alert } from 'react-bootstrap';
+import PhoneInput, { type Country } from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
+import { countries } from 'countries-list';
 
 type AddLeadModalProps = {
   show: boolean;
   handleClose: () => void;
   onLeadAdded: () => void;
+  agencyCountry: string | null;
 };
 
-const AddLeadModal = ({ show, handleClose, onLeadAdded }: AddLeadModalProps) => {
+const AddLeadModal = ({ show, handleClose, onLeadAdded, agencyCountry }: AddLeadModalProps) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [city, setCity] = useState(''); // New state for city
+  const [phone, setPhone] = useState<string | undefined>('');
+  const [city, setCity] = useState('');
+  const [country, setCountry] = useState<Country | '' >(agencyCountry || '');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const countryOptions = Object.entries(countries).map(([code, country]) => ({
+    value: code,
+    label: country.name,
+  }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,7 +35,7 @@ const AddLeadModal = ({ show, handleClose, onLeadAdded }: AddLeadModalProps) => 
       const res = await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ firstName, lastName, email, phone, city }), // Include city
+        body: JSON.stringify({ firstName, lastName, email, phone, city, country }),
       });
 
       if (!res.ok) {
@@ -38,11 +48,12 @@ const AddLeadModal = ({ show, handleClose, onLeadAdded }: AddLeadModalProps) => 
       setLastName('');
       setEmail('');
       setPhone('');
-      setCity(''); // Reset city
+      setCity('');
+      setCountry('');
 
       setLoading(false);
-      onLeadAdded(); // This will trigger a refresh on the parent page
-      handleClose(); // Close the modal
+      onLeadAdded();
+      handleClose();
     } catch (err: any) {
       setLoading(false);
       setError(err.message);
@@ -70,14 +81,30 @@ const AddLeadModal = ({ show, handleClose, onLeadAdded }: AddLeadModalProps) => 
             <Form.Control type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
           </Form.Group>
           <Form.Group className="mb-3">
-            <Form.Label>Téléphone</Form.Label>
-            <Form.Control type="text" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+            <Form.Label>Pays</Form.Label>
+            <Form.Select value={country} onChange={(e) => setCountry(e.target.value as Country)}>
+              <option value="">-- Select Country --</option>
+              {countryOptions.map(option => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </Form.Select>
           </Form.Group>
-          <Form.Group className="mb-3"> {/* New Form Group for City */}
+          <Form.Group className="mb-3">
             <Form.Label>Ville (optionnel)</Form.Label>
             <Form.Control type="text" value={city} onChange={(e) => setCity(e.target.value)} />
-          </Form.Group>
-          <div className="d-flex justify-content-end mt-4">
+          </Form.Group>          <Form.Group className="mb-3">
+            <Form.Label>Téléphone</Form.Label>
+            <PhoneInput
+                                                        numberInputProps={{ className: 'form-control' }}
+              withCountryCallingCode
+              defaultCountry={agencyCountry || undefined}
+              placeholder="06 06 06 06 06"
+              value={phone}
+              onChange={setPhone}
+                            country={country || undefined}
+              international
+            />
+          </Form.Group>          <div className="d-flex justify-content-end mt-4">
             <Button variant="secondary" onClick={handleClose} className="me-2">
               Annuler
             </Button>

@@ -20,12 +20,15 @@ type SettingsPageProps = {
   agency: AgencyWithDetails;
 };
 
+import { countries } from 'countries-list';
+
 const CURRENCIES = ['EUR', 'USD', 'GBP', 'MAD'];
 
 const SettingsPage = ({ user, agency }: SettingsPageProps) => {
   // Agency state
   const [agencyName, setAgencyName] = useState(agency.name);
   const [selectedCurrency, setSelectedCurrency] = useState(agency.currency);
+  const [selectedCountry, setSelectedCountry] = useState(agency.country || '');
 
   // Password state
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -38,6 +41,11 @@ const SettingsPage = ({ user, agency }: SettingsPageProps) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const countryOptions = Object.entries(countries).map(([code, country]) => ({
+    value: code,
+    label: country.name,
+  }));
+
   const handleAgencySettingsUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -48,7 +56,7 @@ const SettingsPage = ({ user, agency }: SettingsPageProps) => {
       const res = await fetch('/api/agency/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: agencyName, currency: selectedCurrency }),
+        body: JSON.stringify({ name: agencyName, currency: selectedCurrency, country: selectedCountry }),
       });
 
       if (!res.ok) {
@@ -132,6 +140,15 @@ const SettingsPage = ({ user, agency }: SettingsPageProps) => {
                   <Form.Select value={selectedCurrency} onChange={(e) => setSelectedCurrency(e.target.value)}>
                     {CURRENCIES.map(curr => (
                       <option key={curr} value={curr}>{curr}</option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+                <Form.Group className="mb-3" controlId="countrySelect">
+                  <Form.Label>Pays</Form.Label>
+                  <Form.Select value={selectedCountry} onChange={(e) => setSelectedCountry(e.target.value)}>
+                    <option value="">-- Select Country --</option>
+                    {countryOptions.map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
                     ))}
                   </Form.Select>
                 </Form.Group>

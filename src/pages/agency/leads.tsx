@@ -42,9 +42,10 @@ type LeadsPageProps = {
   currentPage: number;
   pageSize: number;
   totalPages: number;
+  agencyCountry: string | null;
 };
 
-const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initialFilterName, filterAgentId: initialFilterAgentId, isTrialActive, currentPage, pageSize, totalPages }: LeadsPageProps) => {
+const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initialFilterName, filterAgentId: initialFilterAgentId, isTrialActive, currentPage, pageSize, totalPages, agencyCountry }: LeadsPageProps) => {
   const { data: session } = useSession();
   const [showAddModal, setShowAddModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -456,6 +457,7 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
         show={showAddModal}
         handleClose={() => setShowAddModal(false)}
         onLeadAdded={refreshData}
+        agencyCountry={agencyCountry}
       />
 
       {editingLead && (
@@ -573,7 +575,7 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
     whereClause.assignedToId = session.user.id;
   }
 
-  const [leads, totalLeadsCount, agents, properties, trialIsActive] = await Promise.all([
+  const [leads, totalLeadsCount, agents, properties, trialIsActive, agency] = await Promise.all([
     prisma.lead.findMany({
       where: whereClause,
       include: {
@@ -611,6 +613,7 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
       },
     }),
     isTrialActive(agencyId),
+    prisma.agency.findUnique({ where: { id: agencyId } }),
   ]);
 
   const totalPages = Math.ceil(totalLeadsCount / currentSize);
@@ -627,6 +630,7 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
       currentPage,
       pageSize: currentSize,
       totalPages,
+      agencyCountry: agency?.country || null,
     },
   };
 }, ['AGENCY_OWNER', 'AGENCY_MEMBER', 'AGENCY_SUPER_AGENT']); // All agency roles can access this page

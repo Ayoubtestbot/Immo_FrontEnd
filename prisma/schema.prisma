@@ -118,6 +118,7 @@ model VerificationToken {
 model Agency {
   id        String   @id @default(cuid())
   name      String
+  country   String?  // New field
   currency  String   @default("MAD") // Changed default currency
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -139,6 +140,7 @@ model Lead {
   createdAt DateTime   @default(now())
   updatedAt DateTime @updatedAt
   city      String? // New field
+  country   String? // New field
   trafficSource String? // New field
   isUrgent      Boolean @default(false) // New field for urgent leads
   appointmentDate DateTime? // New field for appointment scheduling
