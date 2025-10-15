@@ -6,6 +6,8 @@ import { UserRole } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { Row, Col, Card, Button } from 'react-bootstrap';
 
+import { FaBuilding, FaCheckCircle, FaUsers, FaHome, FaTicketAlt, FaMoneyBillWave } from 'react-icons/fa';
+
 import ModernChart from '@/components/ModernChart';
 import KpiCard from '@/components/KpiCard';
 
@@ -67,22 +69,22 @@ const AdminDashboard = ({
 
       <Row className="mt-4">
         <Col md={4} className="mb-4">
-          <KpiCard title="Agences enregistrées" value={totalAgencies} />
+          <KpiCard title="Agences enregistrées" value={totalAgencies} icon={<FaBuilding />} iconColor="#0d6efd" />
         </Col>
         <Col md={4} className="mb-4">
-          <KpiCard title="Abonnements actifs" value={totalSubscriptions} />
+          <KpiCard title="Abonnements actifs" value={totalSubscriptions} icon={<FaCheckCircle />} iconColor="#198754" />
         </Col>
         <Col md={4} className="mb-4">
-          <KpiCard title="Prospects totaux" value={totalLeads} />
+          <KpiCard title="Prospects totaux" value={totalLeads} icon={<FaUsers />} iconColor="#fd7e14" />
         </Col>
         <Col md={4} className="mb-4">
-          <KpiCard title="Propriétés gérées" value={totalProperties} />
+          <KpiCard title="Propriétés gérées" value={totalProperties} icon={<FaHome />} iconColor="#A0522D" />
         </Col>
         <Col md={4} className="mb-4">
-          <KpiCard title="Tickets ouverts" value={totalTickets} />
+          <KpiCard title="Tickets ouverts" value={totalTickets} icon={<FaTicketAlt />} iconColor="#6f42c1" />
         </Col>
         <Col md={4} className="mb-4">
-          <KpiCard title="Revenu Total" value={totalIncome} prefix="MAD " />
+          <KpiCard title="Revenu Total" value={totalIncome} prefix="MAD " icon={<FaMoneyBillWave />} iconColor="#dc3545" />
         </Col>
       </Row>
 

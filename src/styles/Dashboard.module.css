@@ -6,6 +6,7 @@
   text-align: left;
   border: 1px solid var(--border-color);
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  min-height: 150px;
 }
 
 .kpiCard:hover {

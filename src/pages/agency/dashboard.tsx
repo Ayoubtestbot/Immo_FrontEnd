@@ -43,6 +43,7 @@ type AgencyDashboardProps = {
   leadsToContact: number;
   leadsToFollowUp: number;
   appointmentsToday: number;
+  leadsContacted: number;
 };
 
 const AgencyDashboard = (props: AgencyDashboardProps) => {
@@ -65,6 +66,7 @@ const AgencyDashboard = (props: AgencyDashboardProps) => {
     leadsToContact,
     leadsToFollowUp,
     appointmentsToday,
+    leadsContacted,
   } = props;
 
   const funnelStages: LeadStatus[] = ['NEW', 'CONTACTED', 'QUALIFIED', 'APPOINTMENT_SCHEDULED', 'CONVERTED'];
@@ -184,44 +186,46 @@ const AgencyDashboard = (props: AgencyDashboardProps) => {
       <h1 className="h2 mb-4">Tableau de bord</h1>
 
       <Row>
-        {userRole !== UserRole.AGENCY_MEMBER && (
+        {userRole === UserRole.AGENCY_OWNER && (
+                              <>
+                                <Col md={4} className="mb-4">
+                                  <KpiCard title="Prospects totaux (Agence)" value={totalLeads} icon={<FaBullseye />} trend={totalLeadsTrend} iconColor="#0d6efd" />
+                                </Col>
+                                <Col md={4} className="mb-4">
+                                  <KpiCard title="Prospects à contacter" value={leadsToContact} icon={<FaPhone />} iconColor="#dc3545" />
+                                </Col>
+                                <Col md={4} className="mb-4">
+                                  <KpiCard title="Prospects contactés" value={leadsContacted} icon={<FaUsers />} iconColor="#198754" />
+                                </Col>
+                                <Col md={4} className="mb-4">
+                                  <KpiCard title="Nouveaux prospects (Aujourd'hui)" value={leadsToday} icon={<FaPlus />} trend={leadsTodayTrend} iconColor="#fd7e14" />
+                                </Col>
+                                <Col md={4} className="mb-4">
+                                  <KpiCard title="Taux de conversion (Agence)" value={conversionRate} suffix="%" icon={<FaChartLine />} trend={conversionRateTrend} iconColor="#6f42c1" />
+                                </Col>
+                                <Col md={4} className="mb-4">
+                                  <KpiCard title="Propriétés gérées" value={totalProperties} icon={<FaBuilding />} iconColor="#A0522D" />
+                                </Col>
+                              </>        )}
+        {(userRole === UserRole.AGENCY_MEMBER || userRole === UserRole.AGENCY_SUPER_AGENT) && (
           <>
             <Col md={4} className="mb-4">
-              <KpiCard title="Prospects totaux (Agence)" value={totalLeads} icon={<FaBullseye />} trend={totalLeadsTrend} />
+              <KpiCard title={userRole === UserRole.AGENCY_MEMBER ? "Mes prospects à contacter" : "Prospects à contacter"} value={leadsToContact} icon={<FaPhone />} iconColor="#dc3545" />
             </Col>
             <Col md={4} className="mb-4">
-              <KpiCard title="Nouveaux prospects (Aujourd'hui)" value={leadsToday} icon={<FaPlus />} trend={leadsTodayTrend} />
+              <KpiCard title={userRole === UserRole.AGENCY_MEMBER ? "Mes prospects à relancer" : "Prospects à relancer"} value={leadsToFollowUp} icon={<FaSyncAlt />} iconColor="#fd7e14" />
             </Col>
             <Col md={4} className="mb-4">
-              <KpiCard title="Taux de conversion (Agence)" value={conversionRate} suffix="%" icon={<FaChartLine />} trend={conversionRateTrend} />
-            </Col>
-            <Col md={4} className="mb-4">
-              <KpiCard title="Propriétés gérées" value={totalProperties} icon={<FaBuilding />} />
-            </Col>
-            <Col md={4} className="mb-4">
-              <KpiCard title="Tickets totaux" value={totalTickets} icon={<FaTicketAlt />} />
-            </Col>
-          </>
-        )}
-        {userRole === UserRole.AGENCY_MEMBER && (
-          <>
-            <Col md={4} className="mb-4">
-              <KpiCard title="Mes prospects à contacter" value={leadsToContact} icon={<FaPhone />} />
-            </Col>
-            <Col md={4} className="mb-4">
-              <KpiCard title="Mes prospects à relancer" value={leadsToFollowUp} icon={<FaSyncAlt />} />
-            </Col>
-            <Col md={4} className="mb-4">
-              <KpiCard title="Mes RV aujourd'hui" value={appointmentsToday} icon={<FaCalendarDay />} />
+              <KpiCard title={userRole === UserRole.AGENCY_MEMBER ? "Mes RV aujourd'hui" : "RV aujourd'hui"} value={appointmentsToday} icon={<FaCalendarDay />} iconColor="#0d6efd" />
             </Col>
              <Col md={4} className="mb-4">
-              <KpiCard title="Mes prospects" value={totalLeads} icon={<FaUsers />} trend={totalLeadsTrend} />
+              <KpiCard title={userRole === UserRole.AGENCY_MEMBER ? "Mes prospects" : "Prospects"} value={totalLeads} icon={<FaUsers />} trend={totalLeadsTrend} iconColor="#198754" />
             </Col>
             <Col md={4} className="mb-4">
-              <KpiCard title="Nouveaux prospects (Aujourd'hui)" value={leadsToday} icon={<FaPlus />} trend={leadsTodayTrend} />
+              <KpiCard title="Nouveaux prospects (Aujourd'hui)" value={leadsToday} icon={<FaPlus />} trend={leadsTodayTrend} iconColor="#6f42c1" />
             </Col>
             <Col md={4} className="mb-4">
-              <KpiCard title="Mon taux de conversion" value={conversionRate} suffix="%" icon={<FaChartLine />} trend={conversionRateTrend} />
+              <KpiCard title={userRole === UserRole.AGENCY_MEMBER ? "Mon taux de conversion" : "Taux de conversion"} value={conversionRate} suffix="%" icon={<FaChartLine />} trend={conversionRateTrend} iconColor="#A0522D" />
             </Col>
           </>
         )}
@@ -276,32 +280,6 @@ const AgencyDashboard = (props: AgencyDashboardProps) => {
                   </Row>
                 ) : (
                   <p className="text-muted">Aucun prospect urgent</p>
-                )}
-
-                {userRole !== UserRole.AGENCY_MEMBER && (
-                  <>
-                    <h6 className="text-muted mt-4 mb-2">Tickets urgents</h6>
-                    {urgentTasks.urgentTickets.length > 0 ? (
-                      <ul className="list-unstyled">
-                        {urgentTasks.urgentTickets.map(ticket => (
-                          <li key={ticket.id} className="d-flex justify-content-between align-items-center mb-2">
-                            <div>
-                              <span className="status-dot urgent-ticket me-2"></span>
-                              <Link href={`/agency/tickets/${ticket.id}`} className="text-decoration-none text-dark fw-bold">
-                                {ticket.subject}
-                              </Link>
-                            </div>
-                            <div className="task-actions">
-                              <Button size="sm" className="btn-outline-secondary me-2" onClick={() => router.push(`/agency/tickets/${ticket.id}`)}>Voir</Button>
-                              <Button size="sm" className="btn-outline-primary" onClick={() => router.push(`/agency/tickets/${ticket.id}`)}>Répondre</Button>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-muted">Aucun ticket urgent</p>
-                    )}
-                  </>
                 )}
               </div>
             </Card.Body>
@@ -374,6 +352,40 @@ const AgencyDashboard = (props: AgencyDashboardProps) => {
           </Card>
         </Col>
       </Row>
+
+        <Row className="mt-4">
+          <Col md={12} className="mb-4">
+            <Card className="card">
+              <Card.Body>
+                <h6 className="text-muted mb-2">Tickets urgents</h6>
+                {urgentTasks.urgentTickets.length > 0 ? (
+                  <Row>
+                    {urgentTasks.urgentTickets.map(ticket => (
+                      <Col md={6} key={ticket.id}>
+                        <Card className={`mb-3 ${styles.urgentTaskCard} ${styles.smallUrgentTaskCard}`}>
+                          <Card.Body>
+                            <div className="d-flex justify-content-between align-items-center">
+                              <div>
+                                <span className="status-dot urgent-ticket me-2"></span>
+                                <Card.Title className="mb-1 d-inline-block">{ticket.subject}</Card.Title>
+                              </div>
+                              <div className="task-actions">
+                                <Button size="sm" className="btn-outline-secondary me-2" onClick={() => router.push(`/agency/tickets/${ticket.id}`)}>Voir</Button>
+                                <Button size="sm" className="btn-outline-primary" onClick={() => router.push(`/agency/tickets/${ticket.id}`)}>Répondre</Button>
+                              </div>
+                            </div>
+                          </Card.Body>
+                        </Card>
+                      </Col>
+                    ))}
+                  </Row>
+                ) : (
+                  <p className="text-muted">Aucun ticket urgent</p>
+                )}
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
     </DashboardLayout>
   );
 };
@@ -405,7 +417,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
 
-  const [totalLeads, leadsToday, leadsYesterday, totalProperties, propertiesToday, totalTickets, ticketsToday, convertedLeads, convertedLeadsYesterday, totalLeadsYesterday, leadsByStatusRaw, agencyAgents, urgentTickets, urgentLeads, funnelData, leadsToContact, leadsToFollowUp, appointmentsToday] = await Promise.all([
+  const [totalLeads, leadsToday, leadsYesterday, totalProperties, propertiesToday, totalTickets, ticketsToday, convertedLeads, convertedLeadsYesterday, totalLeadsYesterday, leadsByStatusRaw, agencyAgents, urgentTickets, urgentLeads, funnelData, leadsToContact, leadsToFollowUp, appointmentsToday, leadsContacted] = await Promise.all([
     prisma.lead.count({ where: baseWhere }),
     prisma.lead.count({ where: { ...baseWhere, createdAt: { gte: today } } }),
     prisma.lead.count({ where: { ...baseWhere, createdAt: { gte: yesterday, lt: today } } }),
@@ -425,7 +437,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       where: { agencyId },
       include: { _count: { select: { assignedLeads: true } } },
     }),
-    isAgent ? Promise.resolve([]) : prisma.ticket.findMany({
+    prisma.ticket.findMany({
       where: { agencyId, priority: TicketPriority.URGENT, status: { not: 'CLOSED' } },
       select: { id: true, subject: true },
       orderBy: { createdAt: 'desc' },
@@ -451,7 +463,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }),
     prisma.lead.count({ where: { ...baseWhere, status: LeadStatus.NEW } }),
     prisma.lead.count({ where: { ...baseWhere, status: LeadStatus.FOLLOW_UP } }),
-    prisma.lead.count({ where: { ...baseWhere, appointmentDate: { gte: today, lt: tomorrow } } })
+    prisma.lead.count({ where: { ...baseWhere, appointmentDate: { gte: today, lt: tomorrow } } }),
+    prisma.lead.count({ where: { ...baseWhere, status: LeadStatus.CONTACTED } })
   ]);
 
   const conversionRate = totalLeads > 0 ? (convertedLeads / totalLeads) * 100 : 0;
@@ -488,6 +501,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       leadsToContact,
       leadsToFollowUp,
       appointmentsToday,
+      leadsContacted,
     },
   };
 };
