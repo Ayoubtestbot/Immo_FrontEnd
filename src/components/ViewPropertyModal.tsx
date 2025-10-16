@@ -1,6 +1,5 @@
-import { Modal, Button, Badge, ListGroup, Carousel } from 'react-bootstrap';
+import { Modal, Button, Badge, ListGroup, Carousel, Row, Col } from 'react-bootstrap';
 import type { Property, Image as PrismaImage, Lead } from '@prisma/client';
-import DynamicMap from './DynamicMap';
 import Image from 'next/image';
 
 import { PropertyWithDetails } from '@/types';
@@ -40,15 +39,27 @@ const ViewPropertyModal = ({ show, handleClose, property, agencyCurrency }: View
           </Carousel>
         )}
         <h5>Détails de la propriété <Badge bg="primary">{property.status}</Badge></h5>
+        {property.project && <p><strong>Projet:</strong> {property.project.name}</p>}
         <p><strong>Type:</strong> {property.type}</p>
         <p><strong>Prix:</strong> {property.price.toLocaleString('fr-FR', { style: 'currency', currency: agencyCurrency })}</p>
+        <Row>
+          <Col md={6}>
+            <p><strong>Etage:</strong> {property.etage || '-'}</p>
+          </Col>
+          <Col md={6}>
+            <p><strong>Superficie:</strong> {property.superficie || '-'} m²</p>
+          </Col>
+        </Row>
+        <Row>
+          <Col md={6}>
+            <p><strong>Tranche:</strong> {property.tranche || '-'}</p>
+          </Col>
+          <Col md={6}>
+            <p><strong>Numéro d'appartement:</strong> {property.numAppartement || '-'}</p>
+          </Col>
+        </Row>
         <p><strong>Description:</strong></p>
         <p>{property.description || '-'}</p>
-        <hr />
-        <h5>Localisation</h5>
-        <div style={{ height: '300px' }}>
-          <DynamicMap properties={[property]} />
-        </div>
         <hr />
         <h5>Prospects intéressés</h5>
         <ListGroup variant="flush">

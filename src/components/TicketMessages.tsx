@@ -79,7 +79,7 @@ const TicketMessages = ({ ticketId }: TicketMessagesProps) => {
             as="textarea"
             rows={3}
             value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNewMessage(e.target.value)}
             placeholder="Écrire un message..."
             required
           />

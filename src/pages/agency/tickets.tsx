@@ -115,15 +115,15 @@ const TicketsPage = ({ tickets, ticketPriorities, ticketCategories }: TicketsPag
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3">
               <Form.Label>Sujet</Form.Label>
-              <Form.Control type="text" value={subject} onChange={(e) => setSubject(e.target.value)} required />
+              <Form.Control type="text" value={subject} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSubject(e.target.value)} required />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Description</Form.Label>
-              <Form.Control as="textarea" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} required />
+              <Form.Control as="textarea" rows={3} value={description} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)} required />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Priorité</Form.Label>
-              <Form.Select value={priority} onChange={(e) => setPriority(e.target.value)} required>
+              <Form.Select value={priority} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setPriority(e.target.value)} required>
                 {ticketPriorities.map((p) => (
                   <option key={p} value={p}>{ticketPriorityTranslations[p]}</option>
                 ))}
@@ -131,7 +131,7 @@ const TicketsPage = ({ tickets, ticketPriorities, ticketCategories }: TicketsPag
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Catégorie</Form.Label>
-              <Form.Select value={category} onChange={(e) => setCategory(e.target.value)} required>
+              <Form.Select value={category} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCategory(e.target.value)} required>
                 {ticketCategories.map((c) => (
                   <option key={c} value={c}>{ticketCategoryTranslations[c]}</option>
                 ))}

@@ -59,7 +59,7 @@ const NewAgencyPage = () => {
             </Form.Group>
             <Form.Group className="mb-3" controlId="agencyName">
               <Form.Label>Nom de votre Agence</Form.Label>
-              <Form.Control type="text" value={agencyName} onChange={(e) => setAgencyName(e.target.value)} required />
+              <Form.Control type="text" value={agencyName} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAgencyName(e.target.value)} required />
             </Form.Group>
             <Button type="submit" className="btn-primary w-100" disabled={loading}>
               {loading ? 'Création en cours...' : 'Créer l\'agence'}

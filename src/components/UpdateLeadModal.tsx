@@ -89,7 +89,7 @@ const UpdateLeadModal = ({ show, handleClose, lead, agents, onLeadUpdated }: Upd
           {error && <Alert variant="danger">{error}</Alert>}
           <Form.Group className="mb-3" controlId="status">
             <Form.Label>Statut</Form.Label>
-            <Form.Select value={status} onChange={(e) => setStatus(e.target.value as LeadStatus)}>
+            <Form.Select value={status} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setStatus(e.target.value as LeadStatus)}>
               {Object.values(LeadStatus).map(s => (
                 <option key={s} value={s}>{leadStatusTranslations[s]}</option>
               ))}
@@ -102,7 +102,7 @@ const UpdateLeadModal = ({ show, handleClose, lead, agents, onLeadUpdated }: Upd
                 <Form.Control
                   type="date"
                   value={appointmentDate}
-                  onChange={(e) => setAppointmentDate(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAppointmentDate(e.target.value)}
                 />
               </Form.Group>
               <Row>
@@ -114,7 +114,7 @@ const UpdateLeadModal = ({ show, handleClose, lead, agents, onLeadUpdated }: Upd
                       min="0"
                       max="23"
                       value={appointmentTimeHour}
-                      onChange={(e) => setAppointmentTimeHour(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAppointmentTimeHour(e.target.value)}
                     />
                   </Form.Group>
                 </Col>
@@ -126,7 +126,7 @@ const UpdateLeadModal = ({ show, handleClose, lead, agents, onLeadUpdated }: Upd
                       min="0"
                       max="59"
                       value={appointmentTimeMinute}
-                      onChange={(e) => setAppointmentTimeMinute(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAppointmentTimeMinute(e.target.value)}
                     />
                   </Form.Group>
                 </Col>
@@ -135,7 +135,7 @@ const UpdateLeadModal = ({ show, handleClose, lead, agents, onLeadUpdated }: Upd
           )}
           <Form.Group className="mb-3" controlId="assignedTo">
             <Form.Label>Assigner à</Form.Label>
-            <Form.Select value={assignedToId || ''} onChange={(e) => setAssignedToId(e.target.value || null)}>
+            <Form.Select value={assignedToId || ''} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setAssignedToId(e.target.value || null)}>
               <option value="">Non assigné</option>
               {agents.map(agent => (
                 <option key={agent.id} value={agent.id}>{agent.name}</option>

@@ -68,7 +68,7 @@ const LinkLeadModal = ({ show, handleClose, leads, propertyId, onLeadLinked }: L
               type="text"
               placeholder="Taper pour rechercher..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
             />
           </Form.Group>
           <Form.Group className="mb-3">

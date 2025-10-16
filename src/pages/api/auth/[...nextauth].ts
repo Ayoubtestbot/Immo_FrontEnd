@@ -3,7 +3,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { prisma } from '@/lib/prisma';
-import { compare } from 'bcrypt';
+import { compare } from 'bcryptjs';
 import admin from '@/lib/firebase-admin';
 
 // Extend the user and session types to include our custom fields
@@ -65,6 +65,7 @@ export const authOptions: NextAuthOptions = {
         };
       },
     }),
+/*
     CredentialsProvider({
       id: 'firebase',
       name: 'Firebase',
@@ -111,6 +112,7 @@ export const authOptions: NextAuthOptions = {
         }
       },
     }),
+*/
   ],
   callbacks: {
     session({ session, token }) {

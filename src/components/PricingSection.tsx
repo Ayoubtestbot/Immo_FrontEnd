@@ -17,8 +17,12 @@ const PricingSection = ({ plans }: PricingSectionProps) => {
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [isYearly, setIsYearly] = useState(false);
 
-  const freeTrialPlan = plans.find(p => p.name === 'Free Trial');
-  const mainPlans = plans.filter(p => p.name !== 'Free Trial');
+  const sortedPlans = [...plans].sort((a, b) => {
+    const order = ['Free Trial', 'Starter', 'Pro', 'Entreprise'];
+    return order.indexOf(a.name) - order.indexOf(b.name);
+  });
+
+
 
   const getDisplayedPrice = (plan: Plan) => {
     if (isYearly) {
@@ -37,10 +41,7 @@ const PricingSection = ({ plans }: PricingSectionProps) => {
     }
   };
 
-  mainPlans.sort((a, b) => {
-    const order = ['Starter', 'Pro', 'Entreprise'];
-    return order.indexOf(a.name) - order.indexOf(b.name);
-  });
+
 
   const handleChoosePlan = (planId: string) => {
     if (!session) {
@@ -90,29 +91,7 @@ const PricingSection = ({ plans }: PricingSectionProps) => {
       </div>
 
       <div className="d-flex flex-wrap justify-content-center">
-        {freeTrialPlan && (
-            <div className="p-4 m-2 card" style={{ flex: '1 1 300px', maxWidth: '350px' }}>
-                {getPlanIcon(freeTrialPlan.name)}
-                <h4 className="my-0 fw-normal">{freeTrialPlan.name}</h4>
-                <hr />
-                <h1 className="card-title pricing-card-title">
-                    {getDisplayedPrice(freeTrialPlan).price} MAD<small className="text-muted">{getDisplayedPrice(freeTrialPlan).period}</small>
-                </h1>
-                <ul className="list-unstyled mt-3 mb-4">
-                    {freeTrialPlan.features.split(',').map((feature, fIndex) => (
-                    <li key={fIndex} className="mb-2">{feature.trim()}</li>
-                    ))}
-                </ul>
-                <button
-                    className="btn-primary w-100 mt-auto"
-                    onClick={() => handleChoosePlan(freeTrialPlan.id)}
-                >
-                    Choisir ce plan
-                </button>
-            </div>
-        )}
-
-        {mainPlans.map((plan) => (
+        {sortedPlans.map((plan) => (
             <div className={`p-4 m-2 card ${plan.name.toLowerCase() === 'pro' ? 'card-pro' : ''}`} style={{ flex: '1 1 300px', maxWidth: '350px' }} key={plan.id}>
                 {plan.name.toLowerCase() === 'pro' && <span className={styles.mostPopularBadge}>Most Popular</span>}
                 {getPlanIcon(plan.name)}

@@ -281,7 +281,7 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
             <Form.Label>Filtrer par statut</Form.Label>
             <Form.Select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as LeadStatus | 'ALL')}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setStatusFilter(e.target.value as LeadStatus | 'ALL')}
             >
               <option value="ALL">Tous les statuts</option>
               {Object.values(LeadStatus).map(status => (
@@ -297,7 +297,7 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
               type="text"
               placeholder="Rechercher par nom"
               value={filterName}
-              onChange={(e) => setFilterName(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilterName(e.target.value)}
             />
           </Form.Group>
         </Col>
@@ -306,7 +306,7 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
             <Form.Label>Filtrer par agent</Form.Label>
             <Form.Select
               value={filterAgentId}
-              onChange={(e) => setFilterAgentId(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilterAgentId(e.target.value)}
             >
               <option value="ALL">Tous les agents</option>
               {agents.map(agent => (
@@ -422,7 +422,7 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
         <Col md={4}>
           <Form.Group controlId="pageSizeSelect" className="d-flex align-items-center">
             <Form.Label className="me-2 mb-0">Afficher</Form.Label>
-            <Form.Select value={pageSize} onChange={(e) => router.push({ pathname: router.pathname, query: { ...router.query, pageSize: e.target.value, page: 1 } })} style={{ width: 'auto' }}>
+            <Form.Select value={pageSize} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => router.push({ pathname: router.pathname, query: { ...router.query, pageSize: e.target.value, page: 1 } })} style={{ width: 'auto' }}>
               <option value="10">10</option>
               <option value="50">50</option>
               <option value="100">100</option>

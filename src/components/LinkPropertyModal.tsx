@@ -57,7 +57,7 @@ const LinkPropertyModal = ({ show, handleClose, properties, leadId, onPropertyLi
         <Form onSubmit={handleSubmit}>
           <Form.Group className="mb-3">
             <Form.Label>Sélectionner une propriété</Form.Label>
-            <Form.Select value={selectedPropertyId} onChange={(e) => setSelectedPropertyId(e.target.value)} required>
+            <Form.Select value={selectedPropertyId} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedPropertyId(e.target.value)} required>
               <option value="">-- Choisir une propriété --</option>
               {properties.map(property => (
                 <option key={property.id} value={property.id}>{property.address}, {property.city}</option>

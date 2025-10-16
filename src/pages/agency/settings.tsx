@@ -131,13 +131,13 @@ const SettingsPage = ({ user, agency }: SettingsPageProps) => {
                   <Form.Control
                     type="text"
                     value={agencyName}
-                    onChange={(e) => setAgencyName(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAgencyName(e.target.value)}
                     required
                   />
                 </Form.Group>
                 <Form.Group className="mb-3" controlId="currencySelect">
                   <Form.Label>Devise</Form.Label>
-                  <Form.Select value={selectedCurrency} onChange={(e) => setSelectedCurrency(e.target.value)}>
+                  <Form.Select value={selectedCurrency} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedCurrency(e.target.value)}>
                     {CURRENCIES.map(curr => (
                       <option key={curr} value={curr}>{curr}</option>
                     ))}
@@ -145,7 +145,7 @@ const SettingsPage = ({ user, agency }: SettingsPageProps) => {
                 </Form.Group>
                 <Form.Group className="mb-3" controlId="countrySelect">
                   <Form.Label>Pays</Form.Label>
-                  <Form.Select value={selectedCountry} onChange={(e) => setSelectedCountry(e.target.value)}>
+                  <Form.Select value={selectedCountry} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedCountry(e.target.value)}>
                     <option value="">-- Select Country --</option>
                     {countryOptions.map(option => (
                       <option key={option.value} value={option.value}>{option.label}</option>
@@ -196,7 +196,7 @@ const SettingsPage = ({ user, agency }: SettingsPageProps) => {
               <Form.Control
                 type="password"
                 value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCurrentPassword(e.target.value)}
                 required
               />
             </Form.Group>
@@ -205,7 +205,7 @@ const SettingsPage = ({ user, agency }: SettingsPageProps) => {
               <Form.Control
                 type="password"
                 value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewPassword(e.target.value)}
                 required
               />
             </Form.Group>
@@ -214,7 +214,7 @@ const SettingsPage = ({ user, agency }: SettingsPageProps) => {
               <Form.Control
                 type="password"
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value)}
                 required
               />
             </Form.Group>

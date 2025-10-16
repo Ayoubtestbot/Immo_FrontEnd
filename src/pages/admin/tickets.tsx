@@ -137,7 +137,7 @@ const AdminTicketsPage = ({ tickets, ticketStatuses, ticketPriorities }: AdminTi
           type="text"
           placeholder="Rechercher par sujet, agence ou utilisateur..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
           className="mb-3"
         />
 
@@ -187,15 +187,15 @@ const AdminTicketsPage = ({ tickets, ticketStatuses, ticketPriorities }: AdminTi
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3">
               <Form.Label>Sujet</Form.Label>
-              <Form.Control type="text" value={subject} onChange={(e) => setSubject(e.target.value)} required />
+              <Form.Control type="text" value={subject} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSubject(e.target.value)} required />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Description</Form.Label>
-              <Form.Control as="textarea" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} required />
+              <Form.Control as="textarea" rows={3} value={description} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)} required />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Statut</Form.Label>
-              <Form.Select value={status} onChange={(e) => setStatus(e.target.value)} required>
+              <Form.Select value={status} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setStatus(e.target.value)} required>
                 {ticketStatuses.map((s) => (
                   <option key={s} value={s}>{ticketStatusTranslations[s]}</option>
                 ))}
@@ -203,7 +203,7 @@ const AdminTicketsPage = ({ tickets, ticketStatuses, ticketPriorities }: AdminTi
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Priorité</Form.Label>
-              <Form.Select value={priority} onChange={(e) => setPriority(e.target.value)} required>
+              <Form.Select value={priority} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setPriority(e.target.value)} required>
                 {ticketPriorities.map((p) => (
                   <option key={p} value={p}>{ticketPriorityTranslations[p]}</option>
                 ))}

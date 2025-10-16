@@ -141,7 +141,7 @@ const AdminAgenciesPage = ({ agencies, plans }: AdminAgenciesPageProps) => {
           type="text"
           placeholder="Rechercher une agence..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
           className="mb-3"
         />
 
@@ -186,11 +186,11 @@ const AdminAgenciesPage = ({ agencies, plans }: AdminAgenciesPageProps) => {
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3">
               <Form.Label>Nom de l&apos;Agence</Form.Label>
-              <Form.Control type="text" value={name} onChange={(e) => setName(e.target.value)} required />
+              <Form.Control type="text" value={name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)} required />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Plan d&apos;Abonnement</Form.Label>
-              <Form.Select value={selectedPlanId} onChange={(e) => setSelectedPlanId(e.target.value)}>
+              <Form.Select value={selectedPlanId} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedPlanId(e.target.value)}>
                 <option value="">Sélectionner un plan</option>
                 {plans.map((plan) => (
                   <option key={plan.id} value={plan.id}>{plan.name}</option>

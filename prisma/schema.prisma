@@ -117,7 +117,7 @@ model VerificationToken {
 
 model Agency {
   id        String   @id @default(cuid())
-  name      String
+  name      String   @unique
   country   String?  // New field
   currency  String   @default("MAD") // Changed default currency
   createdAt DateTime @default(now())
@@ -126,6 +126,7 @@ model Agency {
   users         User[]
   leads         Lead[]
   properties    Property[]
+  projects      Project[]
   subscription  Subscription?
   tickets       Ticket[]
 }
@@ -171,24 +172,46 @@ enum PropertyStatus {
   LOUE
 }
 
-model Property {
-  id            String         @id @default(cuid())
-  propertyNumber Int?          // New field, optional
-  address     String
-  city        String
-  zipCode     String
-  country     String
-  type        PropertyType
-  price       Float
-  status      PropertyStatus
+model Project {
+  id          String   @id @default(cuid())
+  name        String
   description String?
-  latitude    Float?
-  longitude   Float?
+  country     String?
+  city        String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   agency   Agency @relation(fields: [agencyId], references: [id])
   agencyId String
+
+  properties Property[]
+}
+
+model Property {
+  id            String         @id @default(cuid())
+  propertyNumber Int?
+  address       String
+  city          String
+  zipCode       String
+  country       String
+  type          PropertyType
+  price         Float
+  status        PropertyStatus
+  description   String?
+  latitude      Float?
+  longitude     Float?
+  etage         Int?
+  superficie    Float?
+  tranche       String?
+  numAppartement String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  agency   Agency @relation(fields: [agencyId], references: [id])
+  agencyId String
+
+  project   Project? @relation(fields: [projectId], references: [id])
+  projectId String?
 
   leads Lead[] @relation("LeadToProperty")
   images Image[]

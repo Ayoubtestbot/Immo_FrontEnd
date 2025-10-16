@@ -17,7 +17,7 @@ const AddLeadModal = ({ show, handleClose, onLeadAdded, agencyCountry }: AddLead
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState<string | undefined>('');
   const [city, setCity] = useState('');
-  const [country, setCountry] = useState<Country | '' >(agencyCountry || '');
+  const [country, setCountry] = useState<Country | ''>((agencyCountry as Country) || '');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -70,19 +70,19 @@ const AddLeadModal = ({ show, handleClose, onLeadAdded, agencyCountry }: AddLead
         <Form onSubmit={handleSubmit}>
           <Form.Group className="mb-3">
             <Form.Label>Prénom</Form.Label>
-            <Form.Control type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+            <Form.Control type="text" value={firstName} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFirstName(e.target.value)} required />
           </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label>Nom</Form.Label>
-            <Form.Control type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+            <Form.Control type="text" value={lastName} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLastName(e.target.value)} required />
           </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label>Email (optionnel)</Form.Label>
-            <Form.Control type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <Form.Control type="email" value={email} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)} />
           </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label>Pays</Form.Label>
-            <Form.Select value={country} onChange={(e) => setCountry(e.target.value as Country)}>
+            <Form.Select value={country} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCountry(e.target.value as Country)}>
               <option value="">-- Select Country --</option>
               {countryOptions.map(option => (
                 <option key={option.value} value={option.value}>{option.label}</option>
@@ -91,13 +91,13 @@ const AddLeadModal = ({ show, handleClose, onLeadAdded, agencyCountry }: AddLead
           </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label>Ville (optionnel)</Form.Label>
-            <Form.Control type="text" value={city} onChange={(e) => setCity(e.target.value)} />
+            <Form.Control type="text" value={city} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCity(e.target.value)} />
           </Form.Group>          <Form.Group className="mb-3">
             <Form.Label>Téléphone</Form.Label>
             <PhoneInput
                                                         numberInputProps={{ className: 'form-control' }}
               withCountryCallingCode
-              defaultCountry={agencyCountry || undefined}
+              defaultCountry={(agencyCountry as Country) || undefined}
               placeholder="06 06 06 06 06"
               value={phone}
               onChange={setPhone}

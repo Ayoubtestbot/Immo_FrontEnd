@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Modal, Button, Form, Alert } from 'react-bootstrap';
-import { Property, PropertyType, PropertyStatus } from '@prisma/client';
+import { Modal, Button, Form, Alert, Row, Col } from 'react-bootstrap';
+import { Property, PropertyType, PropertyStatus, Project } from '@prisma/client';
 import { propertyStatusTranslations } from '@/utils/propertyStatusTranslations';
 import { countries } from '@/utils/locations';
 import Select from 'react-select';
@@ -8,7 +8,7 @@ import Select from 'react-select';
 type EditPropertyModalProps = {
   show: boolean;
   handleClose: () => void;
-  property: Property | null;
+  property: (Property & { project: Project | null }) | null;
   onPropertyUpdated: () => void;
 };
 
@@ -24,6 +24,12 @@ const EditPropertyModal = ({ show, handleClose, property, onPropertyUpdated }: E
   const [description, setDescription] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [etage, setEtage] = useState<number | undefined>(undefined);
+  const [superficie, setSuperficie] = useState<number | undefined>(undefined);
+  const [tranche, setTranche] = useState('');
+  const [numAppartement, setNumAppartement] = useState('');
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedProject, setSelectedProject] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (property) {
@@ -37,6 +43,11 @@ const EditPropertyModal = ({ show, handleClose, property, onPropertyUpdated }: E
       setPrice(property.price);
       setStatus(property.status);
       setDescription(property.description || '');
+      setEtage(property.etage || undefined);
+      setSuperficie(property.superficie || undefined);
+      setTranche(property.tranche || '');
+      setNumAppartement(property.numAppartement || '');
+      setSelectedProject(property.projectId || undefined);
     }
   }, [property]);
 
@@ -48,6 +59,25 @@ const EditPropertyModal = ({ show, handleClose, property, onPropertyUpdated }: E
     }
   }, [country]);
 
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const res = await fetch('/api/projects');
+        if (!res.ok) {
+          throw new Error('Failed to fetch projects');
+        }
+        const data = await res.json();
+        setProjects(data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    if (show) {
+      fetchProjects();
+    }
+  }, [show]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -58,7 +88,7 @@ const EditPropertyModal = ({ show, handleClose, property, onPropertyUpdated }: E
         {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ address, city, zipCode, country, type, price, status, description }),
+          body: JSON.stringify({ address, city, zipCode, country, type, price, status, description, etage, superficie, tranche, numAppartement, projectId: selectedProject }),
         }
       );
 
@@ -78,6 +108,7 @@ const EditPropertyModal = ({ show, handleClose, property, onPropertyUpdated }: E
 
   const countryOptions = countries.map(country => ({ value: country.name, label: country.name }));
   const cityOptions = cities.map(city => ({ value: city, label: city }));
+  const projectOptions = projects.map(project => ({ value: project.id, label: project.name }));
 
   return (
     <Modal show={show} onHide={handleClose} centered>
@@ -87,15 +118,26 @@ const EditPropertyModal = ({ show, handleClose, property, onPropertyUpdated }: E
       <Modal.Body>
         {error && <Alert variant="danger">{error}</Alert>}
         <Form onSubmit={handleSubmit}>
+        <Form.Group className="mb-3">
+              <Form.Label>Projet</Form.Label>
+              <Select
+                options={projectOptions}
+                onChange={(option: { value: string; label: string } | null) => setSelectedProject(option ? option.value : '')}
+                isClearable
+                isSearchable
+                placeholder="Sélectionner un projet"
+                value={projectOptions.find(p => p.value === selectedProject)}
+              />
+            </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label>Adresse</Form.Label>
-            <Form.Control type="text" value={address} onChange={(e) => setAddress(e.target.value)} required />
+            <Form.Control type="text" value={address} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAddress(e.target.value)} required />
           </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label>Pays</Form.Label>
             <Select
               options={countryOptions}
-              onChange={(option) => setCountry(option ? option.value : '')}
+              onChange={(option: { value: string; label: string } | null) => setCountry(option ? option.value : '')}
               isClearable
               isSearchable
               placeholder="Sélectionner un pays"
@@ -106,7 +148,7 @@ const EditPropertyModal = ({ show, handleClose, property, onPropertyUpdated }: E
             <Form.Label>Ville</Form.Label>
             <Select
               options={cityOptions}
-              onChange={(option) => setCity(option ? option.value : '')}
+              onChange={(option: { value: string; label: string } | null) => setCity(option ? option.value : '')}
               isClearable
               isSearchable
               placeholder="Sélectionner une ville"
@@ -116,25 +158,57 @@ const EditPropertyModal = ({ show, handleClose, property, onPropertyUpdated }: E
           </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label>Code Postal</Form.Label>
-            <Form.Control type="text" value={zipCode} onChange={(e) => setZipCode(e.target.value)} required />
+            <Form.Control type="text" value={zipCode} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setZipCode(e.target.value)} required />
           </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>Type</Form.Label>
-            <Form.Select value={type} onChange={(e) => setType(e.target.value as PropertyType)}>
-              {Object.values(PropertyType).map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </Form.Select>
-          </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>Prix</Form.Label>
-            <Form.Control type="number" value={price} onChange={(e) => setPrice(parseFloat(e.target.value))} required />
-          </Form.Group>
+          <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Type</Form.Label>
+                  <Form.Select value={type} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setType(e.target.value as PropertyType)}>
+                    {Object.values(PropertyType).map(type => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Prix</Form.Label>
+                  <Form.Control type="number" value={price} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPrice(parseFloat(e.target.value))} required />
+                </Form.Group>
+              </Col>
+            </Row>
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Etage</Form.Label>
+                  <Form.Control type="number" value={etage} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEtage(parseInt(e.target.value))} />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Superficie</Form.Label>
+                  <Form.Control type="number" value={superficie} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSuperficie(parseFloat(e.target.value))} />
+                </Form.Group>
+              </Col>
+            </Row>
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Tranche</Form.Label>
+                  <Form.Control type="text" value={tranche} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTranche(e.target.value)} />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Numéro d'appartement</Form.Label>
+                  <Form.Control type="text" value={numAppartement} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNumAppartement(e.target.value)} />
+                </Form.Group>
+              </Col>
+            </Row>
           <Form.Group className="mb-3">
             <Form.Label>Statut</Form.Label>
-            <Form.Select value={status} onChange={(e) => setStatus(e.target.value as PropertyStatus)}>
+            <Form.Select value={status} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setStatus(e.target.value as PropertyStatus)}>
               {Object.entries(propertyStatusTranslations).map(([key, value]) => (
                 <option key={key} value={key}>{value}</option>
               ))}
@@ -142,7 +216,7 @@ const EditPropertyModal = ({ show, handleClose, property, onPropertyUpdated }: E
           </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label>Description</Form.Label>
-            <Form.Control as="textarea" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
+            <Form.Control as="textarea" rows={3} value={description} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)} />
           </Form.Group>
           <div className="d-flex justify-content-end mt-4">
             <Button variant="secondary" onClick={handleClose} className="me-2">

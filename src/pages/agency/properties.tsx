@@ -1,39 +1,44 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { GetServerSideProps } from 'next';
-import { Prisma } from '@prisma/client';
+import { Prisma, Project } from '@prisma/client';
 import { withAuth } from '@/lib/withAuth';
 import { isTrialActive } from '@/lib/subscription';
 import { propertyStatusTranslations } from '@/utils/propertyStatusTranslations';
 import { Lead, PropertyType } from '@prisma/client';
 import { PropertyWithDetails } from '@/types';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Button, Row, Col, Form, Table, Dropdown, Alert } from 'react-bootstrap';
+import { Button, Row, Col, Form, Table, Dropdown, Alert, Card, Accordion } from 'react-bootstrap';
 import Select from 'react-select';
 import useDebounce from '@/hooks/useDebounce';
-import DynamicMap from '@/components/DynamicMap';
 import AddPropertyModal from '@/components/AddPropertyModal';
 import ViewPropertyModal from '@/components/ViewPropertyModal';
 import EditPropertyModal from '@/components/EditPropertyModal';
 import LinkLeadModal from '@/components/LinkLeadModal';
 import CustomDropdownMenu from '@/components/CustomDropdownMenu';
+import AddProjectModal from '@/components/AddProjectModal';
 import { prisma } from '@/lib/prisma';
 
 
 interface PropertiesPageProps {
   properties: PropertyWithDetails[];
+  projects: Project[];
   leads: Lead[];
   filterPropertyNumber: string;
   filterCity: string;
   filterType: PropertyType | 'ALL';
   filterMinPrice: string;
   filterMaxPrice: string;
+  filterProjectId: string;
+  filterEtage: string;
+  filterTranche: string;
   isTrialActive: boolean;
   agencyCurrency: string;
 }
 
-const PropertiesPage = ({ properties, leads, filterPropertyNumber: initialFilterPropertyNumber, filterCity: initialFilterCity, filterType: initialFilterType, filterMinPrice: initialFilterMinPrice, filterMaxPrice: initialFilterMaxPrice, isTrialActive, agencyCurrency }: PropertiesPageProps) => {
+const PropertiesPage = ({ properties, projects, leads, filterPropertyNumber: initialFilterPropertyNumber, filterCity: initialFilterCity, filterType: initialFilterType, filterMinPrice: initialFilterMinPrice, filterMaxPrice: initialFilterMaxPrice, filterProjectId: initialFilterProjectId, filterEtage: initialFilterEtage, filterTranche: initialFilterTranche, isTrialActive, agencyCurrency }: PropertiesPageProps) => {
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showAddProjectModal, setShowAddProjectModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showLinkLeadModal, setShowLinkLeadModal] = useState(false);
@@ -45,10 +50,15 @@ const PropertiesPage = ({ properties, leads, filterPropertyNumber: initialFilter
   const [filterType, setFilterType] = useState(initialFilterType);
   const [filterMinPrice, setFilterMinPrice] = useState(initialFilterMinPrice);
   const [filterMaxPrice, setFilterMaxPrice] = useState(initialFilterMaxPrice);
+  const [filterProjectId, setFilterProjectId] = useState(initialFilterProjectId);
+  const [filterEtage, setFilterEtage] = useState(initialFilterEtage);
+  const [filterTranche, setFilterTranche] = useState(initialFilterTranche);
   const router = useRouter();
 
   const debouncedPropertyNumber = useDebounce(filterPropertyNumber, 500);
   const debouncedCity = useDebounce(filterCity, 500);
+  const debouncedEtage = useDebounce(filterEtage, 500);
+  const debouncedTranche = useDebounce(filterTranche, 500);
 
   const refreshData = async () => {
     const res = await fetch('/api/properties');
@@ -74,6 +84,15 @@ const PropertiesPage = ({ properties, leads, filterPropertyNumber: initialFilter
     if (filterMaxPrice) {
       newQuery.maxPrice = filterMaxPrice;
     }
+    if (filterProjectId) {
+      newQuery.projectId = filterProjectId;
+    }
+    if (debouncedEtage) {
+      newQuery.etage = debouncedEtage;
+    }
+    if (debouncedTranche) {
+      newQuery.tranche = debouncedTranche;
+    }
 
     // Construct current query from router.query for comparison
     const currentQuery: Record<string, string> = {};
@@ -93,7 +112,7 @@ const PropertiesPage = ({ properties, leads, filterPropertyNumber: initialFilter
         query: newQuery,
       });
     }
-  }, [debouncedPropertyNumber, debouncedCity, filterType, filterMinPrice, filterMaxPrice, router]);
+  }, [debouncedPropertyNumber, debouncedCity, filterType, filterMinPrice, filterMaxPrice, filterProjectId, debouncedEtage, debouncedTranche, router]);
 
   const handleOpenViewModal = (property: PropertyWithDetails) => {
     setSelectedProperty(property);
@@ -127,7 +146,8 @@ const PropertiesPage = ({ properties, leads, filterPropertyNumber: initialFilter
     }
   };
 
-  const cityOptions = [...new Set(clientProperties.map(p => p.city))].map(city => ({ value: city, label: city }));
+  const cityOptions = Array.from(new Set(clientProperties.map(p => p.city))).map(city => ({ value: city, label: city }));
+  const projectOptions = projects.map(project => ({ value: project.id, label: project.name }));
 
   const filteredProperties = selectedCity
     ? clientProperties.filter(p => p.city === selectedCity.value)
@@ -142,104 +162,142 @@ const PropertiesPage = ({ properties, leads, filterPropertyNumber: initialFilter
       )}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1 className="h2">Gestion des propriétés</h1>
-        <Button onClick={() => setShowAddModal(true)} className="btn-primary" disabled={!isTrialActive}>
-          Ajouter une propriété
-        </Button>
+        <div>
+          <Button onClick={() => setShowAddProjectModal(true)} className="btn-primary me-2" disabled={!isTrialActive}>
+            Ajouter un projet
+          </Button>
+          <Button onClick={() => setShowAddModal(true)} className="btn-primary" disabled={!isTrialActive}>
+            Ajouter une propriété
+          </Button>
+        </div>
       </div>
 
       <div className="mb-4">
-        <Row>
-          <Col md={3}>
-            <Form.Group controlId="cityFilter">
-              <Form.Label>Filtrer par Ville</Form.Label>
-              <Select
-                options={cityOptions}
-                onChange={(option) => setSelectedCity(option)}
-                isClearable
-                isSearchable
-                placeholder="Sélectionner une ville"
-              />
-            </Form.Group>
-          </Col>
-        </Row>
-      </div>
-
-      <div className="mb-4">
-        <DynamicMap properties={filteredProperties} />
+        <Card>
+          <Card.Header>Filtres</Card.Header>
+          <Card.Body>
+            <Row>
+              <Col md={2}>
+                <Form.Group controlId="propertyNumberFilter">
+                  <Form.Label>N° Propriété</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="Ex: PR000001"
+                    value={filterPropertyNumber}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilterPropertyNumber(e.target.value)}
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={2}>
+                <Form.Group controlId="typeFilter">
+                  <Form.Label>Type</Form.Label>
+                  <Form.Select
+                    value={filterType}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilterType(e.target.value as PropertyType)}
+                  >
+                    <option value="ALL">Tous les types</option>
+                    {Object.values(PropertyType).map(type => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+              <Col md={2}>
+                <Form.Group controlId="priceRangeFilter">
+                  <Form.Label>Prix</Form.Label>
+                  <Row>
+                    <Col md={6}>
+                      <Form.Control
+                        type="number"
+                        placeholder="Min"
+                        value={filterMinPrice}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilterMinPrice(e.target.value)}
+                      />
+                    </Col>
+                    <Col md={6}>
+                      <Form.Control
+                        type="number"
+                        placeholder="Max"
+                        value={filterMaxPrice}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilterMaxPrice(e.target.value)}
+                      />
+                    </Col>
+                  </Row>
+                </Form.Group>
+              </Col>
+              <Col md={2}>
+                <Form.Group controlId="projectFilter">
+                  <Form.Label>Projet</Form.Label>
+                  <Select
+                    className="form-control"
+                    options={projectOptions}
+                    onChange={(option: { value: string; label: string } | null) => setFilterProjectId(option ? option.value : '')}
+                    isClearable
+                    isSearchable
+                    placeholder="Projet"
+                    value={projectOptions.find(p => p.value === filterProjectId)}
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={2}>
+                <Form.Group controlId="etageFilter">
+                  <Form.Label>Etage</Form.Label>
+                  <Form.Control
+                    type="number"
+                    placeholder="Etage"
+                    value={filterEtage}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilterEtage(e.target.value)}
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={2}>
+                <Form.Group controlId="trancheFilter">
+                  <Form.Label>Tranche</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="Tranche"
+                    value={filterTranche}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilterTranche(e.target.value)}
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+          </Card.Body>
+        </Card>
       </div>
 
       <div className="table-responsive-wrapper">
-        <Row className="mb-4">
-        <Col md={3}>
-          <Form.Group controlId="propertyNumberFilter">
-            <Form.Label>Filtrer par N° Propriété</Form.Label>
-            <Form.Control
-              type="text"
-              placeholder="Ex: PR000001"
-              value={filterPropertyNumber}
-              onChange={(e) => setFilterPropertyNumber(e.target.value)}
-            />
-          </Form.Group>
-        </Col>
-        <Col md={3}>
-          <Form.Group controlId="typeFilter">
-            <Form.Label>Filtrer par Type</Form.Label>
-            <Form.Select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value as PropertyType)}
-            >
-              <option value="ALL">Tous les types</option>
-              {Object.values(PropertyType).map(type => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </Form.Select>
-          </Form.Group>
-        </Col>
-        <Col md={3}>
-          <Form.Group controlId="priceRangeFilter">
-            <Form.Label>Filtrer par Prix</Form.Label>
-            <div className="d-flex">
-              <Form.Control
-                type="number"
-                placeholder="Min"
-                value={filterMinPrice}
-                onChange={(e) => setFilterMinPrice(e.target.value)}
-                className="me-2"
-              />
-              <Form.Control
-                type="number"
-                placeholder="Max"
-                value={filterMaxPrice}
-                onChange={(e) => setFilterMaxPrice(e.target.value)}
-              />
-            </div>
-          </Form.Group>
-        </Col>
-      </Row>
-
       <Table hover responsive>
         <thead>
           <tr>
             <th>Propriété</th>
+            <th>Projet</th>
             <th>Adresse</th>
             <th>Ville</th>
-            <th>Code Postal</th>
             <th>Type</th>
             <th>Prix</th>
             <th>Statut</th>
+            <th>Etage</th>
+            <th>Superficie</th>
+            <th>Tranche</th>
+            <th>Num Appartement</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
-          {filteredProperties.map((property) => (
+          {clientProperties.map((property) => (
             <tr key={property.id} className={!isTrialActive ? 'text-muted' : ''}>
               <td>{`PR${String(property.propertyNumber).padStart(6, '0')}`}</td>
+              <td>{property.project?.name}</td>
               <td>{property.address}</td>
               <td>{property.city}</td>
-              <td>{property.zipCode}</td>
               <td>{property.type}</td>
               <td>{property.price}</td>
               <td>{propertyStatusTranslations[property.status]}</td>
+              <td>{property.etage}</td>
+              <td>{property.superficie}</td>
+              <td>{property.tranche}</td>
+              <td>{property.numAppartement}</td>
               <td>
                 <Dropdown align="end">
                                       <Dropdown.Toggle variant="outline-secondary" size="sm">
@@ -263,6 +321,12 @@ const PropertiesPage = ({ properties, leads, filterPropertyNumber: initialFilter
         show={showAddModal}
         handleClose={() => setShowAddModal(false)}
         onPropertyAdded={refreshData}
+      />
+
+      <AddProjectModal
+        show={showAddProjectModal}
+        handleClose={() => setShowAddProjectModal(false)}
+        onProjectAdded={refreshData}
       />
 
       {selectedProperty && (
@@ -298,12 +362,15 @@ const PropertiesPage = ({ properties, leads, filterPropertyNumber: initialFilter
 
 export const getServerSideProps: GetServerSideProps = withAuth(async (context, session) => {
   try {
-  const { propertyNumber, city, type, minPrice, maxPrice } = context.query;
+  const { propertyNumber, city, type, minPrice, maxPrice, projectId, etage, tranche } = context.query;
   const filterPropertyNumber = propertyNumber ? String(propertyNumber) : '';
   const filterCity = city ? String(city) : '';
   const filterType = type && Object.values(PropertyType).includes(type as PropertyType) ? type as PropertyType : 'ALL';
   const filterMinPrice = minPrice ? parseFloat(String(minPrice)) : undefined;
   const filterMaxPrice = maxPrice ? parseFloat(String(maxPrice)) : undefined;
+  const filterProjectId = projectId ? String(projectId) : '';
+  const filterEtage = etage ? parseInt(String(etage)) : undefined;
+  const filterTranche = tranche ? String(tranche) : '';
 
   const agencyId = session.user.agencyId;
   if (!agencyId) {
@@ -348,31 +415,31 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
       whereClause.price = { lte: filterMaxPrice };
     }
   }
+  if (filterProjectId) {
+    whereClause.projectId = filterProjectId;
+  }
+  if (filterEtage) {
+    whereClause.etage = filterEtage;
+  }
+  if (filterTranche) {
+    whereClause.tranche = { contains: filterTranche };
+  }
 
-  const [properties, leads, trialIsActive, agency] = await Promise.all([
+  const [properties, projects, leads, trialIsActive, agency] = await Promise.all([
     prisma.property.findMany({
       where: whereClause,
-      select: {
-        id: true,
-        propertyNumber: true,
-        address: true,
-        city: true,
-        zipCode: true,
-        country: true,
-        type: true,
-        price: true,
-        status: true,
-        description: true,
-        latitude: true,
-        longitude: true,
-        createdAt: true,
-        updatedAt: true,
-        agencyId: true,
+      include: {
+        project: true,
         images: true,
         leads: true,
       },
       orderBy: {
         createdAt: 'desc',
+      },
+    }),
+    prisma.project.findMany({
+      where: {
+        agencyId: agencyId,
       },
     }),
     prisma.lead.findMany({
@@ -390,12 +457,16 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
   return {
     props: {
       properties: JSON.parse(JSON.stringify(properties)),
+      projects: JSON.parse(JSON.stringify(projects)),
       leads: JSON.parse(JSON.stringify(leads)),
       filterPropertyNumber,
       filterCity,
       filterType,
       filterMinPrice: filterMinPrice || '',
       filterMaxPrice: filterMaxPrice || '',
+      filterProjectId,
+      filterEtage: filterEtage || '',
+      filterTranche: filterTranche || '',
       isTrialActive: trialIsActive,
       agencyCurrency: agency?.currency || 'MAD',
     },
@@ -405,17 +476,21 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
   return {
     props: {
       properties: [],
+      projects: [],
       leads: [],
       filterPropertyNumber: '',
       filterCity: '',
       filterType: 'ALL',
       filterMinPrice: '',
       filterMaxPrice: '',
+      filterProjectId: '',
+      filterEtage: '',
+      filterTranche: '',
       isTrialActive: false,
       agencyCurrency: 'MAD',
     },
   };
 }
-}, ['AGENCY_OWNER', 'AGENCY_MEMBER']);
+}, ['AGENCY_OWNER', 'AGENCY_MEMBER', 'AGENCY_SUPER_AGENT']);
 
 export default PropertiesPage;

@@ -61,23 +61,23 @@ const AddUserModal = ({ show, handleClose, onUserAdded }: AddUserModalProps) => 
         <Form onSubmit={handleSubmit}>
           <Form.Group className="mb-3">
             <Form.Label>Nom</Form.Label>
-            <Form.Control type="text" value={name} onChange={(e) => setName(e.target.value)} required />
+            <Form.Control type="text" value={name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)} required />
           </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label>Email</Form.Label>
-            <Form.Control type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <Form.Control type="email" value={email} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)} required />
           </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label>Téléphone</Form.Label>
-            <Form.Control type="text" value={phone} onChange={(e) => setPhone(e.target.value)} />
+            <Form.Control type="text" value={phone} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPhone(e.target.value)} />
           </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label>Mot de passe</Form.Label>
-            <Form.Control type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <Form.Control type="password" value={password} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)} required />
           </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label>Rôle</Form.Label>
-            <Form.Select value={role} onChange={(e) => setRole(e.target.value as UserRole)}>
+            <Form.Select value={role} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setRole(e.target.value as UserRole)}>
               {Object.values(UserRole)
                 .filter(r => r !== UserRole.ADMIN && r !== UserRole.AGENCY_OWNER) // Filter out ADMIN and AGENCY_OWNER roles
                 .map(r => (

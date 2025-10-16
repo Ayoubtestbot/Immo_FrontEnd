@@ -57,7 +57,7 @@ const AddNoteModal = ({ show, handleClose, lead, onNoteAdded }: AddNoteModalProp
               as="textarea"
               rows={4}
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)}
               required
             />
           </Form.Group>

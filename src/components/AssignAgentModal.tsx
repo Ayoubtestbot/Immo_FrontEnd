@@ -103,7 +103,7 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({
             <Form.Control
               as="select"
               value={selectedAgentId || ''}
-              onChange={(e) => setSelectedAgentId(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedAgentId(e.target.value)}
             >
               <option value="">-- Sélectionner un agent --</option>
               {agents.map((agent) => (

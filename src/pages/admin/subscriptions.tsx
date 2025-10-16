@@ -124,7 +124,7 @@ const AdminSubscriptionsPage = ({ subscriptions, plans }: AdminSubscriptionsPage
           type="text"
           placeholder="Rechercher par agence ou plan..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
           className="mb-3"
         />
 
@@ -173,19 +173,19 @@ const AdminSubscriptionsPage = ({ subscriptions, plans }: AdminSubscriptionsPage
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3">
               <Form.Label>Statut</Form.Label>
-              <Form.Control type="text" value={status} onChange={(e) => setStatus(e.target.value)} required />
+              <Form.Control type="text" value={status} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStatus(e.target.value)} required />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Date de Début</Form.Label>
-              <Form.Control type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
+              <Form.Control type="date" value={startDate} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStartDate(e.target.value)} required />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Date de Fin (optionnel)</Form.Label>
-              <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+              <Form.Control type="date" value={endDate} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEndDate(e.target.value)} />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Plan d&apos;Abonnement</Form.Label>
-              <Form.Select value={selectedPlanId} onChange={(e) => setSelectedPlanId(e.target.value)} required>
+              <Form.Select value={selectedPlanId} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedPlanId(e.target.value)} required>
                 {plans.map((plan) => (
                   <option key={plan.id} value={plan.id}>{plan.name}</option>
                 ))}

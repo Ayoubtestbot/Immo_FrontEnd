@@ -56,7 +56,7 @@ const BulkStatusChangeModal: React.FC<BulkStatusChangeModalProps> = ({
         <p>{selectedLeadIds.length} prospect(s) sélectionné(s) seront mis à jour.</p>
         <Form.Group className="mb-3" controlId="newStatus">
           <Form.Label>Nouveau statut</Form.Label>
-          <Form.Select value={newStatus} onChange={(e) => setNewStatus(e.target.value as LeadStatus)}>
+          <Form.Select value={newStatus} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setNewStatus(e.target.value as LeadStatus)}>
             <option value="">-- Sélectionner un statut --</option>
             {Object.values(LeadStatus).map(s => (
               <option key={s} value={s}>{leadStatusTranslations[s]}</option>

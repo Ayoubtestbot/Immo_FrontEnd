@@ -116,7 +116,7 @@ const AdminPlansPage = ({ plans }: PlansPageProps) => {
           type="text"
           placeholder="Rechercher un plan..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
           className="mb-3"
         />
 
@@ -169,19 +169,19 @@ const AdminPlansPage = ({ plans }: PlansPageProps) => {
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3">
               <Form.Label>Nom du Plan</Form.Label>
-              <Form.Control type="text" value={name} onChange={(e) => setName(e.target.value)} required />
+              <Form.Control type="text" value={name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)} required />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Prix (MAD)</Form.Label>
-              <Form.Control type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} required />
+              <Form.Control type="number" step="0.01" value={price} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPrice(e.target.value)} required />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Limite Prospects (-1 pour illimité)</Form.Label>
-              <Form.Control type="number" value={prospectsLimit} onChange={(e) => setProspectsLimit(e.target.value)} required />
+              <Form.Control type="number" value={prospectsLimit} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProspectsLimit(e.target.value)} required />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Fonctionnalités (séparées par des virgules)</Form.Label>
-              <Form.Control as="textarea" rows={3} value={features} onChange={(e) => setFeatures(e.target.value)} required />
+              <Form.Control as="textarea" rows={3} value={features} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFeatures(e.target.value)} required />
             </Form.Group>
             <div className="d-flex justify-content-end mt-4">
               <Button variant="secondary" onClick={handleClose} className="me-2">Annuler</Button>
