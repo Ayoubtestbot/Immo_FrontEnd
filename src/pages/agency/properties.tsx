@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { useSession } from 'next-auth/react';
 import { GetServerSideProps } from 'next';
 import { Prisma, Project } from '@prisma/client';
 import { withAuth } from '@/lib/withAuth';
@@ -17,7 +18,8 @@ import EditPropertyModal from '@/components/EditPropertyModal';
 import LinkLeadModal from '@/components/LinkLeadModal';
 import CustomDropdownMenu from '@/components/CustomDropdownMenu';
 import AddProjectModal from '@/components/AddProjectModal';
-import { prisma } from '@/lib/prisma';
+import LinkProjectModal from '@/components/LinkProjectModal';
+import DuplicatePropertyModal from '@/components/DuplicatePropertyModal';
 
 
 interface PropertiesPageProps {
@@ -41,10 +43,12 @@ const PropertiesPage = ({ properties, projects, leads, filterPropertyNumber: ini
   const [showAddProjectModal, setShowAddProjectModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showLinkProjectModal, setShowLinkProjectModal] = useState(false);
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   const [showLinkLeadModal, setShowLinkLeadModal] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<PropertyWithDetails | null>(null);
   const [clientProperties, setClientProperties] = useState(properties);
-  const [selectedCity, setSelectedCity] = useState<{ value: string; label: string } | null>(null);
+  const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
   const [filterPropertyNumber, setFilterPropertyNumber] = useState(initialFilterPropertyNumber);
   const [filterCity, setFilterCity] = useState(initialFilterCity);
   const [filterType, setFilterType] = useState(initialFilterType);
@@ -54,16 +58,19 @@ const PropertiesPage = ({ properties, projects, leads, filterPropertyNumber: ini
   const [filterEtage, setFilterEtage] = useState(initialFilterEtage);
   const [filterTranche, setFilterTranche] = useState(initialFilterTranche);
   const router = useRouter();
+  const { data: session } = useSession();
 
   const debouncedPropertyNumber = useDebounce(filterPropertyNumber, 500);
   const debouncedCity = useDebounce(filterCity, 500);
   const debouncedEtage = useDebounce(filterEtage, 500);
   const debouncedTranche = useDebounce(filterTranche, 500);
 
-  const refreshData = async () => {
-    const res = await fetch('/api/properties');
-    const data = await res.json();
-    setClientProperties(data);
+  useEffect(() => {
+    setClientProperties(properties);
+  }, [properties]);
+
+  const refreshData = () => {
+    router.replace(router.asPath);
   };
 
   useEffect(() => {
@@ -149,9 +156,7 @@ const PropertiesPage = ({ properties, projects, leads, filterPropertyNumber: ini
   const cityOptions = Array.from(new Set(clientProperties.map(p => p.city))).map(city => ({ value: city, label: city }));
   const projectOptions = projects.map(project => ({ value: project.id, label: project.name }));
 
-  const filteredProperties = selectedCity
-    ? clientProperties.filter(p => p.city === selectedCity.value)
-    : clientProperties;
+
 
   return (
     <DashboardLayout>
@@ -166,9 +171,35 @@ const PropertiesPage = ({ properties, projects, leads, filterPropertyNumber: ini
           <Button onClick={() => setShowAddProjectModal(true)} className="btn-primary me-2" disabled={!isTrialActive}>
             Ajouter un projet
           </Button>
-          <Button onClick={() => setShowAddModal(true)} className="btn-primary" disabled={!isTrialActive}>
+          <Button onClick={() => setShowAddModal(true)} className="btn-primary me-2" disabled={!isTrialActive}>
             Ajouter une propriété
           </Button>
+          <Button variant="outline-primary" className="me-2" disabled={selectedProperties.length === 0} onClick={() => setShowLinkProjectModal(true)}>
+            Lier à un projet
+          </Button>
+          {session?.user?.role !== 'AGENCY_MEMBER' && (
+            <Button variant="outline-danger" disabled={selectedProperties.length === 0} onClick={async () => {
+              if (window.confirm('Etes-vous sur de vouloir supprimer les propriétés sélectionnées ?')) {
+                try {
+                  const res = await fetch('/api/properties/bulk-delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ propertyIds: selectedProperties }),
+                  });
+                  if (!res.ok) {
+                    throw new Error('Failed to delete properties');
+                  }
+                  refreshData();
+                  setSelectedProperties([]);
+                } catch (error) {
+                  console.error(error);
+                  alert('Error deleting properties');
+                }
+              }
+            }}>
+              Supprimer
+            </Button>
+          )}
         </div>
       </div>
 
@@ -270,6 +301,13 @@ const PropertiesPage = ({ properties, projects, leads, filterPropertyNumber: ini
       <Table hover responsive>
         <thead>
           <tr>
+            <th><Form.Check type="checkbox" onChange={(e) => {
+              if (e.target.checked) {
+                setSelectedProperties(clientProperties.map((p) => p.id));
+              } else {
+                setSelectedProperties([]);
+              }
+            }} /></th>
             <th>Propriété</th>
             <th>Projet</th>
             <th>Adresse</th>
@@ -287,6 +325,13 @@ const PropertiesPage = ({ properties, projects, leads, filterPropertyNumber: ini
         <tbody>
           {clientProperties.map((property) => (
             <tr key={property.id} className={!isTrialActive ? 'text-muted' : ''}>
+              <td><Form.Check type="checkbox" checked={selectedProperties.includes(property.id)} onChange={(e) => {
+                if (e.target.checked) {
+                  setSelectedProperties([...selectedProperties, property.id]);
+                } else {
+                  setSelectedProperties(selectedProperties.filter((id) => id !== property.id));
+                }
+              }} /></td>
               <td>{`PR${String(property.propertyNumber).padStart(6, '0')}`}</td>
               <td>{property.project?.name}</td>
               <td>{property.address}</td>
@@ -307,7 +352,13 @@ const PropertiesPage = ({ properties, projects, leads, filterPropertyNumber: ini
                                         <Dropdown.Item onClick={() => handleOpenViewModal(property)}>Visualiser</Dropdown.Item>
                                         <Dropdown.Item onClick={() => handleOpenEditModal(property)}>Modifier</Dropdown.Item>
                                         <Dropdown.Item onClick={() => handleOpenLinkLeadModal(property)}>Lier à un prospect</Dropdown.Item>
-                                        <Dropdown.Item className="text-danger" onClick={() => handleDeleteProperty(property.id)}>Supprimer</Dropdown.Item>
+                                        <Dropdown.Item onClick={() => {
+                                          setSelectedProperty(property);
+                                          setShowDuplicateModal(true);
+                                        }}>Dupliquer</Dropdown.Item>
+                                        {session?.user?.role !== 'AGENCY_MEMBER' && (
+                                          <Dropdown.Item className="text-danger" onClick={() => handleDeleteProperty(property.id)}>Supprimer</Dropdown.Item>
+                                        )}
                                       </CustomDropdownMenu>                </Dropdown>
               </td>
             </tr>
@@ -338,6 +389,13 @@ const PropertiesPage = ({ properties, projects, leads, filterPropertyNumber: ini
         />
       )}
 
+      <DuplicatePropertyModal
+        show={showDuplicateModal}
+        handleClose={() => setShowDuplicateModal(false)}
+        property={selectedProperty}
+        onPropertyDuplicated={refreshData}
+      />
+
       {selectedProperty && (
         <EditPropertyModal
           show={showEditModal}
@@ -346,6 +404,17 @@ const PropertiesPage = ({ properties, projects, leads, filterPropertyNumber: ini
           onPropertyUpdated={refreshData}
         />
       )}
+
+      <LinkProjectModal
+        show={showLinkProjectModal}
+        handleClose={() => setShowLinkProjectModal(false)}
+        projects={projects}
+        propertyIds={selectedProperties}
+        onProjectLinked={() => {
+          refreshData();
+          setSelectedProperties([]);
+        }}
+      />
 
       {selectedProperty && (
         <LinkLeadModal

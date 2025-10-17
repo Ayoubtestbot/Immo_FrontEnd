@@ -268,7 +268,9 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
             <Dropdown.Menu>
               <Dropdown.Item onClick={() => setShowBulkAssignAgentModal(true)}>Assigner un agent (en masse)</Dropdown.Item>
               <Dropdown.Item onClick={() => setShowBulkStatusChangeModal(true)}>Changer le statut (en masse)</Dropdown.Item>
-              <Dropdown.Item onClick={() => setShowBulkDeleteModal(true)}>Supprimer (en masse)</Dropdown.Item>
+              {session?.user?.role !== 'AGENCY_MEMBER' && (
+                <Dropdown.Item onClick={() => setShowBulkDeleteModal(true)}>Supprimer (en masse)</Dropdown.Item>
+              )}
             </Dropdown.Menu>
           </Dropdown>
         </div>
@@ -395,7 +397,9 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
                                             <Dropdown.Item as="button" onClick={() => handleOpenAddNoteModal(lead)}>Ajouter Note</Dropdown.Item>
                                             <Dropdown.Item as="button" onClick={() => handleOpenLinkPropertyModal(lead)}>Lier une propriété</Dropdown.Item>
                                             <Dropdown.Item as="button" onClick={() => handleOpenAssignAgentModal(lead)}>Assigner un agent</Dropdown.Item> {/* New Dropdown Item */}
-                                            <Dropdown.Item as="button" className="text-danger" onClick={() => handleDeleteLead(lead.id)}>Supprimer</Dropdown.Item>
+                                            {session?.user?.role !== 'AGENCY_MEMBER' && (
+                                              <Dropdown.Item as="button" className="text-danger" onClick={() => handleDeleteLead(lead.id)}>Supprimer</Dropdown.Item>
+                                            )}
                                           </CustomDropdownMenu>                    </Dropdown>
                   </td>
                   <td>

@@ -41,8 +41,11 @@ export default async function handler(
       return res.status(500).json({ error: 'Failed to fetch lead' });
     }
   } else if (req.method === 'DELETE') {
+    if (session.user.role === 'AGENCY_MEMBER') {
+      return res.status(403).json({ error: 'You do not have permission to delete this lead' });
+    }
+
     try {
-      await prisma.lead.delete({
         where: { id },
       });
       return res.status(204).end();

@@ -56,7 +56,7 @@ async function handler(
         }
     }
 
-    const { address, city, zipCode, country, type, price, status, description, images } = req.body;
+    const { address, city, zipCode, country, type, price, status, description, images, projectId } = req.body;
 
     if (!address || !city || !zipCode || !country || !type || price === undefined || !status) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -112,6 +112,7 @@ async function handler(
           images: {
             create: images.map((url: string) => ({ url })),
           },
+          ...(projectId && { project: { connect: { id: projectId } } }),
         },
       });
       return res.status(201).json(property);

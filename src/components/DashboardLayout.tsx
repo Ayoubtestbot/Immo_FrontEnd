@@ -31,6 +31,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     { href: '/agency/dashboard', icon: <FiGrid />, label: 'Tableau de bord' },
     { href: '/agency/leads', icon: <FiUsers />, label: 'Prospects' },
     { href: '/agency/properties', icon: <FiArchive />, label: 'Propriétés' },
+    { href: '/agency/projects', icon: <FiTag />, label: 'Projets' },
     { href: '/agency/calendar', icon: <FiCalendar />, label: 'Calendrier' },
     { href: '/agency/tickets', icon: <FiTag />, label: 'Tickets' },
   ];

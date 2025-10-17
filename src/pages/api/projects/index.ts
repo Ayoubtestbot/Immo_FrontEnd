@@ -34,6 +34,11 @@ async function handler(req: NextApiRequest, res: NextApiResponse, session: any) 
         where: {
           agencyId,
         },
+        include: {
+          _count: {
+            select: { properties: true },
+          },
+        },
       });
       res.status(200).json(projects);
     } catch (error) {
