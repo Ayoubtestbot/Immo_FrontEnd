@@ -52,6 +52,10 @@ export default async function handler(
           },
         }));
         updateData.status = status;
+
+        if (status === LeadStatus.CONTACTED && !lead.firstContactedAt) {
+          updateData.firstContactedAt = new Date();
+        }
       }
 
       if (assignedToId && assignedToId !== lead.assignedToId) {

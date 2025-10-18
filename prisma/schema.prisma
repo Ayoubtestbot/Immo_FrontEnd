@@ -78,6 +78,7 @@ model User {
   notes         Note[]
   ticketMessages TicketMessage[]
   notifications  Notification[]
+  showings       Showing[]
 }
 
 model Account {
@@ -145,6 +146,7 @@ model Lead {
   trafficSource String? // New field
   isUrgent      Boolean @default(false) // New field for urgent leads
   appointmentDate DateTime? // New field for appointment scheduling
+  firstContactedAt DateTime? // New field for lead response time
 
   agency   Agency @relation(fields: [agencyId], references: [id])
   agencyId String
@@ -216,6 +218,7 @@ model Property {
   leads Lead[] @relation("LeadToProperty")
   images Image[]
   documents Document[]
+  showings  Showing[]
 }
 
 model Image {
@@ -223,6 +226,15 @@ model Image {
   url       String
   property  Property @relation(fields: [propertyId], references: [id])
   propertyId String
+}
+
+model Showing {
+  id          String   @id @default(cuid())
+  showingDate DateTime
+  property    Property @relation(fields: [propertyId], references: [id])
+  propertyId  String
+  agent       User     @relation(fields: [agentId], references: [id])
+  agentId     String
 }
 
 model Document {

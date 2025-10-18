@@ -81,6 +81,10 @@ async function handler(
             details: `Statut changé de ${leadStatusTranslations[lead.status]} à ${leadStatusTranslations[status as LeadStatus]} (action groupée)`,
           });
           individualUpdateData.status = status;
+
+          if (status === LeadStatus.CONTACTED && !lead.firstContactedAt) {
+            individualUpdateData.firstContactedAt = new Date();
+          }
         }
 
         // Handle assigned agent change activity and SMS

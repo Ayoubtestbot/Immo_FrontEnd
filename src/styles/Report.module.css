@@ -1,0 +1,56 @@
+.reportPage {
+  background-color: #f4f7fa;
+  padding: 2rem;
+}
+
+.reportHeader {
+  margin-bottom: 2rem;
+}
+
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.kpiCard {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s;
+}
+
+.kpiCard:hover {
+  transform: translateY(-5px);
+}
+
+.kpiCardTitle {
+  font-size: 1rem;
+  color: #6c757d;
+  margin-bottom: 0.5rem;
+}
+
+.kpiCardValue {
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #343a40;
+}
+
+.kpiCardIcon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  color: #007bff;
+}
+
+.funnelContainer {
+  margin-top: 2rem;
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.urgentTasksContainer {
+  margin-top: 2rem;
+}

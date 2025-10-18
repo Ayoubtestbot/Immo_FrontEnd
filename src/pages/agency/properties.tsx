@@ -19,6 +19,7 @@ import LinkLeadModal from '@/components/LinkLeadModal';
 import CustomDropdownMenu from '@/components/CustomDropdownMenu';
 import AddProjectModal from '@/components/AddProjectModal';
 import LinkProjectModal from '@/components/LinkProjectModal';
+import AddShowingModal from '@/components/AddShowingModal';
 import DuplicatePropertyModal from '@/components/DuplicatePropertyModal';
 
 
@@ -26,6 +27,7 @@ interface PropertiesPageProps {
   properties: PropertyWithDetails[];
   projects: Project[];
   leads: Lead[];
+  agents: User[];
   filterPropertyNumber: string;
   filterCity: string;
   filterType: PropertyType | 'ALL';
@@ -38,7 +40,7 @@ interface PropertiesPageProps {
   agencyCurrency: string;
 }
 
-const PropertiesPage = ({ properties, projects, leads, filterPropertyNumber: initialFilterPropertyNumber, filterCity: initialFilterCity, filterType: initialFilterType, filterMinPrice: initialFilterMinPrice, filterMaxPrice: initialFilterMaxPrice, filterProjectId: initialFilterProjectId, filterEtage: initialFilterEtage, filterTranche: initialFilterTranche, isTrialActive, agencyCurrency }: PropertiesPageProps) => {
+const PropertiesPage = ({ properties, projects, leads, agents, filterPropertyNumber: initialFilterPropertyNumber, filterCity: initialFilterCity, filterType: initialFilterType, filterMinPrice: initialFilterMinPrice, filterMaxPrice: initialFilterMaxPrice, filterProjectId: initialFilterProjectId, filterEtage: initialFilterEtage, filterTranche: initialFilterTranche, isTrialActive, agencyCurrency }: PropertiesPageProps) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAddProjectModal, setShowAddProjectModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -46,6 +48,7 @@ const PropertiesPage = ({ properties, projects, leads, filterPropertyNumber: ini
   const [showLinkProjectModal, setShowLinkProjectModal] = useState(false);
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   const [showLinkLeadModal, setShowLinkLeadModal] = useState(false);
+  const [showAddShowingModal, setShowAddShowingModal] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<PropertyWithDetails | null>(null);
   const [clientProperties, setClientProperties] = useState(properties);
   const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
@@ -386,6 +389,7 @@ const PropertiesPage = ({ properties, projects, leads, filterPropertyNumber: ini
           handleClose={() => setShowViewModal(false)}
           property={selectedProperty}
           agencyCurrency={agencyCurrency}
+          onAddShowing={() => setShowAddShowingModal(true)}
         />
       )}
 
@@ -414,6 +418,14 @@ const PropertiesPage = ({ properties, projects, leads, filterPropertyNumber: ini
           refreshData();
           setSelectedProperties([]);
         }}
+      />
+
+      <AddShowingModal
+        show={showAddShowingModal}
+        handleClose={() => setShowAddShowingModal(false)}
+        propertyId={selectedProperty?.id || ''}
+        agents={agents}
+        onShowingAdded={refreshData}
       />
 
       {selectedProperty && (
@@ -494,7 +506,7 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
     whereClause.tranche = { contains: filterTranche };
   }
 
-  const [properties, projects, leads, trialIsActive, agency] = await Promise.all([
+  const [properties, projects, leads, agents, trialIsActive, agency] = await Promise.all([
     prisma.property.findMany({
       where: whereClause,
       include: {
@@ -516,6 +528,11 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
         agencyId: agencyId,
       },
     }),
+    prisma.user.findMany({
+      where: {
+        agencyId: agencyId,
+      },
+    }),
     isTrialActive(agencyId),
     prisma.agency.findUnique({
         where: { id: agencyId },
@@ -528,6 +545,7 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
       properties: JSON.parse(JSON.stringify(properties)),
       projects: JSON.parse(JSON.stringify(projects)),
       leads: JSON.parse(JSON.stringify(leads)),
+      agents: JSON.parse(JSON.stringify(agents)),
       filterPropertyNumber,
       filterCity,
       filterType,

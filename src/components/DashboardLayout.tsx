@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FiGrid, FiUsers, FiArchive, FiTag, FiSettings, FiLogOut, FiUser, FiMenu, FiCalendar, FiBell } from 'react-icons/fi';
+import { FiGrid, FiUsers, FiArchive, FiTag, FiSettings, FiLogOut, FiUser, FiMenu, FiCalendar, FiBell, FiTrendingUp } from 'react-icons/fi';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { signOut, useSession } from 'next-auth/react';
@@ -34,6 +34,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     { href: '/agency/projects', icon: <FiTag />, label: 'Projets' },
     { href: '/agency/calendar', icon: <FiCalendar />, label: 'Calendrier' },
     { href: '/agency/tickets', icon: <FiTag />, label: 'Tickets' },
+    { href: '/agency/report', icon: <FiTrendingUp />, label: 'Rapport' },
   ];
 
   const adminNavItems = [

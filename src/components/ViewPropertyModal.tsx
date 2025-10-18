@@ -9,6 +9,7 @@ type ViewPropertyModalProps = {
   handleClose: () => void;
   property: PropertyWithDetails | null;
   agencyCurrency: string;
+  onAddShowing: () => void;
 };
 
 const ViewPropertyModal = ({ show, handleClose, property, agencyCurrency }: ViewPropertyModalProps) => {
@@ -75,6 +76,9 @@ const ViewPropertyModal = ({ show, handleClose, property, agencyCurrency }: View
         </ListGroup>
       </Modal.Body>
       <Modal.Footer>
+        <Button variant="primary" onClick={onAddShowing}>
+          Add Showing
+        </Button>
         <Button variant="secondary" onClick={handleClose}>
           Fermer
         </Button>
