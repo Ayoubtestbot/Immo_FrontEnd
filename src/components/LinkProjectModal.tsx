@@ -59,7 +59,7 @@ const LinkProjectModal = ({ show, handleClose, projects, propertyIds, onProjectL
         <Form onSubmit={handleSubmit}>
           <Form.Group className="mb-3">
             <Form.Label>Project</Form.Label>
-            <Form.Select value={selectedProject} onChange={(e) => setSelectedProject(e.target.value)} required>
+            <Form.Select value={selectedProject} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedProject(e.target.value)} required>
               <option value="">Select a project</option>
               {projectOptions.map(option => (
                 <option key={option.value} value={option.value}>{option.label}</option>
