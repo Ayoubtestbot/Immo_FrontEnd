@@ -7,6 +7,7 @@ import { Row, Col } from 'react-bootstrap';
 import KpiCard from '@/components/KpiCard';
 import styles from '@/styles/Report.module.css';
 import { FiUsers, FiCheckCircle, FiTrendingUp, FiClock, FiHome, FiDollarSign, FiEye } from 'react-icons/fi';
+import { leadStatusTranslations } from '@/utils/leadStatusTranslations';
 import CustomFunnelChart from '@/components/CustomFunnelChart';
 
 const formatDuration = (milliseconds: number) => {
@@ -80,6 +81,11 @@ const ReportPage = ({ data }: { data: any }) => {
 
     const COLORS = ['#0088FE', '#FF8042'];
 
+    const funnelChartData = data.funnelData.map((item: any) => ({
+      name: leadStatusTranslations[item.status] || item.status,
+      value: item._count.status,
+    }));
+
     return (
       <div className={styles.reportPage}>
         <div className={styles.reportHeader}>
@@ -105,7 +111,7 @@ const ReportPage = ({ data }: { data: any }) => {
         </div>
         <div className={styles.funnelContainer}>
           <h3>Funnel de conversion</h3>
-          <CustomFunnelChart />
+          <CustomFunnelChart data={funnelChartData} />
         </div>
         <div className="mt-4">
           <h4>KPIs par agent</h4>

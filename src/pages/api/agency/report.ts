@@ -124,6 +124,19 @@ async function handler(req: NextApiRequest, res: NextApiResponse, session: any) 
         },
       });
 
+      const funnelData = await prisma.lead.groupBy({
+        by: ['status'],
+        where: {
+          agencyId: agencyId,
+          status: {
+            in: ['NEW', 'CONTACTED', 'QUALIFIED', 'APPOINTMENT_SCHEDULED', 'CONVERTED'],
+          },
+        },
+        _count: {
+          status: true,
+        },
+      });
+
       const urgentTasks = allLeads.filter(lead => lead.isUrgent);
 
       res.status(200).json({
@@ -135,6 +148,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, session: any) 
         overallSalesVolume,
         overallNumberOfShowings,
         agentKpis,
+        funnelData, // Add funnelData to the response
         urgentTasks,
       });
     } else {
