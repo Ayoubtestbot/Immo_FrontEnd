@@ -227,7 +227,7 @@ const DuplicatePropertyModal = ({ show, handleClose, property, onPropertyDuplica
               </Col>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Numéro d'appartement</Form.Label>
+                  <Form.Label>Numéro d&apos;appartement</Form.Label>
                   <Form.Control type="text" value={numAppartement} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNumAppartement(e.target.value)} />
                 </Form.Group>
               </Col>

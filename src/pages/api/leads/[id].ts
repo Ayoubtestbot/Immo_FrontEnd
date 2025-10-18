@@ -46,6 +46,7 @@ export default async function handler(
     }
 
     try {
+      await prisma.lead.delete({
         where: { id },
       });
       return res.status(204).end();

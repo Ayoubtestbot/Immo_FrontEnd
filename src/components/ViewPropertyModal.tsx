@@ -56,7 +56,7 @@ const ViewPropertyModal = ({ show, handleClose, property, agencyCurrency }: View
             <p><strong>Tranche:</strong> {property.tranche || '-'}</p>
           </Col>
           <Col md={6}>
-            <p><strong>Numéro d'appartement:</strong> {property.numAppartement || '-'}</p>
+            <p><strong>Numéro d&apos;appartement:</strong> {property.numAppartement || '-'}</p>
           </Col>
         </Row>
         <p><strong>Description:</strong></p>

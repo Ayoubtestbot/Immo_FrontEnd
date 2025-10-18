@@ -83,7 +83,7 @@ const ReportPage = ({ data }: { data: any }) => {
     return (
       <div className={styles.reportPage}>
         <div className={styles.reportHeader}>
-          <h1>Rapport de l'agence</h1>
+          <h1>Rapport de l&apos;agence</h1>
         </div>
         <div className={styles.kpiGrid}>
           <KpiCard title="Nombre total de prospects" value={data.totalLeads} icon={<FiUsers />} />
