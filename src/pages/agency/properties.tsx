@@ -304,7 +304,7 @@ const PropertiesPage = ({ properties, projects, leads, agents, filterPropertyNum
       <Table hover responsive>
         <thead>
           <tr>
-            <th><Form.Check type="checkbox" onChange={(e) => {
+            <th><Form.Check type="checkbox" onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               if (e.target.checked) {
                 setSelectedProperties(clientProperties.map((p) => p.id));
               } else {
@@ -328,7 +328,7 @@ const PropertiesPage = ({ properties, projects, leads, agents, filterPropertyNum
         <tbody>
           {clientProperties.map((property) => (
             <tr key={property.id} className={!isTrialActive ? 'text-muted' : ''}>
-              <td><Form.Check type="checkbox" checked={selectedProperties.includes(property.id)} onChange={(e) => {
+              <td><Form.Check type="checkbox" checked={selectedProperties.includes(property.id)} onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 if (e.target.checked) {
                   setSelectedProperties([...selectedProperties, property.id]);
                 } else {
