@@ -58,7 +58,7 @@ const AddShowingModal = ({ show, handleClose, propertyId, agents, onShowingAdded
         <Form onSubmit={handleSubmit}>
           <Form.Group className="mb-3">
             <Form.Label>Agent</Form.Label>
-            <Form.Select value={agentId} onChange={(e) => setAgentId(e.target.value)} required>
+            <Form.Select value={agentId} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setAgentId(e.target.value)} required>
               <option value="">Select an agent</option>
               {agents.map(agent => (
                 <option key={agent.id} value={agent.id}>{agent.name}</option>
@@ -67,7 +67,7 @@ const AddShowingModal = ({ show, handleClose, propertyId, agents, onShowingAdded
           </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label>Showing Date</Form.Label>
-            <Form.Control type="datetime-local" value={showingDate} onChange={(e) => setShowingDate(e.target.value)} required />
+            <Form.Control type="datetime-local" value={showingDate} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setShowingDate(e.target.value)} required />
           </Form.Group>
           <div className="d-flex justify-content-end mt-4">
             <Button variant="secondary" onClick={handleClose} className="me-2">
