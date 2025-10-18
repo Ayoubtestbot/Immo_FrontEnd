@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { GetServerSideProps } from 'next';
 import { Prisma, Project } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { withAuth } from '@/lib/withAuth';
 import { isTrialActive } from '@/lib/subscription';
 import { propertyStatusTranslations } from '@/utils/propertyStatusTranslations';
