@@ -6,7 +6,7 @@ import { Prisma, Project } from '@prisma/client';
 import { withAuth } from '@/lib/withAuth';
 import { isTrialActive } from '@/lib/subscription';
 import { propertyStatusTranslations } from '@/utils/propertyStatusTranslations';
-import { Lead, PropertyType } from '@prisma/client';
+import { Lead, PropertyType, User } from '@prisma/client';
 import { PropertyWithDetails } from '@/types';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Button, Row, Col, Form, Table, Dropdown, Alert, Card, Accordion } from 'react-bootstrap';
