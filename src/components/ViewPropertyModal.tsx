@@ -12,7 +12,7 @@ type ViewPropertyModalProps = {
   onAddShowing: () => void;
 };
 
-const ViewPropertyModal = ({ show, handleClose, property, agencyCurrency }: ViewPropertyModalProps) => {
+const ViewPropertyModal = ({ show, handleClose, property, agencyCurrency, onAddShowing }: ViewPropertyModalProps) => {
   if (!property) {
     return null;
   }

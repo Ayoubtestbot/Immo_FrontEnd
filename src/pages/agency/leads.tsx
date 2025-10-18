@@ -178,7 +178,7 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
   };
 
   const handleDeleteLead = async (leadId: string) => {
-    if (window.confirm('Etes-vous sur de vouloir supprimer ce prospect ?')) {
+    if (window.confirm('Etes-vous sûr de vouloir supprimer ce prospect ?')) {
       try {
         const res = await fetch(`/api/leads/${leadId}`, {
           method: 'DELETE',
@@ -536,6 +536,17 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
         onClose={() => setShowBulkStatusChangeModal(false)}
         selectedLeadIds={selectedLeadIds}
         onLeadsUpdated={() => {
+          refreshData();
+          setSelectedLeadIds([]); // Clear selection after bulk action
+        }}
+      />
+
+      {/* Bulk Delete Modal */}
+      <BulkDeleteModal
+        show={showBulkDeleteModal}
+        onClose={() => setShowBulkDeleteModal(false)}
+        selectedLeadIds={selectedLeadIds}
+        onLeadsDeleted={() => {
           refreshData();
           setSelectedLeadIds([]); // Clear selection after bulk action
         }}
