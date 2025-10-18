@@ -189,43 +189,43 @@ const AgencyDashboard = (props: AgencyDashboardProps) => {
         {userRole === UserRole.AGENCY_OWNER && (
                               <>
                                 <Col md={4} className="mb-4">
-                                  <KpiCard title="Prospects totaux (Agence)" value={totalLeads} icon={<FaBullseye />} trend={totalLeadsTrend} iconColor="#0d6efd" />
+                                  <KpiCard title="Prospects totaux (Agence)" value={totalLeads} icon={<FaBullseye />} />
                                 </Col>
                                 <Col md={4} className="mb-4">
-                                  <KpiCard title="Prospects à contacter" value={leadsToContact} icon={<FaPhone />} iconColor="#dc3545" />
+                                  <KpiCard title="Prospects à contacter" value={leadsToContact} icon={<FaPhone />} />
                                 </Col>
                                 <Col md={4} className="mb-4">
-                                  <KpiCard title="Prospects contactés" value={leadsContacted} icon={<FaUsers />} iconColor="#198754" />
+                                  <KpiCard title="Prospects contactés" value={leadsContacted} icon={<FaUsers />} />
                                 </Col>
                                 <Col md={4} className="mb-4">
-                                  <KpiCard title="Nouveaux prospects (Aujourd'hui)" value={leadsToday} icon={<FaPlus />} trend={leadsTodayTrend} iconColor="#fd7e14" />
+                                  <KpiCard title="Nouveaux prospects (Aujourd'hui)" value={leadsToday} icon={<FaPlus />} />
                                 </Col>
                                 <Col md={4} className="mb-4">
-                                  <KpiCard title="Taux de conversion (Agence)" value={conversionRate} suffix="%" icon={<FaChartLine />} trend={conversionRateTrend} iconColor="#6f42c1" />
+                                  <KpiCard title="Taux de conversion (Agence)" value={conversionRate} icon={<FaChartLine />} />
                                 </Col>
                                 <Col md={4} className="mb-4">
-                                  <KpiCard title="Propriétés gérées" value={totalProperties} icon={<FaBuilding />} iconColor="#A0522D" />
+                                  <KpiCard title="Propriétés gérées" value={totalProperties} icon={<FaBuilding />} />
                                 </Col>
                               </>        )}
         {(userRole === UserRole.AGENCY_MEMBER || userRole === UserRole.AGENCY_SUPER_AGENT) && (
           <>
             <Col md={4} className="mb-4">
-              <KpiCard title={userRole === UserRole.AGENCY_MEMBER ? "Mes prospects à contacter" : "Prospects à contacter"} value={leadsToContact} icon={<FaPhone />} iconColor="#dc3545" />
+              <KpiCard title={userRole === UserRole.AGENCY_MEMBER ? "Mes prospects à contacter" : "Prospects à contacter"} value={leadsToContact} icon={<FaPhone />} />
             </Col>
             <Col md={4} className="mb-4">
-              <KpiCard title={userRole === UserRole.AGENCY_MEMBER ? "Mes prospects à relancer" : "Prospects à relancer"} value={leadsToFollowUp} icon={<FaSyncAlt />} iconColor="#fd7e14" />
+              <KpiCard title={userRole === UserRole.AGENCY_MEMBER ? "Mes prospects à relancer" : "Prospects à relancer"} value={leadsToFollowUp} icon={<FaSyncAlt />} />
             </Col>
             <Col md={4} className="mb-4">
-              <KpiCard title={userRole === UserRole.AGENCY_MEMBER ? "Mes RV aujourd'hui" : "RV aujourd'hui"} value={appointmentsToday} icon={<FaCalendarDay />} iconColor="#0d6efd" />
+              <KpiCard title={userRole === UserRole.AGENCY_MEMBER ? "Mes RV aujourd'hui" : "RV aujourd'hui"} value={appointmentsToday} icon={<FaCalendarDay />} />
             </Col>
              <Col md={4} className="mb-4">
-              <KpiCard title={userRole === UserRole.AGENCY_MEMBER ? "Mes prospects" : "Prospects"} value={totalLeads} icon={<FaUsers />} trend={totalLeadsTrend} iconColor="#198754" />
+              <KpiCard title={userRole === UserRole.AGENCY_MEMBER ? "Mes prospects" : "Prospects"} value={totalLeads} icon={<FaUsers />} />
             </Col>
             <Col md={4} className="mb-4">
-              <KpiCard title="Nouveaux prospects (Aujourd'hui)" value={leadsToday} icon={<FaPlus />} trend={leadsTodayTrend} iconColor="#6f42c1" />
+              <KpiCard title="Nouveaux prospects (Aujourd'hui)" value={leadsToday} icon={<FaPlus />} />
             </Col>
             <Col md={4} className="mb-4">
-              <KpiCard title={userRole === UserRole.AGENCY_MEMBER ? "Mon taux de conversion" : "Taux de conversion"} value={conversionRate} suffix="%" icon={<FaChartLine />} trend={conversionRateTrend} iconColor="#A0522D" />
+              <KpiCard title={userRole === UserRole.AGENCY_MEMBER ? "Mon taux de conversion" : "Taux de conversion"} value={conversionRate} icon={<FaChartLine />} />
             </Col>
           </>
         )}

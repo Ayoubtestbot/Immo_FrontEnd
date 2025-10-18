@@ -69,22 +69,22 @@ const AdminDashboard = ({
 
       <Row className="mt-4">
         <Col md={4} className="mb-4">
-          <KpiCard title="Agences enregistrées" value={totalAgencies} icon={<FaBuilding />} iconColor="#0d6efd" />
+          <KpiCard title="Agences enregistrées" value={totalAgencies} icon={<FaBuilding />} />
         </Col>
         <Col md={4} className="mb-4">
-          <KpiCard title="Abonnements actifs" value={totalSubscriptions} icon={<FaCheckCircle />} iconColor="#198754" />
+          <KpiCard title="Abonnements actifs" value={totalSubscriptions} icon={<FaCheckCircle />} />
         </Col>
         <Col md={4} className="mb-4">
-          <KpiCard title="Prospects totaux" value={totalLeads} icon={<FaUsers />} iconColor="#fd7e14" />
+          <KpiCard title="Prospects totaux" value={totalLeads} icon={<FaUsers />} />
         </Col>
         <Col md={4} className="mb-4">
-          <KpiCard title="Propriétés gérées" value={totalProperties} icon={<FaHome />} iconColor="#A0522D" />
+          <KpiCard title="Propriétés gérées" value={totalProperties} icon={<FaHome />} />
         </Col>
         <Col md={4} className="mb-4">
-          <KpiCard title="Tickets ouverts" value={totalTickets} icon={<FaTicketAlt />} iconColor="#6f42c1" />
+          <KpiCard title="Tickets ouverts" value={totalTickets} icon={<FaTicketAlt />} />
         </Col>
         <Col md={4} className="mb-4">
-          <KpiCard title="Revenu Total" value={totalIncome} prefix="MAD " icon={<FaMoneyBillWave />} iconColor="#dc3545" />
+          <KpiCard title="Revenu Total" value={totalIncome} icon={<FaMoneyBillWave />} />
         </Col>
       </Row>
 
