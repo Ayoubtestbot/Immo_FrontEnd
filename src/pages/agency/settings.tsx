@@ -169,7 +169,7 @@ const SettingsPage = ({ user, agency }: SettingsPageProps) => {
                   <p><strong>Plan:</strong> {agency.subscription.plan.name}</p>
                   <p><strong>Limite de prospects:</strong> {agency.subscription.plan.prospectsLimit === -1 ? 'Illimité' : agency.subscription.plan.prospectsLimit}</p>
                   <p><strong>Limite d&apos;utilisateurs:</strong> {agency.subscription.plan.usersLimit === -1 ? 'Illimité' : agency.subscription.plan.usersLimit}</p>
-                  <p><strong>Limite de propriétés:</strong> {agency.subscription.plan.propertiesLimit === -1 ? 'Illimité' : agency.subscription.plan.propertiesLimit}</p>
+                  <p><strong>Limite de projets:</strong> {agency.subscription.plan.projectsLimit === -1 ? 'Illimité' : agency.subscription.plan.projectsLimit}</p>
                   {agency.subscription.endDate && <p><strong>Date de fin:</strong> {format(new Date(agency.subscription.endDate), 'dd/MM/yyyy')}</p>}
                   <Button className="btn-primary">Mettre à niveau le plan</Button>
                 </>
