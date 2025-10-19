@@ -38,16 +38,16 @@ async function main() {
         price: 0.00,
         prospectsLimit: 10,
         usersLimit: 1,
-        propertiesLimit: 3,
-        features: 'Gestion de 10 prospects, 3 propriétés, 1 utilisateur',
+        projectsLimit: 1,
+        features: 'Gestion de 10 prospects, 1 projet, 1 utilisateur',
     },
     create: {
       name: 'Free Trial',
       price: 0.00,
       prospectsLimit: 10,
       usersLimit: 1,
-      propertiesLimit: 3,
-      features: 'Gestion de 10 prospects, 3 propriétés, 1 utilisateur',
+      projectsLimit: 1,
+      features: 'Gestion de 10 prospects, 1 projet, 1 utilisateur',
     },
   });
 
@@ -57,16 +57,16 @@ async function main() {
         price: 49.00,
         prospectsLimit: 50,
         usersLimit: 5,
-        propertiesLimit: 10,
-        features: 'Gestion de 50 prospects, 10 propriétés, 5 utilisateurs, Accès aux fonctionnalités de base, Support par email',
+        projectsLimit: 5,
+        features: 'Gestion de 50 prospects, 5 projets, 5 utilisateurs, Accès aux fonctionnalités de base, Support par email',
     },
     create: {
       name: 'Starter',
       price: 49.00,
       prospectsLimit: 50,
       usersLimit: 5,
-      propertiesLimit: 10,
-      features: 'Gestion de 50 prospects, 10 propriétés, 5 utilisateurs, Accès aux fonctionnalités de base, Support par email',
+      projectsLimit: 5,
+      features: 'Gestion de 50 prospects, 5 projets, 5 utilisateurs, Accès aux fonctionnalités de base, Support par email',
     },
   });
 
@@ -76,16 +76,16 @@ async function main() {
         price: 99.00,
         prospectsLimit: -1,
         usersLimit: -1,
-        propertiesLimit: 100,
-        features: 'Gestion illimitée de prospects, 100 propriétés, utilisateurs illimités, Rapports avancés, Intégration CRM, Support prioritaire',
+        projectsLimit: 10,
+        features: 'Gestion illimitée de prospects, 10 projets, utilisateurs illimités, Rapports avancés, Intégration CRM, Support prioritaire',
     },
     create: {
       name: 'Pro',
       price: 99.00,
       prospectsLimit: -1,
       usersLimit: -1,
-      propertiesLimit: 100,
-      features: 'Gestion illimitée de prospects, 100 propriétés, utilisateurs illimités, Rapports avancés, Intégration CRM, Support prioritaire',
+      projectsLimit: 10,
+      features: 'Gestion illimitée de prospects, 10 projets, utilisateurs illimités, Rapports avancés, Intégration CRM, Support prioritaire',
     },
   });
 
@@ -95,7 +95,7 @@ async function main() {
         price: 0.00, // Price on quote
         prospectsLimit: -1,
         usersLimit: -1,
-        propertiesLimit: -1,
+        projectsLimit: -1,
         features: 'Accès complet à toutes les fonctionnalités, Support dédié 24/7, Personnalisation et intégration sur mesure, Formation de l\'équipe',
     },
     create: {
@@ -103,7 +103,7 @@ async function main() {
       price: 0.00, // Price on quote
       prospectsLimit: -1,
       usersLimit: -1,
-      propertiesLimit: -1,
+      projectsLimit: -1,
       features: 'Accès complet à toutes les fonctionnalités, Support dédié 24/7, Personnalisation et intégration sur mesure, Formation de l\'équipe',
     },
   });
