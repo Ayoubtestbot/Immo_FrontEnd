@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import { signOut, useSession } from 'next-auth/react';
 import { Dropdown, Badge } from 'react-bootstrap';
 import { UserRole } from '@prisma/client';
-import styles from '../styles/NewDashboard.module.css';
+import styles from '../styles/ModernDashboard.module.css';
 import Image from 'next/image';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -15,10 +15,15 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const { data: session } = useSession();
   const router = useRouter();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const { notifications, unreadCount, markAsRead } = useNotifications();
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
+  };
+
+  const toggleMobileSidebar = () => {
+    setIsMobileSidebarOpen(!isMobileSidebarOpen);
   };
 
   const handleNotificationDropdownToggle = (isOpen: boolean) => {
@@ -44,7 +49,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className={styles.layout}>
-      <div className={`${styles.sidebar} ${isSidebarCollapsed ? styles.sidebarCollapsed : ''}`}>
+      <div className={`${styles.sidebar} ${isSidebarCollapsed ? styles.sidebarCollapsed : ''} ${isMobileSidebarOpen ? styles.sidebarOpen : ''}`}>
         <div className={styles.sidebarHeader}>
           <Image
             src={isSidebarCollapsed ? "/Logo_Only.png" : "/Logo_page.png"}
@@ -56,7 +61,12 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         </div>
         <nav className={styles.sidebarNav}>
           {navItems.map((item) => (
-            <Link key={item.href} href={item.href} className={`${styles.sidebarLink} ${router.pathname === item.href ? styles.active : ''}`}>
+            <Link 
+              key={item.href} 
+              href={item.href} 
+              className={`${styles.sidebarLink} ${router.pathname === item.href ? styles.active : ''}`}
+              onClick={() => setIsMobileSidebarOpen(false)}
+            >
               {item.icon}
               <span>{item.label}</span>
               <span className={styles.tooltip}>{item.label}</span>
@@ -65,8 +75,14 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 
           {session?.user?.role === UserRole.AGENCY_OWNER && (
             <>
+              <div className={styles.sectionDivider}></div>
               {adminNavItems.map((item) => (
-                <Link key={item.href} href={item.href} className={`${styles.sidebarLink} ${router.pathname === item.href ? styles.active : ''}`}>
+                <Link 
+                  key={item.href} 
+                  href={item.href} 
+                  className={`${styles.sidebarLink} ${router.pathname === item.href ? styles.active : ''}`}
+                  onClick={() => setIsMobileSidebarOpen(false)}
+                >
                   {item.icon}
                   <span>{item.label}</span>
                   <span className={styles.tooltip}>{item.label}</span>
@@ -77,33 +93,33 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         </nav>
 
         <div className={styles.userProfile}>
-            <Dropdown drop="up">
-                <Dropdown.Toggle as="div" className="d-flex align-items-center" style={{ cursor: 'pointer' }}>
-                    <div className={styles.userProfileImg}>
-                        {session?.user?.image ? (
-                            <Image src={session.user.image} alt={session.user.name || 'User'} width={40} height={40} style={{ borderRadius: '50%' }} />
-                        ) : (
-                            <FiUser />
-                        )}
-                    </div>
-                    <div className={styles.userProfileInfo}>
-                        <span>{session?.user?.name}</span>
-                        <small>{session?.user?.email}</small>
-                    </div>
-                </Dropdown.Toggle>
-<Dropdown.Menu popperConfig={{ strategy: 'fixed' }}>
-                    <Dropdown.Item onClick={() => signOut({ callbackUrl: '/' })}>
-                        <FiLogOut className="me-2" />
-                        Déconnexion
-                    </Dropdown.Item>
-                </Dropdown.Menu>
-            </Dropdown>
+          <Dropdown drop="up">
+            <Dropdown.Toggle as="div" className="d-flex align-items-center">
+              <div className={styles.userProfileImg}>
+                {session?.user?.image ? (
+                  <Image src={session.user.image} alt={session.user.name || 'User'} width={40} height={40} style={{ borderRadius: '50%' }} />
+                ) : (
+                  <FiUser />
+                )}
+              </div>
+              <div className={styles.userProfileInfo}>
+                <span>{session?.user?.name}</span>
+                <small>{session?.user?.email}</small>
+              </div>
+            </Dropdown.Toggle>
+            <Dropdown.Menu popperConfig={{ strategy: 'fixed' }}>
+              <Dropdown.Item onClick={() => signOut({ callbackUrl: '/' })}>
+                <FiLogOut className="me-2" />
+                Déconnexion
+              </Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown>
         </div>
       </div>
 
       <div className={`${styles.mainContent} ${isSidebarCollapsed ? styles.mainContentCollapsed : ''}`}>
         <div className={styles.header}>
-          <button onClick={toggleSidebar} className={styles.sidebarMobileToggle}>
+          <button onClick={window.innerWidth > 968 ? toggleSidebar : toggleMobileSidebar} className={styles.sidebarMobileToggle}>
             <FiMenu />
           </button>
           <div className="ms-auto d-flex align-items-center">
