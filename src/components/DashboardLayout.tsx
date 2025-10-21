@@ -26,6 +26,14 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     setIsMobileSidebarOpen(!isMobileSidebarOpen);
   };
 
+  const handleToggle = () => {
+    if (typeof window !== 'undefined' && window.innerWidth > 968) {
+      toggleSidebar();
+    } else {
+      toggleMobileSidebar();
+    }
+  };
+
   const handleNotificationDropdownToggle = (isOpen: boolean) => {
     if (isOpen && unreadCount > 0) {
       markAsRead();
@@ -119,7 +127,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 
       <div className={`${styles.mainContent} ${isSidebarCollapsed ? styles.mainContentCollapsed : ''}`}>
         <div className={styles.header}>
-          <button onClick={window.innerWidth > 968 ? toggleSidebar : toggleMobileSidebar} className={styles.sidebarMobileToggle}>
+          <button onClick={handleToggle} className={styles.sidebarMobileToggle}>
             <FiMenu />
           </button>
           <div className="ms-auto d-flex align-items-center">
