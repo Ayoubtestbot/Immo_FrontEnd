@@ -1,11 +1,21 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
-import { FaRocket } from 'react-icons/fa';
-import styles from '@/styles/Landing.module.css';
+import { FaRocket, FaBars, FaTimes } from 'react-icons/fa';
+import styles from '@/styles/ModernHeader.module.css';
 
 const Header = () => {
   const { data: session, status } = useSession();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const getDashboardUrl = () => {
     if (!session?.user) return '/login';
@@ -15,36 +25,58 @@ const Header = () => {
   };
 
   return (
-    <header className={styles.header}>
-      <div className={styles.logo}>
-        <Link href="/" legacyBehavior>
-          <a>
-            <FaRocket className="me-2" size={24} />
-            LeadEstate
-          </a>
-        </Link>
-      </div>
-      <nav className={styles.nav}>
-        <Link href="/#services" legacyBehavior><a>Services</a></Link>
-        <Link href="/#pricing" legacyBehavior><a>Tarifs</a></Link>
-        <Link href="/#features" legacyBehavior><a>Fonctionnalités</a></Link>
-        <Link href="/#about" legacyBehavior><a>À propos</a></Link>
-        <Link href="/#contact" legacyBehavior><a>Contact</a></Link>
-      </nav>
-      <div>
-        {status === 'loading' && <p>Loading...</p>}
-        {status === 'unauthenticated' && (
-          <>
-            <Link href="/register" legacyBehavior><a className="btn-outline-primary me-2">S&apos;enregistrer</a></Link>
-            <Link href="/login" legacyBehavior><a className="btn-primary">Se connecter</a></Link>
-          </>
-        )}
-        {status === 'authenticated' && (
-          <>
-            <Link href={getDashboardUrl()} legacyBehavior><a className="btn-primary me-2">Tableau de bord</a></Link>
-            <button onClick={() => signOut()} className="btn-primary">Déconnexion</button>
-          </>
-        )}
+    <header className={`${styles.header} ${isScrolled ? styles.scrolled : ''}`}>
+      <div className={styles.container}>
+        <div className={styles.logo}>
+          <Link href="/" className={styles.logoLink}>
+            <div className={styles.logoIcon}>
+              <FaRocket size={24} />
+            </div>
+            <span className={styles.logoText}>LeadEstate</span>
+          </Link>
+        </div>
+
+        <button 
+          className={styles.mobileMenuButton}
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          aria-label="Toggle menu"
+        >
+          {isMobileMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+        </button>
+
+        <nav className={`${styles.nav} ${isMobileMenuOpen ? styles.mobileMenuOpen : ''}`}>
+          <Link href="/#services" className={styles.navLink}>Services</Link>
+          <Link href="/#pricing" className={styles.navLink}>Tarifs</Link>
+          <Link href="/#features" className={styles.navLink}>Fonctionnalités</Link>
+          <Link href="/#about" className={styles.navLink}>À propos</Link>
+          <Link href="/#contact" className={styles.navLink}>Contact</Link>
+        </nav>
+
+        <div className={`${styles.authButtons} ${isMobileMenuOpen ? styles.mobileMenuOpen : ''}`}>
+          {status === 'loading' && (
+            <div className={styles.loadingSpinner}></div>
+          )}
+          {status === 'unauthenticated' && (
+            <>
+              <Link href="/register" className={styles.btnSecondary}>
+                S&apos;enregistrer
+              </Link>
+              <Link href="/login" className={styles.btnPrimary}>
+                Se connecter
+              </Link>
+            </>
+          )}
+          {status === 'authenticated' && (
+            <>
+              <Link href={getDashboardUrl()} className={styles.btnPrimary}>
+                Tableau de bord
+              </Link>
+              <button onClick={() => signOut()} className={styles.btnSecondary}>
+                Déconnexion
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </header>
   );

@@ -8,6 +8,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import '@/styles/custom.css';
 import '@/styles/modern.css';
 import '@/styles/new-design.css';
+import '@/styles/ModernTheme.css';
 import { useEffect } from 'react';
 
 import { NotificationsProvider } from '@/contexts/NotificationsContext';
