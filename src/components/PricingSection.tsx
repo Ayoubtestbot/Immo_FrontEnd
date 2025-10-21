@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { FaFeatherAlt, FaCrown, FaBuilding, FaGift, FaRocket } from 'react-icons/fa';
+import { FaFeatherAlt, FaCrown, FaRocket, FaGift, FaCheck } from 'react-icons/fa';
 import type { Plan } from '@prisma/client';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { PayPalButtons } from '@paypal/react-paypal-js';
-import styles from '@/styles/Landing.module.css';
+import styles from '@/styles/ModernPricing.module.css';
 
 type PricingSectionProps = {
   plans: Plan[];
@@ -22,26 +22,22 @@ const PricingSection = ({ plans }: PricingSectionProps) => {
     return order.indexOf(a.name) - order.indexOf(b.name);
   });
 
-
-
   const getDisplayedPrice = (plan: Plan) => {
     if (isYearly) {
       switch (plan.name) {
         case 'Starter':
-          return { price: 4990, period: '/an' };
+          return { price: 4990, period: '/an', save: '2 mois offerts' };
         case 'Pro':
-          return { price: 7990, period: '/an' };
+          return { price: 7990, period: '/an', save: '2 mois offerts' };
         case 'Entreprise':
-          return { price: 19900, period: '/an' };
+          return { price: 19900, period: '/an', save: '2 mois offerts' };
         default:
-          return { price: plan.price, period: '/mois' };
+          return { price: plan.price, period: '/mois', save: '' };
       }
     } else {
-      return { price: plan.price, period: '/mois' };
+      return { price: plan.price, period: '/mois', save: '' };
     }
   };
-
-
 
   const handleChoosePlan = (planId: string) => {
     if (!session) {
@@ -58,112 +54,167 @@ const PricingSection = ({ plans }: PricingSectionProps) => {
   const getPlanIcon = (planName: string) => {
     switch (planName.toLowerCase()) {
       case 'free trial':
-        return <FaGift size={30} className="mb-3" />;
+        return <FaGift />;
       case 'starter':
-        return <FaFeatherAlt size={30} className="mb-3" />;
+        return <FaFeatherAlt />;
       case 'pro':
-        return <FaCrown size={30} className="mb-3" />;
+        return <FaCrown />;
       case 'entreprise':
-        return <FaRocket size={30} className="mb-3" />;
+        return <FaRocket />;
       default:
-        return <FaFeatherAlt size={30} className="mb-3" />;
+        return <FaFeatherAlt />;
+    }
+  };
+
+  const getPlanGradient = (planName: string) => {
+    switch (planName.toLowerCase()) {
+      case 'free trial':
+        return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+      case 'starter':
+        return 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)';
+      case 'pro':
+        return 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)';
+      case 'entreprise':
+        return 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)';
+      default:
+        return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
     }
   };
 
   return (
     <section id="pricing" className={styles.section}>
-      <h2 className={styles.sectionTitle}>Des tarifs adaptés à chaque agence</h2>
-      <p className="lead text-muted">Choisissez le plan qui correspond à vos ambitions.</p>
+      <div className="modern-container">
+        <div className={styles.sectionHeader}>
+          <h2 className="modern-section-title">Des tarifs adaptés à chaque agence</h2>
+          <p className="modern-section-subtitle">
+            Choisissez le plan qui correspond à vos ambitions et développez votre activité
+          </p>
+        </div>
 
-      <div className="d-flex justify-content-center mb-4">
+        <div className={styles.billingToggle}>
           <button
-            className={!isYearly ? 'btn-primary me-2' : 'btn-outline-primary me-2'}
+            className={!isYearly ? styles.toggleActive : styles.toggleInactive}
             onClick={() => setIsYearly(false)}
           >
             Mensuel
           </button>
           <button
-            className={isYearly ? 'btn-primary' : 'btn-outline-primary'}
+            className={isYearly ? styles.toggleActive : styles.toggleInactive}
             onClick={() => setIsYearly(true)}
           >
             Annuel
+            <span className={styles.saveBadge}>Économisez 15%</span>
           </button>
-      </div>
-
-      <div className="d-flex flex-wrap justify-content-center">
-        {sortedPlans.map((plan) => (
-            <div className={`p-4 m-2 card ${plan.name.toLowerCase() === 'pro' ? 'card-pro' : ''}`} style={{ flex: '1 1 300px', maxWidth: '350px' }} key={plan.id}>
-                {plan.name.toLowerCase() === 'pro' && <span className={styles.mostPopularBadge}>Most Popular</span>}
-                {getPlanIcon(plan.name)}
-                <h4 className="my-0 fw-normal">{plan.name}</h4>
-                <hr />
-                <h1 className="card-title pricing-card-title">
-                    {getDisplayedPrice(plan).price} MAD<small>{getDisplayedPrice(plan).period}</small>
-                </h1>
-                <ul className="list-unstyled mt-3 mb-4">
-                    {plan.features.split(',').map((feature, fIndex) => (
-                    <li key={fIndex} className="mb-2">{feature.trim()}</li>
-                    ))}
-                </ul>
-                <button
-                    className="btn-primary w-100 mt-auto"
-                    onClick={() => handleChoosePlan(plan.id)}
-                >
-                    Choisir ce plan
-                </button>
-            </div>
-        ))}
         </div>
 
-      {/* PayPal Payment Modal */}
-        {selectedPlan && showPayPalModal && (
-            <div className="modal d-block" tabIndex={-1} role="dialog">
-                <div className="modal-dialog" role="document">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h5 className="modal-title">Payer l&apos;abonnement</h5>
-                            <button type="button" className="close" onClick={() => setShowPayPalModal(false)} aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div className="modal-body">
-                            <div className="text-center">
-                                <h4>Vous êtes sur le point de vous abonner au plan {selectedPlan.name} pour {getDisplayedPrice(selectedPlan).price} MAD</h4>
-                                <p>Cliquez sur le bouton PayPal ci-dessous pour finaliser votre paiement.</p>
-                                <PayPalButtons
-                                    style={{ layout: 'vertical' }}
-                                    createOrder={async (data, actions) => {
-                                    const res = await fetch('/api/paypal/create-order', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ amount: selectedPlan.price }),
-                                    });
-                                    const order = await res.json();
-                                    return order.id;
-                                    }}
-                                    onApprove={async (data, actions) => {
-                                    const res = await fetch('/api/paypal/capture-order', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ orderID: data.orderID }),
-                                    });
-                                    const capture = await res.json();
-                                    console.log('Capture result:', capture);
-                                    alert('Paiement réussi !');
-                                    setShowPayPalModal(false);
-                                    }}
-                                    onCancel={() => alert('Paiement annulé.')}
-                                    onError={(err) => {
-                                    console.error('PayPal Error:', err);
-                                    alert('Une erreur est survenue lors du paiement PayPal.');
-                                    }}
-                                />
-                            </div>
-                        </div>
-                    </div>
+        <div className={styles.pricingGrid}>
+          {sortedPlans.map((plan, index) => (
+            <div
+              className={`${styles.pricingCard} ${plan.name.toLowerCase() === 'pro' ? styles.popularCard : ''}`}
+              key={plan.id}
+              style={{ animationDelay: `${index * 0.1}s` }}
+            >
+              {plan.name.toLowerCase() === 'pro' && (
+                <div className={styles.popularBadge}>
+                  <FaCrown size={14} />
+                  <span>Le plus populaire</span>
                 </div>
+              )}
+
+              <div className={styles.cardHeader}>
+                <div className={styles.planIcon} style={{ background: getPlanGradient(plan.name) }}>
+                  {getPlanIcon(plan.name)}
+                </div>
+                <h3 className={styles.planName}>{plan.name}</h3>
+              </div>
+
+              <div className={styles.priceContainer}>
+                <div className={styles.price}>
+                  <span className={styles.currency}>MAD</span>
+                  <span className={styles.amount}>{getDisplayedPrice(plan).price}</span>
+                  <span className={styles.period}>{getDisplayedPrice(plan).period}</span>
+                </div>
+                {getDisplayedPrice(plan).save && (
+                  <div className={styles.saveLabel}>{getDisplayedPrice(plan).save}</div>
+                )}
+              </div>
+
+              <ul className={styles.featuresList}>
+                {plan.features.split(',').map((feature, fIndex) => (
+                  <li key={fIndex} className={styles.featureItem}>
+                    <FaCheck className={styles.checkIcon} />
+                    <span>{feature.trim()}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <button
+                className={plan.name.toLowerCase() === 'pro' ? styles.btnPrimary : styles.btnSecondary}
+                onClick={() => handleChoosePlan(plan.id)}
+              >
+                Choisir ce plan
+                <FaRocket size={16} />
+              </button>
             </div>
-        )}
+          ))}
+        </div>
+      </div>
+
+      {selectedPlan && showPayPalModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowPayPalModal(false)}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>Finaliser votre abonnement</h3>
+              <button 
+                className={styles.modalClose}
+                onClick={() => setShowPayPalModal(false)}
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              <div className={styles.planSummary}>
+                <h4>Plan {selectedPlan.name}</h4>
+                <div className={styles.summaryPrice}>
+                  {getDisplayedPrice(selectedPlan).price} MAD{getDisplayedPrice(selectedPlan).period}
+                </div>
+              </div>
+              <p className={styles.paymentInstructions}>
+                Cliquez sur le bouton PayPal ci-dessous pour finaliser votre paiement de manière sécurisée.
+              </p>
+              <PayPalButtons
+                style={{ layout: 'vertical' }}
+                createOrder={async (data, actions) => {
+                  const res = await fetch('/api/paypal/create-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount: selectedPlan.price }),
+                  });
+                  const order = await res.json();
+                  return order.id;
+                }}
+                onApprove={async (data, actions) => {
+                  const res = await fetch('/api/paypal/capture-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderID: data.orderID }),
+                  });
+                  const capture = await res.json();
+                  console.log('Capture result:', capture);
+                  alert('Paiement réussi !');
+                  setShowPayPalModal(false);
+                }}
+                onCancel={() => alert('Paiement annulé.')}
+                onError={(err) => {
+                  console.error('PayPal Error:', err);
+                  alert('Une erreur est survenue lors du paiement PayPal.');
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 };
