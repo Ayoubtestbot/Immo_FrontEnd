@@ -325,6 +325,14 @@ async function main() {
 
   console.log('Third test agency and user upserted.');
 
+  const thirdAgencyOwner = await prisma.user.findUnique({ where: { email: 'owner@third.com' } });
+  const thirdSuperAgent1 = await prisma.user.findUnique({ where: { email: 'super1@third.com' } });
+  const thirdAgent1 = await prisma.user.findUnique({ where: { email: 'agent1@third.com' } });
+
+  console.log('Third Agency Owner ID:', thirdAgencyOwner?.id);
+  console.log('Third Super Agent 1 ID:', thirdSuperAgent1?.id);
+  console.log('Third Agent 1 ID:', thirdAgent1?.id);
+
   const entreprisePlan = await prisma.plan.findUnique({ where: { name: 'Entreprise' } });
   if (entreprisePlan) {
     const thirdSubscription = await prisma.subscription.findUnique({ where: { agencyId: thirdAgency.id } });
@@ -345,33 +353,59 @@ async function main() {
     console.log('Entreprise plan not found, skipping subscription creation for third agency.');
   }
 
-  const agent = await prisma.user.findUnique({ where: { email: 'agent@test.com' } });
-  const testAgency = await prisma.agency.findUnique({ where: { name: 'Test Agency' } });
-
-  if (agent && testAgency) {
+  if (thirdAgency && thirdAgencyOwner && thirdSuperAgent1 && thirdAgent1) {
+    const assignableAgents = [thirdAgencyOwner, thirdSuperAgent1, thirdAgent1];
     const firstNames = ['Fatima', 'Mohamed', 'Aicha', 'Ahmed', 'Khadija', 'Youssef', 'Amina', 'Ali', 'Saida', 'Hassan'];
     const lastNames = ['Alaoui', 'Bennani', 'Cherkaoui', 'Daoudi', 'El Fassi', 'Guerrouj', 'Haddad', 'Idrissi', 'Jebli', 'Kacemi'];
     const cities = ['Casablanca', 'Rabat', 'Marrakech', 'Fes', 'Tangier', 'Agadir', 'Meknes', 'Oujda', 'Kenitra', 'Tetouan'];
     const statuses: LeadStatus[] = ['NEW', 'CONTACTED', 'QUALIFIED', 'APPOINTMENT_SCHEDULED', 'FOLLOW_UP', 'RELAUNCHED', 'NEGOTIATION', 'CONVERTED', 'LOST'];
 
-    for (let i = 0; i < 200; i++) {
+    for (let i = 0; i < 100; i++) {
       const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
       const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+      const agentToAssign = assignableAgents[i % assignableAgents.length];
+
       await prisma.lead.create({
         data: {
           firstName,
           lastName,
-          email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}${i}@test.com`,
+          email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}${i}@third.com`,
           phone: `+2126${Math.floor(10000000 + Math.random() * 90000000)}`,
           city: cities[Math.floor(Math.random() * cities.length)],
           country: 'Morocco',
           status: statuses[Math.floor(Math.random() * statuses.length)],
-          agencyId: testAgency.id,
-          assignedToId: agent.id,
+          agencyId: thirdAgency.id,
+          assignedToId: agentToAssign.id,
         },
       });
     }
-    console.log('200 random leads created.');
+    console.log('100 random leads created for Third Test Agency.');
+  }
+
+  // Create 20 random properties for Third Test Agency
+  if (thirdAgency) {
+    const propertyTypes = ['MAISON', 'APPARTEMENT', 'TERRAIN', 'COMMERCE'];
+    const propertyStatuses = ['A_VENDRE', 'EN_LOCATION'];
+    const cities = ['Casablanca', 'Rabat', 'Marrakech', 'Fes', 'Tangier', 'Agadir', 'Meknes', 'Oujda', 'Kenitra', 'Tetouan'];
+
+    for (let i = 0; i < 20; i++) {
+      await prisma.property.create({
+        data: {
+          address: `Rue ${i + 1} de la Liberté`,
+          city: cities[Math.floor(Math.random() * cities.length)],
+          zipCode: `1000${i}`,
+          country: 'Morocco',
+          type: propertyTypes[Math.floor(Math.random() * propertyTypes.length)] as any,
+          price: parseFloat((Math.random() * 1000000 + 100000).toFixed(2)),
+          status: propertyStatuses[Math.floor(Math.random() * propertyStatuses.length)] as any,
+          agencyId: thirdAgency.id,
+          description: `Description for property ${i + 1} in Morocco.`,
+          superficie: parseFloat((Math.random() * 200 + 50).toFixed(2)),
+          etage: Math.floor(Math.random() * 10) + 1,
+        },
+      });
+    }
+    console.log('20 random properties created for Third Test Agency.');
   }
   console.log('Seed script finished.');
 }

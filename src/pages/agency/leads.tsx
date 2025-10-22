@@ -564,6 +564,7 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
   const filterAgentId = agentId ? String(agentId) : 'ALL';
 
   const agencyId = session.user.agencyId;
+  console.log('LeadsPage: agencyId from session:', agencyId);
   if (!agencyId) {
     return {
       redirect: {
@@ -589,6 +590,8 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
   if (session.user.role === UserRole.AGENCY_MEMBER) {
     whereClause.assignedToId = session.user.id;
   }
+
+  console.log('LeadsPage: whereClause:', whereClause);
 
   const [leads, totalLeadsCount, agents, properties, trialIsActive, agency] = await Promise.all([
     prisma.lead.findMany({
@@ -630,6 +633,8 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
     isTrialActive(agencyId),
     prisma.agency.findUnique({ where: { id: agencyId } }),
   ]);
+
+  console.log('LeadsPage: isTrialActive result:', trialIsActive);
 
   const totalPages = Math.ceil(totalLeadsCount / currentSize);
 
