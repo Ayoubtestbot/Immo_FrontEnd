@@ -6,7 +6,7 @@ import { auth } from "@/lib/firebase";
 import { Alert } from 'react-bootstrap';
 import Link from 'next/link';
 import styles from '@/styles/Login.module.css';
-
+import { FaUser, FaEnvelope, FaLock, FaBuilding, FaGoogle, FaArrowRight } from 'react-icons/fa';
 import Image from 'next/image';
 
 const RegisterPage = () => {
@@ -68,61 +68,129 @@ const RegisterPage = () => {
   return (
     <div className={styles.loginContainer}>
       <div className={styles.imageContainer}>
-        <Image src="/Logo_name.png" alt="LeadEstate Logo" width={150} height={150} />
-        <h1 className={styles.title}>LeadEstate</h1>
-        <p className={styles.subtitle}>Rejoignez notre communauté et commencez à gérer vos prospects efficacement.</p>
+        <div className={styles.brandSection}>
+          <div className={styles.logoWrapper}>
+            <Image src="/Logo_name.png" alt="LeadEstate Logo" width={120} height={120} className={styles.logo} />
+          </div>
+          <h1 className={styles.title}>LeadEstate</h1>
+          <p className={styles.subtitle}>Rejoignez des milliers d'agences immobilières qui transforment leur gestion de prospects</p>
+          <div className={styles.features}>
+            <div className={styles.feature}>
+              <span className={styles.checkmark}>✓</span>
+              <span>Essai gratuit de 14 jours</span>
+            </div>
+            <div className={styles.feature}>
+              <span className={styles.checkmark}>✓</span>
+              <span>Aucune carte de crédit requise</span>
+            </div>
+            <div className={styles.feature}>
+              <span className={styles.checkmark}>✓</span>
+              <span>Configuration en 5 minutes</span>
+            </div>
+          </div>
+        </div>
       </div>
       <div className={styles.formContainer}>
-        <form className={styles.form} onSubmit={handleSubmit}>
-          <h2 className="text-center mb-4">Inscription</h2>
-          {error && <Alert variant="danger">{error}</Alert>}
-          <input
-            type="text"
-            placeholder="Votre Nom"
-            className={styles.input}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-          <input
-            type="email"
-            placeholder="Email"
-            className={styles.input}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <input
-            type="password"
-            placeholder="Mot de passe"
-            className={styles.input}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          <input
-            type="text"
-            placeholder="Nom de votre Agence"
-            className={styles.input}
-            value={agencyName}
-            onChange={(e) => setAgencyName(e.target.value)}
-            required
-          />
-          <button type="submit" className={styles.button} disabled={loading}>
-            {loading ? 'Inscription en cours...' : "S&apos;inscrire"}
-          </button>
-          <hr className="my-4" />
-          <button
-            type="button"
-            className={`${styles.button} ${styles.googleButton}`}
-            onClick={handleGoogleSignUp}
-          >
-            S&apos;inscrire avec Google
-          </button>
-          <p className={styles.link}>
-            Déjà un compte ? <Link href="/login" legacyBehavior>Connectez-vous ici</Link>
-          </p>
-        </form>
+        <div className={styles.formWrapper}>
+          <div className={styles.formHeader}>
+            <h2 className={styles.formTitle}>Créer un compte</h2>
+            <p className={styles.formSubtitle}>Commencez votre essai gratuit maintenant</p>
+          </div>
+          <form className={styles.form} onSubmit={handleSubmit}>
+            {error && <Alert variant="danger" className={styles.alert}>{error}</Alert>}
+            
+            <div className={styles.inputGroup}>
+              <label className={styles.label}>Nom complet</label>
+              <div className={styles.inputWrapper}>
+                <FaUser className={styles.inputIcon} />
+                <input
+                  type="text"
+                  placeholder="Jean Dupont"
+                  className={styles.input}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className={styles.inputGroup}>
+              <label className={styles.label}>Adresse e-mail</label>
+              <div className={styles.inputWrapper}>
+                <FaEnvelope className={styles.inputIcon} />
+                <input
+                  type="email"
+                  placeholder="votre@email.com"
+                  className={styles.input}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className={styles.inputGroup}>
+              <label className={styles.label}>Mot de passe</label>
+              <div className={styles.inputWrapper}>
+                <FaLock className={styles.inputIcon} />
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  className={styles.input}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className={styles.inputGroup}>
+              <label className={styles.label}>Nom de votre agence</label>
+              <div className={styles.inputWrapper}>
+                <FaBuilding className={styles.inputIcon} />
+                <input
+                  type="text"
+                  placeholder="Agence Immobilière XYZ"
+                  className={styles.input}
+                  value={agencyName}
+                  onChange={(e) => setAgencyName(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <button type="submit" className={styles.button} disabled={loading}>
+              {loading ? (
+                <>
+                  <span className={styles.spinner}></span>
+                  Inscription en cours...
+                </>
+              ) : (
+                <>
+                  Créer mon compte
+                  <FaArrowRight className={styles.buttonIcon} />
+                </>
+              )}
+            </button>
+
+            <div className={styles.divider}>
+              <span className={styles.dividerText}>ou continuer avec</span>
+            </div>
+
+            <button
+              type="button"
+              className={styles.googleButton}
+              onClick={handleGoogleSignUp}
+            >
+              <FaGoogle className={styles.googleIcon} />
+              Google
+            </button>
+
+            <p className={styles.link}>
+              Déjà un compte ? <Link href="/login" className={styles.linkText}>Connectez-vous ici</Link>
+            </p>
+          </form>
+        </div>
       </div>
     </div>
   );

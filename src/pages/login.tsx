@@ -6,7 +6,7 @@ import { auth } from "@/lib/firebase";
 import Link from 'next/link';
 import { Alert } from 'react-bootstrap';
 import styles from '@/styles/Login.module.css';
-
+import { FaEnvelope, FaLock, FaGoogle, FaArrowRight } from 'react-icons/fa';
 import Image from 'next/image';
 
 const LoginPage = () => {
@@ -86,50 +86,104 @@ const LoginPage = () => {
   return (
     <div className={styles.loginContainer}>
       <div className={styles.imageContainer}>
-        <Image src="/Logo_name.png" alt="LeadEstate Logo" width={150} height={150} />
-        <h1 className={styles.title}>LeadEstate</h1>
-        <p className={styles.subtitle}>Votre partenaire immobilier de confiance</p>
+        <div className={styles.brandSection}>
+          <div className={styles.logoWrapper}>
+            <Image src="/Logo_name.png" alt="LeadEstate Logo" width={120} height={120} className={styles.logo} />
+          </div>
+          <h1 className={styles.title}>LeadEstate</h1>
+          <p className={styles.subtitle}>Transformez vos prospects en clients avec la plateforme CRM #1 pour l'immobilier</p>
+          <div className={styles.features}>
+            <div className={styles.feature}>
+              <span className={styles.checkmark}>✓</span>
+              <span>Gestion intelligente des prospects</span>
+            </div>
+            <div className={styles.feature}>
+              <span className={styles.checkmark}>✓</span>
+              <span>Suivi des propriétés en temps réel</span>
+            </div>
+            <div className={styles.feature}>
+              <span className={styles.checkmark}>✓</span>
+              <span>Analyses et rapports détaillés</span>
+            </div>
+          </div>
+        </div>
       </div>
       <div className={styles.formContainer}>
-        <form className={styles.form} onSubmit={handleSubmit}>
-          <h2 className="text-center mb-4">Connexion</h2>
-          {registeredSuccess && (
-            <Alert variant="success">
-              Inscription réussie ! Vous pouvez maintenant vous connecter.
-            </Alert>
-          )}
-          {error && <Alert variant="danger">{error}</Alert>}
-          <input
-            type="email"
-            placeholder="Email"
-            className={styles.input}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <input
-            type="password"
-            placeholder="Mot de passe"
-            className={styles.input}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          <button type="submit" className={styles.button} disabled={loading}>
-            {loading ? 'Connexion en cours...' : 'Se connecter'}
-          </button>
-          <hr className="my-4" />
-          <button
-            type="button"
-            className={`${styles.button} ${styles.googleButton}`}
-            onClick={handleGoogleSignIn}
-          >
-            Se connecter avec Google
-          </button>
-          <p className={styles.link}>
-            Pas encore de compte ? <Link href="/register" legacyBehavior>Inscrivez-vous ici</Link>
-          </p>
-        </form>
+        <div className={styles.formWrapper}>
+          <div className={styles.formHeader}>
+            <h2 className={styles.formTitle}>Bon retour !</h2>
+            <p className={styles.formSubtitle}>Connectez-vous à votre compte</p>
+          </div>
+          <form className={styles.form} onSubmit={handleSubmit}>
+            {registeredSuccess && (
+              <Alert variant="success" className={styles.alert}>
+                Inscription réussie ! Vous pouvez maintenant vous connecter.
+              </Alert>
+            )}
+            {error && <Alert variant="danger" className={styles.alert}>{error}</Alert>}
+            
+            <div className={styles.inputGroup}>
+              <label className={styles.label}>Adresse e-mail</label>
+              <div className={styles.inputWrapper}>
+                <FaEnvelope className={styles.inputIcon} />
+                <input
+                  type="email"
+                  placeholder="votre@email.com"
+                  className={styles.input}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className={styles.inputGroup}>
+              <label className={styles.label}>Mot de passe</label>
+              <div className={styles.inputWrapper}>
+                <FaLock className={styles.inputIcon} />
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  className={styles.input}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <button type="submit" className={styles.button} disabled={loading}>
+              {loading ? (
+                <>
+                  <span className={styles.spinner}></span>
+                  Connexion en cours...
+                </>
+              ) : (
+                <>
+                  Se connecter
+                  <FaArrowRight className={styles.buttonIcon} />
+                </>
+              )}
+            </button>
+
+            <div className={styles.divider}>
+              <span className={styles.dividerText}>ou continuer avec</span>
+            </div>
+
+            <button
+              type="button"
+              className={styles.googleButton}
+              onClick={handleGoogleSignIn}
+            >
+              <FaGoogle className={styles.googleIcon} />
+              Google
+            </button>
+
+            <p className={styles.link}>
+              Pas encore de compte ? <Link href="/register" className={styles.linkText}>Inscrivez-vous gratuitement</Link>
+            </p>
+          </form>
+        </div>
       </div>
     </div>
   );
