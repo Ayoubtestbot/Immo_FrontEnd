@@ -37,11 +37,12 @@ interface PropertiesPageProps {
   filterProjectId: string;
   filterEtage: string;
   filterTranche: string;
+  filterStatus: PropertyStatus | 'ALL';
   isTrialActive: boolean;
   agencyCurrency: string;
 }
 
-const PropertiesPage = ({ properties, projects, leads, agents, filterPropertyNumber: initialFilterPropertyNumber, filterCity: initialFilterCity, filterType: initialFilterType, filterMinPrice: initialFilterMinPrice, filterMaxPrice: initialFilterMaxPrice, filterProjectId: initialFilterProjectId, filterEtage: initialFilterEtage, filterTranche: initialFilterTranche, isTrialActive, agencyCurrency }: PropertiesPageProps) => {
+const PropertiesPage = ({ properties, projects, leads, agents, filterPropertyNumber: initialFilterPropertyNumber, filterCity: initialFilterCity, filterType: initialFilterType, filterMinPrice: initialFilterMinPrice, filterMaxPrice: initialFilterMaxPrice, filterProjectId: initialFilterProjectId, filterEtage: initialFilterEtage, filterTranche: initialFilterTranche, filterStatus: initialFilterStatus, isTrialActive, agencyCurrency }: PropertiesPageProps) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAddProjectModal, setShowAddProjectModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -61,6 +62,7 @@ const PropertiesPage = ({ properties, projects, leads, agents, filterPropertyNum
   const [filterProjectId, setFilterProjectId] = useState(initialFilterProjectId);
   const [filterEtage, setFilterEtage] = useState(initialFilterEtage);
   const [filterTranche, setFilterTranche] = useState(initialFilterTranche);
+  const [filterStatus, setFilterStatus] = useState(initialFilterStatus);
   const router = useRouter();
   const { data: session } = useSession();
 
@@ -104,6 +106,9 @@ const PropertiesPage = ({ properties, projects, leads, agents, filterPropertyNum
     if (debouncedTranche) {
       newQuery.tranche = debouncedTranche;
     }
+    if (filterStatus !== 'ALL') {
+      newQuery.status = filterStatus;
+    }
 
     // Construct current query from router.query for comparison
     const currentQuery: Record<string, string> = {};
@@ -123,7 +128,7 @@ const PropertiesPage = ({ properties, projects, leads, agents, filterPropertyNum
         query: newQuery,
       });
     }
-  }, [debouncedPropertyNumber, debouncedCity, filterType, filterMinPrice, filterMaxPrice, filterProjectId, debouncedEtage, debouncedTranche, router]);
+  }, [debouncedPropertyNumber, debouncedCity, filterType, filterMinPrice, filterMaxPrice, filterProjectId, debouncedEtage, debouncedTranche, filterStatus, router]);
 
   const handleOpenViewModal = (property: PropertyWithDetails) => {
     setSelectedProperty(property);
@@ -296,6 +301,20 @@ const PropertiesPage = ({ properties, projects, leads, agents, filterPropertyNum
                   />
                 </Form.Group>
               </Col>
+              <Col md={2}>
+                <Form.Group controlId="statusFilter">
+                  <Form.Label>Statut</Form.Label>
+                  <Form.Select
+                    value={filterStatus}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilterStatus(e.target.value as PropertyStatus)}
+                  >
+                    <option value="ALL">Tous les statuts</option>
+                    {Object.entries(propertyStatusTranslations).map(([status, translation]) => (
+                      <option key={status} value={status}>{translation}</option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
             </Row>
           </Card.Body>
         </Card>
@@ -322,7 +341,7 @@ const PropertiesPage = ({ properties, projects, leads, agents, filterPropertyNum
             <th>Etage</th>
             <th>Superficie</th>
             <th>Tranche</th>
-            <th>Num Appartement</th>
+            <th>N° App</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -444,7 +463,7 @@ const PropertiesPage = ({ properties, projects, leads, agents, filterPropertyNum
 
 export const getServerSideProps: GetServerSideProps = withAuth(async (context, session) => {
   try {
-  const { propertyNumber, city, type, minPrice, maxPrice, projectId, etage, tranche } = context.query;
+  const { propertyNumber, city, type, minPrice, maxPrice, projectId, etage, tranche, status } = context.query;
   const filterPropertyNumber = propertyNumber ? String(propertyNumber) : '';
   const filterCity = city ? String(city) : '';
   const filterType = type && Object.values(PropertyType).includes(type as PropertyType) ? type as PropertyType : 'ALL';
@@ -453,6 +472,7 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
   const filterProjectId = projectId ? String(projectId) : '';
   const filterEtage = etage ? parseInt(String(etage)) : undefined;
   const filterTranche = tranche ? String(tranche) : '';
+  const filterStatus = status && Object.values(PropertyStatus).includes(status as PropertyStatus) ? status as PropertyStatus : 'ALL';
 
   const agencyId = session.user.agencyId;
   if (!agencyId) {
@@ -506,6 +526,9 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
   if (filterTranche) {
     whereClause.tranche = { contains: filterTranche };
   }
+  if (filterStatus !== 'ALL') {
+    whereClause.status = filterStatus;
+  }
 
   const [properties, projects, leads, agents, trialIsActive, agency] = await Promise.all([
     prisma.property.findMany({
@@ -555,6 +578,7 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
       filterProjectId,
       filterEtage: filterEtage || '',
       filterTranche: filterTranche || '',
+      filterStatus,
       isTrialActive: trialIsActive,
       agencyCurrency: agency?.currency || 'MAD',
     },

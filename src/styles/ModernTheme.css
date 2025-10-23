@@ -88,7 +88,6 @@ body {
 }
 
 .modern-container {
-  max-width: 1280px;
   margin: 0 auto;
   padding: 0 var(--spacing-xl);
 }
@@ -227,7 +226,7 @@ body {
 
 .modern-grid-3 {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--spacing-xl);
 }
 

@@ -26,6 +26,10 @@ enum LeadStatus {
   NEGOTIATION
   CONVERTED
   LOST
+  CONTRACT_SIGNED
+  CLOSED_WON
+  CLOSED_LOST
+  PENDING_DOCUMENTS
 }
 
 enum TicketStatus {
@@ -172,6 +176,7 @@ enum PropertyStatus {
   VENDU
   EN_LOCATION
   LOUE
+  RESERVED
 }
 
 model Project {

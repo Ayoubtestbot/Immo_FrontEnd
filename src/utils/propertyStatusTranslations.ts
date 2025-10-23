@@ -5,4 +5,5 @@ export const propertyStatusTranslations: { [key in PropertyStatus]: string } = {
   VENDU: 'Vendu',
   EN_LOCATION: 'En location',
   LOUE: 'Loué',
+  RESERVED: 'Réservé',
 };

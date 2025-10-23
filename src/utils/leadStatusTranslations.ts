@@ -10,6 +10,10 @@ export const leadStatusTranslations: Record<LeadStatus, string> = {
   [LeadStatus.NEGOTIATION]: 'Négociation',
   [LeadStatus.CONVERTED]: 'Converti',
   [LeadStatus.LOST]: 'Perdu',
+  [LeadStatus.CONTRACT_SIGNED]: 'Contrat signé',
+  [LeadStatus.CLOSED_WON]: 'Fermé Gagné',
+  [LeadStatus.CLOSED_LOST]: 'Fermé Perdu',
+  [LeadStatus.PENDING_DOCUMENTS]: 'En attente de document',
 };
 
 export const leadStatusColors: Record<LeadStatus, string> = {
@@ -22,6 +26,10 @@ export const leadStatusColors: Record<LeadStatus, string> = {
   [LeadStatus.NEGOTIATION]: 'bg-dark', // Dark gray
   [LeadStatus.CONVERTED]: 'bg-success', // Green
   [LeadStatus.LOST]: 'bg-danger', // Red
+  [LeadStatus.CONTRACT_SIGNED]: 'bg-success', // Green
+  [LeadStatus.CLOSED_WON]: 'bg-success', // Green
+  [LeadStatus.CLOSED_LOST]: 'bg-danger', // Red
+  [LeadStatus.PENDING_DOCUMENTS]: 'bg-warning', // Yellow
 };
 
 export const getTranslatedLeadStatus = (status: LeadStatus): string => {
