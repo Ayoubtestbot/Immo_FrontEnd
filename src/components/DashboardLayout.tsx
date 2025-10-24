@@ -53,6 +53,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const adminNavItems = [
     { href: '/agency/users', icon: <FiUsers />, label: 'Équipe' },
     { href: '/agency/settings', icon: <FiSettings />, label: 'Paramètres' },
+    { href: '/agency/settings/sources', icon: <FiTag />, label: 'Sources' },
   ];
 
   return (

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Modal, Button, Form, Alert } from 'react-bootstrap';
+import { Source } from '@prisma/client';
 import PhoneInput, { type Country } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { countries } from 'countries-list';
@@ -20,6 +21,28 @@ const AddLeadModal = ({ show, handleClose, onLeadAdded, agencyCountry }: AddLead
   const [country, setCountry] = useState<Country | ''>((agencyCountry as Country) || '');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sources, setSources] = useState<Source[]>([]);
+  const [sourceId, setSourceId] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (show) {
+      const fetchSources = async () => {
+        try {
+          const res = await fetch('/api/sources');
+          if (res.ok) {
+            const data = await res.json();
+            setSources(data);
+          } else {
+            setError('Failed to fetch sources');
+          }
+        } catch (err) {
+          console.error(err);
+          setError('Failed to fetch sources');
+        }
+      };
+      fetchSources();
+    }
+  }, [show]);
 
   const countryOptions = Object.entries(countries).map(([code, country]) => ({
     value: code,
@@ -35,7 +58,7 @@ const AddLeadModal = ({ show, handleClose, onLeadAdded, agencyCountry }: AddLead
       const res = await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ firstName, lastName, email, phone, city, country }),
+        body: JSON.stringify({ firstName, lastName, email, phone, city, country, sourceId }),
       });
 
       if (!res.ok) {
@@ -50,6 +73,7 @@ const AddLeadModal = ({ show, handleClose, onLeadAdded, agencyCountry }: AddLead
       setPhone('');
       setCity('');
       setCountry('');
+      setSourceId(undefined);
 
       setLoading(false);
       onLeadAdded();
@@ -92,6 +116,18 @@ const AddLeadModal = ({ show, handleClose, onLeadAdded, agencyCountry }: AddLead
           <Form.Group className="mb-3">
             <Form.Label>Ville (optionnel)</Form.Label>
             <Form.Control type="text" value={city} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCity(e.target.value)} />
+          </Form.Group>          
+          <Form.Group className="mb-3">
+            <Form.Label>Source</Form.Label>
+            <Form.Select
+              value={sourceId}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSourceId(e.target.value || undefined)}
+            >
+              <option value="">-- Sélectionner une source --</option>
+              {sources.map(source => (
+                <option key={source.id} value={source.id}>{source.name}</option>
+              ))}
+            </Form.Select>
           </Form.Group>          <Form.Group className="mb-3">
             <Form.Label>Téléphone</Form.Label>
             <PhoneInput

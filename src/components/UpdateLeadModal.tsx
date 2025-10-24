@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Modal, Button, Form, Alert, Row, Col } from 'react-bootstrap';
-import type { Lead, User } from '@prisma/client';
+import type { Lead, User, Source } from '@prisma/client';
 import { LeadStatus } from '@prisma/client';
 import { leadStatusTranslations } from '@/utils/leadStatusTranslations'; // New import
 
@@ -20,11 +20,23 @@ const UpdateLeadModal = ({ show, handleClose, lead, agents, onLeadUpdated }: Upd
   const [appointmentTimeMinute, setAppointmentTimeMinute] = useState<string>(''); // New state for minute
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [trafficSource, setTrafficSource] = useState('');
+  const [sources, setSources] = useState<Source[]>([]);
+  const [sourceId, setSourceId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (lead) {
       setStatus(lead.status);
       setAssignedToId(lead.assignedToId);
+      setFirstName(lead.firstName);
+      setLastName(lead.lastName);
+      setEmail(lead.email);
+      setPhone(lead.phone || '');
+      setSourceId(lead.sourceId || undefined);
       if (lead.appointmentDate) {
         const date = new Date(lead.appointmentDate);
         setAppointmentDate(date.toISOString().split('T')[0]);
@@ -36,7 +48,23 @@ const UpdateLeadModal = ({ show, handleClose, lead, agents, onLeadUpdated }: Upd
         setAppointmentTimeMinute('');
       }
     }
-  }, [lead]);
+
+    const fetchSources = async () => {
+      try {
+        const res = await fetch('/api/sources');
+        if (res.ok) {
+          const data = await res.json();
+          setSources(data);
+        } else {
+          setError('Failed to fetch sources');
+        }
+      } catch (err) {
+        console.error(err);
+        setError('Failed to fetch sources');
+      }
+    };
+    fetchSources();
+  }, [lead, show]); // Added show to dependency array
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,7 +73,7 @@ const UpdateLeadModal = ({ show, handleClose, lead, agents, onLeadUpdated }: Upd
     setLoading(true);
     setError('');
 
-    const data: any = { status, assignedToId };
+    const data: any = { firstName, lastName, email, phone, sourceId, status, assignedToId };
     if (status === LeadStatus.APPOINTMENT_SCHEDULED) {
       if (appointmentDate) {
         const [year, month, day] = appointmentDate.split('-').map(Number);
@@ -59,8 +87,8 @@ const UpdateLeadModal = ({ show, handleClose, lead, agents, onLeadUpdated }: Upd
     }
 
     try {
-      const res = await fetch(`/api/leads/${lead.id}/update`, {
-        method: 'PATCH',
+      const res = await fetch(`/api/leads/${lead.id}`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
@@ -87,6 +115,53 @@ const UpdateLeadModal = ({ show, handleClose, lead, agents, onLeadUpdated }: Upd
       <Form onSubmit={handleSubmit}>
         <Modal.Body>
           {error && <Alert variant="danger">{error}</Alert>}
+          <Form.Group className="mb-3" controlId="firstName">
+            <Form.Label>Prénom</Form.Label>
+            <Form.Control
+              type="text"
+              value={firstName}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFirstName(e.target.value)}
+              required
+            />
+          </Form.Group>
+          <Form.Group className="mb-3" controlId="lastName">
+            <Form.Label>Nom</Form.Label>
+            <Form.Control
+              type="text"
+              value={lastName}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLastName(e.target.value)}
+              required
+            />
+          </Form.Group>
+          <Form.Group className="mb-3" controlId="email">
+            <Form.Label>Email</Form.Label>
+            <Form.Control
+              type="email"
+              value={email}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+              required
+            />
+          </Form.Group>
+          <Form.Group className="mb-3" controlId="phone">
+            <Form.Label>Téléphone</Form.Label>
+            <Form.Control
+              type="text"
+              value={phone}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPhone(e.target.value)}
+            />
+          </Form.Group>
+          <Form.Group className="mb-3" controlId="source">
+            <Form.Label>Source</Form.Label>
+            <Form.Select
+              value={sourceId}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSourceId(e.target.value || undefined)}
+            >
+              <option value="">-- Sélectionner une source --</option>
+              {sources.map(source => (
+                <option key={source.id} value={source.id}>{source.name}</option>
+              ))}
+            </Form.Select>
+          </Form.Group>
           <Form.Group className="mb-3" controlId="status">
             <Form.Label>Statut</Form.Label>
             <Form.Select value={status} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setStatus(e.target.value as LeadStatus)}>

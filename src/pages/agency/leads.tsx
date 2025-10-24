@@ -11,7 +11,7 @@ import ViewLeadModal from '@/components/ViewLeadModal';
 import LinkPropertyModal from '@/components/LinkPropertyModal';
 import CustomDropdownMenu from '@/components/CustomDropdownMenu';
 import { prisma } from '@/lib/prisma';
-import type { Lead, User, Note, Activity, Property, Prisma } from '@prisma/client';
+import type { Lead, User, Note, Activity, Property, Prisma, Source } from '@prisma/client';
 import { LeadStatus, UserRole } from '@prisma/client'; // Added UserRole
 import { FaWhatsapp, FaEnvelope, FaPhone } from 'react-icons/fa';
 import { Table, Button, Alert, Form, Row, Col, Dropdown } from 'react-bootstrap';
@@ -29,6 +29,7 @@ type LeadWithAssignedTo = Lead & {
   activities: Activity[];
   properties: Property[]; // New field
   isUrgent: boolean; // New field
+  source: Source | null;
 };
 
 type LeadsPageProps = {
@@ -38,6 +39,7 @@ type LeadsPageProps = {
   currentStatus: LeadStatus | 'ALL';
   filterName: string;
   filterAgentId: string;
+  filterSourceId: string;
   isTrialActive: boolean;
   currentPage: number;
   pageSize: number;
@@ -45,7 +47,7 @@ type LeadsPageProps = {
   agencyCountry: string | null;
 };
 
-const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initialFilterName, filterAgentId: initialFilterAgentId, isTrialActive, currentPage, pageSize, totalPages, agencyCountry }: LeadsPageProps) => {
+const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initialFilterName, filterAgentId: initialFilterAgentId, filterSourceId: initialFilterSourceId, isTrialActive, currentPage, pageSize, totalPages, agencyCountry }: LeadsPageProps) => {
   const { data: session } = useSession();
   const [showAddModal, setShowAddModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -63,17 +65,30 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]); // New state for bulk actions
   const [filterName, setFilterName] = useState(initialFilterName);
   const [filterAgentId, setFilterAgentId] = useState(initialFilterAgentId);
+  const [filterSourceId, setFilterSourceId] = useState(initialFilterSourceId);
   const [statusFilter, setStatusFilter] = useState(currentStatus);
+  const [sources, setSources] = useState<Source[]>([]);
   const router = useRouter();
 
   const debouncedFilterName = useDebounce(filterName, 500);
   const selectAllRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (selectAllRef.current) {
-      selectAllRef.current.indeterminate = selectedLeadIds.length > 0 && selectedLeadIds.length < leads.length;
-    }
-  }, [selectedLeadIds, leads]);
+    const fetchSources = async () => {
+      try {
+        const res = await fetch('/api/sources');
+        if (res.ok) {
+          const data = await res.json();
+          setSources(data);
+        } else {
+          console.error('Failed to fetch sources');
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchSources();
+  }, []);
 
   const refreshData = () => {
     router.replace(router.asPath);
@@ -95,6 +110,12 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
   };
 
   useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = selectedLeadIds.length > 0 && selectedLeadIds.length < leads.length;
+    }
+  }, [selectedLeadIds, leads]);
+
+  useEffect(() => {
     const newQuery: Record<string, string> = {};
 
     if (statusFilter !== 'ALL') {
@@ -108,6 +129,10 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
 
     if (filterAgentId !== 'ALL') {
       newQuery.agentId = filterAgentId;
+    }
+
+    if (filterSourceId !== 'ALL') {
+      newQuery.sourceId = filterSourceId;
     }
 
     // Construct current query from router.query for comparison
@@ -128,7 +153,7 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
         query: { ...newQuery, page: String(currentPage), pageSize: String(pageSize) },
       });
     }
-  }, [statusFilter, debouncedFilterName, filterAgentId, router, currentPage, pageSize]);
+  }, [statusFilter, debouncedFilterName, filterAgentId, filterSourceId, router, currentPage, pageSize]);
 
   const handleOpenUpdateModal = (lead: LeadWithAssignedTo) => {
     setEditingLead(lead);
@@ -278,7 +303,7 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
 
       <div className="table-responsive-wrapper">
         <Row className="mb-4">
-          <Col md={4}>
+          <Col md={3}>
           <Form.Group controlId="statusFilter">
             <Form.Label>Filtrer par statut</Form.Label>
             <Form.Select
@@ -292,7 +317,7 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
             </Form.Select>
           </Form.Group>
         </Col>
-        <Col md={4}>
+        <Col md={3}>
           <Form.Group controlId="nameFilter">
             <Form.Label>Filtrer par nom</Form.Label>
             <Form.Control
@@ -303,7 +328,7 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
             />
           </Form.Group>
         </Col>
-        <Col md={4}>
+        <Col md={3}>
           <Form.Group controlId="agentFilter">
             <Form.Label>Filtrer par agent</Form.Label>
             <Form.Select
@@ -313,6 +338,20 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
               <option value="ALL">Tous les agents</option>
               {agents.map(agent => (
                 <option key={agent.id} value={agent.id}>{agent.name}</option>
+              ))}
+            </Form.Select>
+          </Form.Group>
+        </Col>
+        <Col md={3}>
+          <Form.Group controlId="sourceFilter">
+            <Form.Label>Filtrer par source</Form.Label>
+            <Form.Select
+              value={filterSourceId}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilterSourceId(e.target.value)}
+            >
+              <option value="ALL">Toutes les sources</option>
+              {sources.map(source => (
+                <option key={source.id} value={source.id}>{source.name}</option>
               ))}
             </Form.Select>
           </Form.Group>
@@ -335,7 +374,7 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
               <th>Email</th>
               <th>Téléphone</th>
               <th>Ville</th>
-              <th>Source de trafic</th>
+              <th>Source</th>
               <th>Statut</th>
               <th>Agent Assigné</th>
               <th>Actions</th>
@@ -381,7 +420,7 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
                     )}
                   </td>
                   <td>{lead.city || '-'}</td>
-                  <td>{lead.trafficSource || '-'}</td>
+                  <td>{lead.source?.name || '-'}</td>
                   <td>
                     <span className={`badge ${leadStatusColors[lead.status]}`}>{getTranslatedLeadStatus(lead.status)}</span>
                   </td>
@@ -556,12 +595,13 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
 };
 
 export const getServerSideProps: GetServerSideProps = withAuth(async (context, session) => {
-  const { status, name, agentId, page = '1', pageSize = '10' } = context.query;
+  const { status, name, agentId, sourceId, page = '1', pageSize = '10' } = context.query;
   const currentPage = parseInt(String(page));
   const currentSize = parseInt(String(pageSize));
   const currentStatus = status && Object.values(LeadStatus).includes(status as LeadStatus) ? status as LeadStatus : 'ALL';
   const filterName = name ? String(name) : '';
   const filterAgentId = agentId ? String(agentId) : 'ALL';
+  const filterSourceId = sourceId ? String(sourceId) : 'ALL';
 
   const agencyId = session.user.agencyId;
   console.log('LeadsPage: agencyId from session:', agencyId);
@@ -584,6 +624,7 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
       ],
     }),
     ...(filterAgentId !== 'ALL' && { assignedToId: filterAgentId }),
+    ...(filterSourceId !== 'ALL' && { sourceId: filterSourceId }),
   };
 
   // Apply RBAC for lead visibility
@@ -612,6 +653,7 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
           },
         },
         properties: true, // New include
+        source: true,
       },
       orderBy: {
         createdAt: 'desc',
@@ -646,6 +688,7 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
       currentStatus,
       filterName,
       filterAgentId,
+      filterSourceId,
       isTrialActive: trialIsActive,
       currentPage,
       pageSize: currentSize,

@@ -134,6 +134,7 @@ model Agency {
   projects      Project[]
   subscription  Subscription?
   tickets       Ticket[]
+  sources       Source[]
 }
 
 model Lead {
@@ -147,7 +148,8 @@ model Lead {
   updatedAt DateTime @updatedAt
   city      String? // New field
   country   String? // New field
-  trafficSource String? // New field
+  source    Source? @relation(fields: [sourceId], references: [id])
+  sourceId  String?
   isUrgent      Boolean @default(false) // New field for urgent leads
   appointmentDate DateTime? // New field for appointment scheduling
   firstContactedAt DateTime? // New field for lead response time
@@ -162,6 +164,18 @@ model Lead {
 
   notes      Note[]
   activities Activity[]
+}
+
+model Source {
+  id        String   @id @default(cuid())
+  name      String
+  agency    Agency   @relation(fields: [agencyId], references: [id])
+  agencyId  String
+  leads     Lead[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([agencyId, name]) // Ensure source names are unique per agency
 }
 
 enum PropertyType {

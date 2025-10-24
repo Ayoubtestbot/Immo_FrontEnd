@@ -55,21 +55,34 @@ export default async function handler(
       return res.status(500).json({ error: 'Failed to delete lead' });
     }
   } else if (req.method === 'PUT') { // Add PUT handler
-    const { isUrgent } = req.body;
-
-    if (typeof isUrgent !== 'boolean') {
-      return res.status(400).json({ error: 'Invalid isUrgent value' });
-    }
+    const { firstName, lastName, email, phone, sourceId, status, assignedToId, appointmentDate, isUrgent } = req.body;
 
     try {
+      const dataToUpdate: Prisma.LeadUpdateInput = {};
+
+      if (firstName !== undefined) dataToUpdate.firstName = firstName;
+      if (lastName !== undefined) dataToUpdate.lastName = lastName;
+      if (email !== undefined) dataToUpdate.email = email;
+      if (phone !== undefined) dataToUpdate.phone = phone;
+      if (status !== undefined) dataToUpdate.status = status;
+      if (isUrgent !== undefined) dataToUpdate.isUrgent = isUrgent;
+      if (appointmentDate !== undefined) dataToUpdate.appointmentDate = appointmentDate;
+
+      if (sourceId !== undefined) {
+        dataToUpdate.source = sourceId ? { connect: { id: sourceId } } : { disconnect: true };
+      }
+      if (assignedToId !== undefined) {
+        dataToUpdate.assignedTo = assignedToId ? { connect: { id: assignedToId } } : { disconnect: true };
+      }
+
       const updatedLead = await prisma.lead.update({
         where: { id },
-        data: { isUrgent },
+        data: dataToUpdate,
       });
       return res.status(200).json(updatedLead);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      return res.status(500).json({ error: 'Failed to update lead urgency' });
+      return res.status(500).json({ error: error.message || 'Failed to update lead' });
     }
   } else {
     res.setHeader('Allow', ['GET', 'DELETE', 'PUT']); // Allow PUT method

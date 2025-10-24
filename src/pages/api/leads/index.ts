@@ -42,7 +42,7 @@ async function handler(
         return res.status(403).json({ error: 'Your free trial has expired. Please upgrade your plan to add new leads.' });
       }
 
-      const { firstName, lastName, email, phone, city } = req.body;
+      const { firstName, lastName, email, phone, city, sourceId } = req.body;
 
       if (!firstName || !lastName || !phone) { // Updated validation
         return res.status(400).json({ error: 'Missing required fields' });
@@ -54,7 +54,8 @@ async function handler(
           lastName,
           email,
           phone,
-          city, // Add city to data
+          city,
+          ...(sourceId && { source: { connect: { id: sourceId } } }),
           agency: {
             connect: { id: agencyId },
           },
