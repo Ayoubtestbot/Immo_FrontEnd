@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Modal, Button, Form, Alert } from 'react-bootstrap';
-import { Source } from '@prisma/client';
+import { Source, LeadStatusOption } from '@prisma/client';
 import PhoneInput, { type Country } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { countries } from 'countries-list';
@@ -23,24 +23,41 @@ const AddLeadModal = ({ show, handleClose, onLeadAdded, agencyCountry }: AddLead
   const [loading, setLoading] = useState(false);
   const [sources, setSources] = useState<Source[]>([]);
   const [sourceId, setSourceId] = useState<string | undefined>(undefined);
+  const [leadStatusOptions, setLeadStatusOptions] = useState<LeadStatusOption[]>([]);
+  const [statusId, setStatusId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (show) {
-      const fetchSources = async () => {
+      const fetchData = async () => {
         try {
-          const res = await fetch('/api/sources');
-          if (res.ok) {
-            const data = await res.json();
-            setSources(data);
+          const [sourcesRes, leadStatusRes] = await Promise.all([
+            fetch('/api/sources'),
+            fetch('/api/lead-status-options'),
+          ]);
+
+          if (sourcesRes.ok) {
+            const sourcesData = await sourcesRes.json();
+            setSources(sourcesData);
           } else {
             setError('Failed to fetch sources');
           }
+
+          if (leadStatusRes.ok) {
+            const leadStatusData = await leadStatusRes.json();
+            setLeadStatusOptions(leadStatusData);
+            // Set default status to the first one if available
+            if (leadStatusData.length > 0) {
+              setStatusId(leadStatusData[0].id);
+            }
+          } else {
+            setError('Failed to fetch lead status options');
+          }
         } catch (err) {
           console.error(err);
-          setError('Failed to fetch sources');
+          setError('Failed to fetch initial data');
         }
       };
-      fetchSources();
+      fetchData();
     }
   }, [show]);
 
@@ -58,7 +75,7 @@ const AddLeadModal = ({ show, handleClose, onLeadAdded, agencyCountry }: AddLead
       const res = await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ firstName, lastName, email, phone, city, country, sourceId }),
+        body: JSON.stringify({ firstName, lastName, email, phone, city, country, sourceId, statusId }),
       });
 
       if (!res.ok) {
@@ -74,6 +91,7 @@ const AddLeadModal = ({ show, handleClose, onLeadAdded, agencyCountry }: AddLead
       setCity('');
       setCountry('');
       setSourceId(undefined);
+      setStatusId(undefined);
 
       setLoading(false);
       onLeadAdded();
@@ -126,6 +144,19 @@ const AddLeadModal = ({ show, handleClose, onLeadAdded, agencyCountry }: AddLead
               <option value="">-- Sélectionner une source --</option>
               {sources.map(source => (
                 <option key={source.id} value={source.id}>{source.name}</option>
+              ))}
+            </Form.Select>
+          </Form.Group>          
+          <Form.Group className="mb-3">
+            <Form.Label>Statut</Form.Label>
+            <Form.Select
+              value={statusId}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setStatusId(e.target.value || undefined)}
+              required
+            >
+              <option value="">-- Sélectionner un statut --</option>
+              {leadStatusOptions.map(status => (
+                <option key={status.id} value={status.id}>{status.translation || status.name}</option>
               ))}
             </Form.Select>
           </Form.Group>          <Form.Group className="mb-3">

@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Modal, Button, Form, Alert, Row, Col } from 'react-bootstrap';
-import type { Lead, User, Source } from '@prisma/client';
-import { LeadStatus } from '@prisma/client';
-import { leadStatusTranslations } from '@/utils/leadStatusTranslations'; // New import
+import type { Lead, User, Source, LeadStatusOption } from '@prisma/client';
 
 type UpdateLeadModalProps = {
   show: boolean;
@@ -13,7 +11,6 @@ type UpdateLeadModalProps = {
 };
 
 const UpdateLeadModal = ({ show, handleClose, lead, agents, onLeadUpdated }: UpdateLeadModalProps) => {
-  const [status, setStatus] = useState<LeadStatus>(LeadStatus.NEW);
   const [assignedToId, setAssignedToId] = useState<string | null>(null);
   const [appointmentDate, setAppointmentDate] = useState<string>('');
   const [appointmentTimeHour, setAppointmentTimeHour] = useState<string>(''); // New state for hour
@@ -24,19 +21,20 @@ const UpdateLeadModal = ({ show, handleClose, lead, agents, onLeadUpdated }: Upd
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [trafficSource, setTrafficSource] = useState('');
   const [sources, setSources] = useState<Source[]>([]);
   const [sourceId, setSourceId] = useState<string | undefined>(undefined);
+  const [leadStatusOptions, setLeadStatusOptions] = useState<LeadStatusOption[]>([]);
+  const [statusId, setStatusId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (lead) {
-      setStatus(lead.status);
       setAssignedToId(lead.assignedToId);
       setFirstName(lead.firstName);
       setLastName(lead.lastName);
       setEmail(lead.email);
       setPhone(lead.phone || '');
       setSourceId(lead.sourceId || undefined);
+      setStatusId(lead.statusId || undefined);
       if (lead.appointmentDate) {
         const date = new Date(lead.appointmentDate);
         setAppointmentDate(date.toISOString().split('T')[0]);
@@ -49,22 +47,35 @@ const UpdateLeadModal = ({ show, handleClose, lead, agents, onLeadUpdated }: Upd
       }
     }
 
-    const fetchSources = async () => {
+    const fetchData = async () => {
       try {
-        const res = await fetch('/api/sources');
-        if (res.ok) {
-          const data = await res.json();
-          setSources(data);
+        const [sourcesRes, leadStatusRes] = await Promise.all([
+          fetch('/api/sources'),
+          fetch('/api/lead-status-options'),
+        ]);
+
+        if (sourcesRes.ok) {
+          const sourcesData = await sourcesRes.json();
+          setSources(sourcesData);
         } else {
           setError('Failed to fetch sources');
         }
+
+        if (leadStatusRes.ok) {
+          const leadStatusData = await leadStatusRes.json();
+          setLeadStatusOptions(leadStatusData);
+        } else {
+          setError('Failed to fetch lead status options');
+        }
       } catch (err) {
         console.error(err);
-        setError('Failed to fetch sources');
+        setError('Failed to fetch initial data');
       }
     };
-    fetchSources();
+    fetchData();
   }, [lead, show]); // Added show to dependency array
+
+  const selectedStatus = leadStatusOptions.find(option => option.id === statusId);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,8 +84,8 @@ const UpdateLeadModal = ({ show, handleClose, lead, agents, onLeadUpdated }: Upd
     setLoading(true);
     setError('');
 
-    const data: any = { firstName, lastName, email, phone, sourceId, status, assignedToId };
-    if (status === LeadStatus.APPOINTMENT_SCHEDULED) {
+    const data: any = { firstName, lastName, email, phone, sourceId, statusId, assignedToId };
+    if (selectedStatus && selectedStatus.name === 'APPOINTMENT_SCHEDULED') {
       if (appointmentDate) {
         const [year, month, day] = appointmentDate.split('-').map(Number);
         const hour = parseInt(appointmentTimeHour || '0');
@@ -164,13 +175,18 @@ const UpdateLeadModal = ({ show, handleClose, lead, agents, onLeadUpdated }: Upd
           </Form.Group>
           <Form.Group className="mb-3" controlId="status">
             <Form.Label>Statut</Form.Label>
-            <Form.Select value={status} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setStatus(e.target.value as LeadStatus)}>
-              {Object.values(LeadStatus).map(s => (
-                <option key={s} value={s}>{leadStatusTranslations[s]}</option>
+            <Form.Select
+              value={statusId}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setStatusId(e.target.value || undefined)}
+              required
+            >
+              <option value="">-- Sélectionner un statut --</option>
+              {leadStatusOptions.map(status => (
+                <option key={status.id} value={status.id}>{status.translation || status.name}</option>
               ))}
             </Form.Select>
           </Form.Group>
-          {status === LeadStatus.APPOINTMENT_SCHEDULED && (
+          {selectedStatus && selectedStatus.name === 'APPOINTMENT_SCHEDULED' && (
             <>
               <Form.Group className="mb-3" controlId="appointmentDate">
                 <Form.Label>Date du rendez-vous</Form.Label>

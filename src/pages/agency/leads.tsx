@@ -11,11 +11,11 @@ import ViewLeadModal from '@/components/ViewLeadModal';
 import LinkPropertyModal from '@/components/LinkPropertyModal';
 import CustomDropdownMenu from '@/components/CustomDropdownMenu';
 import { prisma } from '@/lib/prisma';
-import type { Lead, User, Note, Activity, Property, Prisma, Source } from '@prisma/client';
-import { LeadStatus, UserRole } from '@prisma/client'; // Added UserRole
+import type { Lead, User, Note, Activity, Property, Prisma, Source, LeadStatusOption } from '@prisma/client';
+import { UserRole } from '@prisma/client'; // Added UserRole
 import { FaWhatsapp, FaEnvelope, FaPhone } from 'react-icons/fa';
 import { Table, Button, Alert, Form, Row, Col, Dropdown } from 'react-bootstrap';
-import { leadStatusTranslations, getTranslatedLeadStatus, leadStatusColors } from '@/utils/leadStatusTranslations';
+
 import useDebounce from '@/hooks/useDebounce'; // New import
 import { isTrialActive } from '@/lib/subscription';
 import { useSession } from 'next-auth/react'; // New import
@@ -30,13 +30,14 @@ type LeadWithAssignedTo = Lead & {
   properties: Property[]; // New field
   isUrgent: boolean; // New field
   source: Source | null;
+  status: LeadStatusOption;
 };
 
 type LeadsPageProps = {
   leads: LeadWithAssignedTo[];
   agents: User[];
   properties: Property[];
-  currentStatus: LeadStatus | 'ALL';
+  currentStatus: string | 'ALL';
   filterName: string;
   filterAgentId: string;
   filterSourceId: string;
@@ -45,9 +46,10 @@ type LeadsPageProps = {
   pageSize: number;
   totalPages: number;
   agencyCountry: string | null;
+  leadStatusOptions: LeadStatusOption[]; // Add leadStatusOptions to props
 };
 
-const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initialFilterName, filterAgentId: initialFilterAgentId, filterSourceId: initialFilterSourceId, isTrialActive, currentPage, pageSize, totalPages, agencyCountry }: LeadsPageProps) => {
+const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initialFilterName, filterAgentId: initialFilterAgentId, filterSourceId: initialFilterSourceId, isTrialActive, currentPage, pageSize, totalPages, agencyCountry, leadStatusOptions: initialLeadStatusOptions }: LeadsPageProps) => {
   const { data: session } = useSession();
   const [showAddModal, setShowAddModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -68,27 +70,17 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
   const [filterSourceId, setFilterSourceId] = useState(initialFilterSourceId);
   const [statusFilter, setStatusFilter] = useState(currentStatus);
   const [sources, setSources] = useState<Source[]>([]);
+  const [leadStatusOptions, setLeadStatusOptions] = useState<LeadStatusOption[]>(initialLeadStatusOptions);
   const router = useRouter();
 
   const debouncedFilterName = useDebounce(filterName, 500);
   const selectAllRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const fetchSources = async () => {
-      try {
-        const res = await fetch('/api/sources');
-        if (res.ok) {
-          const data = await res.json();
-          setSources(data);
-        } else {
-          console.error('Failed to fetch sources');
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchSources();
-  }, []);
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = selectedLeadIds.length > 0 && selectedLeadIds.length < leads.length;
+    }
+  }, [selectedLeadIds, leads]);
 
   const refreshData = () => {
     router.replace(router.asPath);
@@ -108,12 +100,6 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
       prev.includes(leadId) ? prev.filter(id => id !== leadId) : [...prev, leadId]
     );
   };
-
-  useEffect(() => {
-    if (selectAllRef.current) {
-      selectAllRef.current.indeterminate = selectedLeadIds.length > 0 && selectedLeadIds.length < leads.length;
-    }
-  }, [selectedLeadIds, leads]);
 
   useEffect(() => {
     const newQuery: Record<string, string> = {};
@@ -210,7 +196,7 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
         });
         if (!res.ok) {
           throw new Error('Failed to delete lead');
-        }
+        }  
         refreshData();
       } catch (error) {
         console.error(error);
@@ -308,11 +294,11 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
             <Form.Label>Filtrer par statut</Form.Label>
             <Form.Select
               value={statusFilter}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setStatusFilter(e.target.value as LeadStatus | 'ALL')}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setStatusFilter(e.target.value)}
             >
               <option value="ALL">Tous les statuts</option>
-              {Object.values(LeadStatus).map(status => (
-                <option key={status} value={status}>{leadStatusTranslations[status]}</option>
+              {leadStatusOptions.map(status => (
+                <option key={status.id} value={status.id}>{status.translation || status.name}</option>
               ))}
             </Form.Select>
           </Form.Group>
@@ -422,7 +408,7 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
                   <td>{lead.city || '-'}</td>
                   <td>{lead.source?.name || '-'}</td>
                   <td>
-                    <span className={`badge ${leadStatusColors[lead.status]}`}>{getTranslatedLeadStatus(lead.status)}</span>
+                    <span className="badge" style={{ backgroundColor: lead.status.color }}>{lead.status.translation || lead.status.name}</span>
                   </td>
                   <td>{lead.assignedTo?.name || <span className="text-muted">Non assigné</span>}</td>
                   <td>
@@ -595,10 +581,10 @@ const LeadsPage = ({ leads, agents, properties, currentStatus, filterName: initi
 };
 
 export const getServerSideProps: GetServerSideProps = withAuth(async (context, session) => {
-  const { status, name, agentId, sourceId, page = '1', pageSize = '10' } = context.query;
+  const { statusId, name, agentId, sourceId, page = '1', pageSize = '10' } = context.query;
   const currentPage = parseInt(String(page));
   const currentSize = parseInt(String(pageSize));
-  const currentStatus = status && Object.values(LeadStatus).includes(status as LeadStatus) ? status as LeadStatus : 'ALL';
+  const currentStatusId = statusId ? String(statusId) : 'ALL';
   const filterName = name ? String(name) : '';
   const filterAgentId = agentId ? String(agentId) : 'ALL';
   const filterSourceId = sourceId ? String(sourceId) : 'ALL';
@@ -616,7 +602,7 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
 
   const whereClause: Prisma.LeadWhereInput = {
     agencyId: agencyId,
-    ...(currentStatus !== 'ALL' && { status: currentStatus }),
+    ...(currentStatusId !== 'ALL' && { statusId: currentStatusId }),
     ...(filterName && {
       OR: [
         { firstName: { contains: filterName } },
@@ -634,7 +620,7 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
 
   console.log('LeadsPage: whereClause:', whereClause);
 
-  const [leads, totalLeadsCount, agents, properties, trialIsActive, agency] = await Promise.all([
+  const [leads, totalLeadsCount, agents, properties, trialIsActive, agency, leadStatusOptions] = await Promise.all([
     prisma.lead.findMany({
       where: whereClause,
       include: {
@@ -654,6 +640,7 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
         },
         properties: true, // New include
         source: true,
+        status: true,
       },
       orderBy: {
         createdAt: 'desc',
@@ -674,6 +661,7 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
     }),
     isTrialActive(agencyId),
     prisma.agency.findUnique({ where: { id: agencyId } }),
+    prisma.leadStatusOption.findMany({ where: { agencyId }, orderBy: { order: 'asc' } }), // Fetch lead status options
   ]);
 
   console.log('LeadsPage: isTrialActive result:', trialIsActive);
@@ -685,7 +673,7 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
       leads: JSON.parse(JSON.stringify(leads)),
       agents: JSON.parse(JSON.stringify(agents)),
       properties: JSON.parse(JSON.stringify(properties)),
-      currentStatus,
+      currentStatus: currentStatusId,
       filterName,
       filterAgentId,
       filterSourceId,
@@ -694,6 +682,7 @@ export const getServerSideProps: GetServerSideProps = withAuth(async (context, s
       pageSize: currentSize,
       totalPages,
       agencyCountry: agency?.country || null,
+      leadStatusOptions: JSON.parse(JSON.stringify(leadStatusOptions)), // Pass leadStatusOptions to props
     },
   };
 }, ['AGENCY_OWNER', 'AGENCY_MEMBER', 'AGENCY_SUPER_AGENT']); // All agency roles can access this page

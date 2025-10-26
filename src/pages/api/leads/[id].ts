@@ -55,7 +55,7 @@ export default async function handler(
       return res.status(500).json({ error: 'Failed to delete lead' });
     }
   } else if (req.method === 'PUT') { // Add PUT handler
-    const { firstName, lastName, email, phone, sourceId, status, assignedToId, appointmentDate, isUrgent } = req.body;
+    const { firstName, lastName, email, phone, sourceId, statusId, assignedToId, appointmentDate, isUrgent } = req.body;
 
     try {
       const dataToUpdate: Prisma.LeadUpdateInput = {};
@@ -64,7 +64,6 @@ export default async function handler(
       if (lastName !== undefined) dataToUpdate.lastName = lastName;
       if (email !== undefined) dataToUpdate.email = email;
       if (phone !== undefined) dataToUpdate.phone = phone;
-      if (status !== undefined) dataToUpdate.status = status;
       if (isUrgent !== undefined) dataToUpdate.isUrgent = isUrgent;
       if (appointmentDate !== undefined) dataToUpdate.appointmentDate = appointmentDate;
 
@@ -74,7 +73,9 @@ export default async function handler(
       if (assignedToId !== undefined) {
         dataToUpdate.assignedTo = assignedToId ? { connect: { id: assignedToId } } : { disconnect: true };
       }
-
+      if (statusId !== undefined) {
+        dataToUpdate.status = statusId ? { connect: { id: statusId } } : { disconnect: true };
+      }
       const updatedLead = await prisma.lead.update({
         where: { id },
         data: dataToUpdate,

@@ -1,7 +1,8 @@
 import { getSession } from 'next-auth/react';
 import type { GetServerSideProps } from 'next';
 import DashboardLayout from '@/components/DashboardLayout';
-import { UserRole, LeadStatus, TicketPriority, User, Lead } from '@prisma/client';
+import { UserRole, TicketPriority } from '@prisma/client';
+import type { User, Lead } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { Row, Col, Card, Button, Modal, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { FaUserCircle, FaPhone, FaSyncAlt, FaCalendarDay, FaUsers, FaPlus, FaChartLine, FaBullseye, FaBuilding, FaTicketAlt, FaEye } from 'react-icons/fa';
@@ -14,7 +15,6 @@ import { getTranslatedUserRole } from '@/utils/userRoleTranslations';
 import { LeadWithAssignedTo } from '@/types';
 import ViewLeadModal from '@/components/ViewLeadModal';
 import HorizontalFunnelChart from '@/components/HorizontalFunnelChart';
-import { getTranslatedLeadStatus, leadStatusColors, leadStatusTranslations } from '@/utils/leadStatusTranslations';
 import styles from '@/styles/Dashboard.module.css';
 
 
@@ -23,36 +23,33 @@ import styles from '@/styles/Dashboard.module.css';
 type AgencyDashboardProps = {
   userRole: UserRole;
   totalLeads: number;
-  totalLeadsTrend: number;
   leadsToday: number;
-  leadsTodayTrend: number;
   totalProperties: number;
   propertiesToday: number;
   totalTickets: number;
   ticketsToday: number;
   conversionRate: number;
   conversionRateTrend: number;
-  leadsByStatus: { status: LeadStatus; count: number }[];
+  leadsByStatus: { status: string; count: number }[];
   agencyAgents?: (User & { _count?: { assignedLeads: number } })[];
   urgentTasks: {
     newLeads: { id: string; firstName: string; lastName: string }[];
     urgentTickets: { id: string; subject: string }[];
-    urgentLeads: { id: string; firstName: string; lastName: string; phone: string | null; status: LeadStatus }[]; // New field
+    urgentLeads: { id: string; firstName: string; lastName: string; phone: string | null; status: { name: string } }[]; // New field
   };
-  funnelData: { status: LeadStatus; _count: { status: number } }[];
+  funnelData: { status: string; _count: { status: number } }[];
   leadsToContact: number;
   leadsToFollowUp: number;
   appointmentsToday: number;
   leadsContacted: number;
+  leadStatusOptions: LeadStatusOption[]; // New field
 };
 
 const AgencyDashboard = (props: AgencyDashboardProps) => {
   const {
     userRole,
     totalLeads,
-    totalLeadsTrend,
     leadsToday,
-    leadsTodayTrend,
     totalProperties,
     propertiesToday,
     totalTickets,
@@ -67,13 +64,15 @@ const AgencyDashboard = (props: AgencyDashboardProps) => {
     leadsToFollowUp,
     appointmentsToday,
     leadsContacted,
+    leadStatusOptions,
   } = props;
 
-  const funnelStages: LeadStatus[] = ['NEW', 'CONTACTED', 'QUALIFIED', 'APPOINTMENT_SCHEDULED', 'CONVERTED'];
+  const funnelStages: string[] = ['NEW', 'CONTACTED', 'QUALIFIED', 'APPOINTMENT_SCHEDULED', 'CONVERTED'];
   const funnelChartData = funnelStages.map(stage => {
     const stageData = funnelData.find(d => d.status === stage);
+    const translatedStatus = leadStatusOptions.find(option => option.name === stage)?.translation || stage;
     return {
-      name: leadStatusTranslations[stage] || stage,
+      name: translatedStatus,
       value: stageData ? stageData._count.status : 0,
     };
   });
@@ -92,7 +91,10 @@ const AgencyDashboard = (props: AgencyDashboardProps) => {
   };
 
   const leadsByStatusChartData = {
-    labels: leadsByStatus.map(item => leadStatusTranslations[item.status as LeadStatus] || item.status),
+    labels: leadsByStatus.map(item => {
+      const statusOption = leadStatusOptions.find(option => option.name === item.status);
+      return statusOption?.translation || item.status;
+    }),
     datasets: [
       {
         label: 'Répartition des prospects',
@@ -105,7 +107,7 @@ const AgencyDashboard = (props: AgencyDashboardProps) => {
   const [showViewLeadModal, setShowViewLeadModal] = useState(false);
   const [showCallLeadModal, setShowCallLeadModal] = useState(false);
   const [selectedLead, setSelectedLead] = useState<LeadWithAssignedTo | null>(null);
-  const [selectedUrgentLead, setSelectedUrgentLead] = useState<{ id: string; firstName: string; lastName: string; phone: string | null; status: LeadStatus } | null>(null);
+  const [selectedUrgentLead, setSelectedUrgentLead] = useState<{ id: string; firstName: string; lastName: string; phone: string | null; status: { name: string } } | null>(null);
 
 
   const handleOpenViewLeadModal = async (leadId: string) => {
@@ -139,7 +141,7 @@ const AgencyDashboard = (props: AgencyDashboardProps) => {
     setShowCallLeadModal(false);
   };
 
-  const handleOpenUrgentLeadCallModal = (lead: { id: string; firstName: string; lastName: string; phone: string | null; status: LeadStatus }) => {
+  const handleOpenUrgentLeadCallModal = (lead: { id: string; firstName: string; lastName: string; phone: string | null; status: { name: string } }) => {
     setSelectedUrgentLead(lead);
     setShowCallLeadModal(true);
   };
@@ -250,8 +252,8 @@ const AgencyDashboard = (props: AgencyDashboardProps) => {
                                   <div>
                                     <Card.Title className="mb-1">{lead.firstName} {lead.lastName}</Card.Title>
                                     <Card.Subtitle className="mb-0 text-muted">
-                                      <span className={`badge ${leadStatusColors[lead.status]}`}>
-                                        {getTranslatedLeadStatus(lead.status)}
+                                      <span className="badge" style={{ backgroundColor: lead.status.color }}>
+                                        {lead.status.translation || lead.status.name}
                                       </span>
                                     </Card.Subtitle>
                                   </div>
@@ -417,7 +419,14 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
 
-  const [totalLeads, leadsToday, leadsYesterday, totalProperties, propertiesToday, totalTickets, ticketsToday, convertedLeads, convertedLeadsYesterday, totalLeadsYesterday, leadsByStatusRaw, agencyAgents, urgentTickets, urgentLeads, funnelData, leadsToContact, leadsToFollowUp, appointmentsToday, leadsContacted] = await Promise.all([
+  const lastStepStatus = await prisma.leadStatusOption.findFirst({
+    where: {
+      agencyId,
+      isLastStep: true,
+    },
+  });
+
+  const [totalLeads, leadsToday, leadsYesterday, totalProperties, propertiesToday, totalTickets, ticketsToday, convertedLeads, convertedLeadsYesterday, totalLeadsYesterday, leadsByStatusRaw, agencyAgents, urgentTickets, urgentLeads, funnelDataRaw, leadsToContact, leadsToFollowUp, appointmentsToday, leadsContacted, leadStatusOptions] = await Promise.all([
     prisma.lead.count({ where: baseWhere }),
     prisma.lead.count({ where: { ...baseWhere, createdAt: { gte: today } } }),
     prisma.lead.count({ where: { ...baseWhere, createdAt: { gte: yesterday, lt: today } } }),
@@ -425,13 +434,13 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     isAgent ? Promise.resolve(0) : prisma.property.count({ where: { agencyId, createdAt: { gte: today } } }),
     isAgent ? Promise.resolve(0) : prisma.ticket.count({ where: { agencyId } }),
     isAgent ? Promise.resolve(0) : prisma.ticket.count({ where: { agencyId, createdAt: { gte: today } } }),
-    prisma.lead.count({ where: { ...baseWhere, status: LeadStatus.CONVERTED } }),
-    prisma.lead.count({ where: { ...baseWhere, status: LeadStatus.CONVERTED, updatedAt: { lt: today } } }),
+    lastStepStatus ? prisma.lead.count({ where: { ...baseWhere, statusId: lastStepStatus.id } }) : Promise.resolve(0),
+    lastStepStatus ? prisma.lead.count({ where: { ...baseWhere, statusId: lastStepStatus.id, updatedAt: { lt: today } } }) : Promise.resolve(0),
     prisma.lead.count({ where: { ...baseWhere, createdAt: { lt: today } } }),
     prisma.lead.groupBy({
-      by: ['status'],
+      by: ['statusId'],
       where: baseWhere,
-      _count: { status: true },
+      _count: { statusId: true },
     }),
     isAgent ? Promise.resolve([]) : prisma.user.findMany({
       where: { agencyId },
@@ -444,38 +453,38 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       take: 5,
     }),
     prisma.lead.findMany({
-      where: { ...baseWhere, isUrgent: true, status: { not: LeadStatus.CONVERTED } },
-      select: { id: true, firstName: true, lastName: true, phone: true, status: true },
+      where: { ...baseWhere, isUrgent: true, ...(lastStepStatus ? { statusId: { not: lastStepStatus.id } } : {}) },
+      select: { id: true, firstName: true, lastName: true, phone: true, status: { select: { name: true } } },
       orderBy: { createdAt: 'desc' },
       take: 5,
     }),
     prisma.lead.groupBy({
-      by: ['status'],
+      by: ['statusId'],
       where: {
         ...baseWhere,
         status: {
-          in: ['NEW', 'CONTACTED', 'QUALIFIED', 'APPOINTMENT_SCHEDULED', 'CONVERTED'],
+          name: {
+            in: ['NEW', 'CONTACTED', 'QUALIFIED', 'APPOINTMENT_SCHEDULED', 'CONVERTED'],
+          }
         },
       },
       _count: {
-        status: true,
+        statusId: true,
       },
     }),
-    prisma.lead.count({ where: { ...baseWhere, status: LeadStatus.NEW } }),
-    prisma.lead.count({ where: { ...baseWhere, status: LeadStatus.FOLLOW_UP } }),
+    prisma.lead.count({ where: { ...baseWhere, status: { name: "NEW" } } }),
+    prisma.lead.count({ where: { ...baseWhere, status: { name: "FOLLOW_UP" } } }),
     prisma.lead.count({ where: { ...baseWhere, appointmentDate: { gte: today, lt: tomorrow } } }),
-    prisma.lead.count({ where: { ...baseWhere, status: LeadStatus.CONTACTED } })
+    prisma.lead.count({ where: { ...baseWhere, status: { name: "CONTACTED" } } }),
+    prisma.leadStatusOption.findMany({ where: { agencyId } })
   ]);
 
   const conversionRate = totalLeads > 0 ? (convertedLeads / totalLeads) * 100 : 0;
   const conversionRateYesterday = totalLeadsYesterday > 0 ? (convertedLeadsYesterday / totalLeadsYesterday) * 100 : 0;
   const conversionRateTrend = conversionRateYesterday > 0 ? ((conversionRate - conversionRateYesterday) / conversionRateYesterday) * 100 : conversionRate > 0 ? 100 : 0;
 
-  const leadsByStatus = leadsByStatusRaw.map(item => ({ status: item.status, count: item._count.status }));
-
-  const leadsTodayTrend = leadsYesterday > 0 ? ((leadsToday - leadsYesterday) / leadsYesterday) * 100 : leadsToday > 0 ? 100 : 0;
-
   const totalLeadsTrend = totalLeadsYesterday > 0 ? ((totalLeads - totalLeadsYesterday) / totalLeadsYesterday) * 100 : totalLeads > 0 ? 100 : 0;
+  const leadsTodayTrend = leadsYesterday > 0 ? ((leadsToday - leadsYesterday) / leadsYesterday) * 100 : leadsToday > 0 ? 100 : 0;
 
   return {
     props: {
@@ -490,18 +499,19 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       ticketsToday,
       conversionRate: parseFloat(conversionRate.toFixed(2)),
       conversionRateTrend: parseFloat(conversionRateTrend.toFixed(2)),
-      leadsByStatus: JSON.parse(JSON.stringify(leadsByStatus)),
+      leadsByStatus: JSON.parse(JSON.stringify(leadsByStatusRaw.map(item => ({ status: leadStatusOptions.find(option => option.id === item.statusId)?.name || '', count: item._count.statusId })))),
       agencyAgents: JSON.parse(JSON.stringify(agencyAgents)),
       urgentTasks: {
         newLeads: [], // This was seemingly unused, so clarifying its state
         urgentTickets: JSON.parse(JSON.stringify(urgentTickets)),
-        urgentLeads: JSON.parse(JSON.stringify(urgentLeads)),
+        urgentLeads: JSON.parse(JSON.stringify(urgentLeads.map(lead => ({ ...lead, status: { name: leadStatusOptions.find(option => option.id === lead.status.name)?.name || '' } })))),
       },
-      funnelData: JSON.parse(JSON.stringify(funnelData)),
+      funnelData: JSON.parse(JSON.stringify(funnelDataRaw.map(item => ({ status: leadStatusOptions.find(option => option.id === item.statusId)?.name || '', _count: { status: item._count.statusId } })))),
       leadsToContact,
       leadsToFollowUp,
       appointmentsToday,
       leadsContacted,
+      leadStatusOptions: JSON.parse(JSON.stringify(leadStatusOptions)),
     },
   };
 };
